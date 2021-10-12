@@ -1,44 +1,47 @@
 pub mod shader_structs;
 mod shader_util;
-
-use std::{borrow::Borrow, sync::Once};
-
 use shader_structs::*;
 use shader_util::*;
 
 pub struct ShaderRepo {
-    imgui:       ImguiShaderProgram,
-    point_cloud: CloudGeometryShaderProgram,
+    pub imgui:       ImguiShaderProgram,
+    pub point_cloud: CloudGeometryShaderProgram,
+    pub simple:      SimpleShaderProgram,
 }
-
 
 impl ShaderRepo{
     pub fn new() -> Self {
         let mut point_cloud = CloudGeometryShaderProgram::new();
         {
-            let gvs = compile_shader(GVS_SRC_CLOUD, gl::VERTEX_SHADER);
-            let gs  = compile_shader(GS_SRC_CLOUD, gl::GEOMETRY_SHADER);
-            let gfs = compile_shader(GFS_SRC_CLOUD, gl::FRAGMENT_SHADER);
-            let program = link_shaders(gvs, Some(gs), gfs);
-            delete_shader(gfs);
-            delete_shader(gs);
-            delete_shader(gvs);
+            let program = build_shader_program(
+                GVS_SRC_CLOUD, 
+                Some(GS_SRC_CLOUD), 
+                GFS_SRC_CLOUD);
             point_cloud.setup(&program);
         }
     
         let mut imgui = ImguiShaderProgram::new();
         {
-            let vs = compile_shader(IMGUI_VS_SRC, gl::VERTEX_SHADER);
-            let fs = compile_shader(IMGUI_FS_SRC, gl::FRAGMENT_SHADER);
-            let program = link_shaders(vs, None, fs);
-            delete_shader(fs);
-            delete_shader(vs);
+            let program = build_shader_program(
+                IMGUI_VS_SRC, 
+                None, 
+                IMGUI_FS_SRC);
             imgui.setup(&program);
+        }
+        
+        let mut simple = SimpleShaderProgram::new();
+        {
+            let program = build_shader_program(
+                SIMPLE_VS_SRC, 
+                None, 
+                SIMPLE_FS_SRC);
+            simple.setup(&program);
         }
         
         ShaderRepo{
             imgui,
-            point_cloud
+            point_cloud,
+            simple
         }
     }
     fn cleanup(&mut self) {

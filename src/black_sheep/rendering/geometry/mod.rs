@@ -2,10 +2,8 @@
 mod mesh_util;
 mod unique_index;
 
-use std::{borrow::{Borrow, BorrowMut}};
 use mesh_util::*;
 use unique_index::*;
-use gl::{TRIANGLES, types::*};
 
 
 
@@ -84,7 +82,7 @@ impl MeshRepo{
         let index = self.unique_index.get_next();
 
         let mut mesh = Mesh::new();
-        init_mesh(mesh.borrow_mut());
+        init_mesh(&mut mesh);
         
         let mesh_token = MeshToken { uid: index, array_id: mesh.array_id, vertex_count: mesh.vertex_count};
 
@@ -94,10 +92,10 @@ impl MeshRepo{
     }
 
     pub fn get_mesh(&self, uid: u32) -> Option<&Mesh>{
-        self.mesh_i_data.binary_search_by_key(uid.borrow(), |x|{
+        self.mesh_i_data.binary_search_by_key(&uid, |x|{
             x.1 as u32
         }).ok().map(|i| {
-            self.mesh_i_data[i].0.borrow()
+            &self.mesh_i_data[i].0
         })
     }
 

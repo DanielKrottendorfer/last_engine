@@ -9,7 +9,6 @@ fn main() {
     println!("Hello, world!");
 
     let bs = black_sheep::BlackSheep::new();
-
-    bs.run(None);
+    bs.run();
 
 }

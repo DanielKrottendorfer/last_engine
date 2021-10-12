@@ -1,24 +1,20 @@
 
-mod gamestate;
 pub mod rendering;
 mod window;
-
 mod constants;
 
-use std::borrow::BorrowMut;
-
-use gamestate::GameState;
 use rendering::shader::ShaderRepo;
 use rendering::geometry::MeshRepo;
 use window::SDLWindow;
 
 use sdl2::event::Event;
 
+use crate::black_sheep::window::window_util::clear_window;
+
 pub struct BlackSheep {
     window:      SDLWindow,
     mesh_repo:   MeshRepo,
-    shader_repo: ShaderRepo,
-    gamestate:   GameState,
+    shader_repo: ShaderRepo
 }
 
 impl BlackSheep {
@@ -30,30 +26,26 @@ impl BlackSheep {
         Self {
             window,
             mesh_repo,
-            shader_repo,
-            gamestate: GameState
+            shader_repo
         }
     }
 
-    pub fn run(mut self,init: Option<fn(&mut GameState)>) {
+    pub fn run(mut self) {
 
-        if let Some(init) = init{
-            init(self.gamestate.borrow_mut());
-        }else{
-            let square_id = self.mesh_repo.add_mesh(|mesh| {
-                use constants::*;
-                mesh.add_floatbuffer(&SQUARE,      0, 3);
-                mesh.add_floatbuffer(&SQUARE_NORM, 1, 3);
-                mesh.add_floatbuffer(&UVS,         2, 2);
-                mesh.add_elementarraybuffer(&ELEMENTS)
-            });
-        }
+        use constants::*;
+
+        let triangle = self.mesh_repo.add_mesh(|mesh| {
+            mesh.add_floatbuffer(&SIMPLE_TRIANGL,0, 3);
+            mesh.add_elementarraybuffer(&TRIANGLE_ELEMENTS);
+        });
+
+        let simple_shader = &self.shader_repo.simple;
+        println!("{:?}",simple_shader);
         let mut running = true;
 
         while running {
             
             while let Some(event) = self.window.poll_event() {
-
 
                 match event {
                     Event::Quit {..} => {
@@ -82,6 +74,15 @@ impl BlackSheep {
                 //Swap;
 
             }
+            
+            clear_window();
+
+            simple_shader.use_program();
+
+            triangle.bind_vertex_array();
+            triangle.draw_elements();
+
+            self.window.swap();
         }
 
     }

@@ -1,6 +1,5 @@
-use cgmath::{Matrix3, Vector3};
 use gl::types::*;
-use std::ffi::{c_void, CString};
+use std::ffi::CString;
 use std::ptr;
 use std::str;
 
@@ -12,6 +11,27 @@ pub static GFS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gfs_cl
 
 pub static IMGUI_FS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.frag");
 pub static IMGUI_VS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.vert");
+
+pub static SIMPLE_VS_SRC: &'static str = include_str!("./shader_res/simple/vs.glsl");
+pub static SIMPLE_FS_SRC: &'static str = include_str!("./shader_res/simple/fs.glsl");
+
+pub fn build_shader_program(
+    vertex_shader: &str, 
+    geometry_shader: Option<&str>, 
+    fragment_shader: &str) -> u32 {
+
+        let vs = compile_shader(vertex_shader, gl::VERTEX_SHADER);
+        let gs = geometry_shader.map(|gs| compile_shader(gs, gl::GEOMETRY_SHADER));
+        let fs = compile_shader(fragment_shader, gl::FRAGMENT_SHADER);
+
+        let program = link_shaders(vs, gs, fs);
+
+        delete_shader(fs);
+        gs.map(|gs|delete_shader(gs));
+        delete_shader(vs);
+
+        program
+}
 
 pub fn compile_shader(src: &str, _type: GLenum) -> GLuint {
     let shader;
@@ -92,31 +112,4 @@ pub fn delete_shader(shader_id: u32){
     unsafe {
         gl::DeleteShader(shader_id);
     }
-}
-
-pub fn three_d_rendering_setup() {
-    unsafe {
-        gl::Enable(gl::DEPTH_TEST);
-        gl::Enable(gl::BLEND);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-    }
-}
-
-pub fn ui_rendering_setup() {
-    unsafe {
-        gl::Enable(gl::BLEND);
-        gl::BlendEquation(gl::FUNC_ADD);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        gl::Disable(gl::CULL_FACE);
-        gl::Disable(gl::DEPTH_TEST);
-        //gl::Enable(gl::SCISSOR_TEST);
-    }
-}
-
-pub fn view_to_screen(w: f32, h: f32) -> Matrix3<f32> {
-    Matrix3::from_cols(
-        Vector3::new(2.0 / w, 0.0, 0.0),
-        Vector3::new(0.0, -2.0 / h, 0.0),
-        Vector3::new(-1.0, 1.0, 1.0),
-    )
 }

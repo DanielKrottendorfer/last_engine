@@ -17,3 +17,7 @@ shader_program!(
         uniform mat4 projection;
     }
 );
+
+shader_program!(
+    SimpleShaderProgram{}
+);
