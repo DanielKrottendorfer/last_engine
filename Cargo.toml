@@ -13,3 +13,6 @@ gl = "0.14.0"
 cgmath = "0.18.0"
 
 shader_macro = {git = "https://github.com/DanielKrottendorfer/gl_shader_macro.git"}
+
+[features]
+vsync_off = []

@@ -3,6 +3,8 @@
 
 out vec3 out_color;
 
+uniform vec3 color;
+
 void main() {
-  out_color = vec3(0.0,1.0,1.0);
+  out_color = color;
 };

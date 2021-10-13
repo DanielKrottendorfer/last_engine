@@ -1,5 +1,4 @@
-use cgmath::Matrix4;
-
+use cgmath::{Matrix4,Vector3};
 use shader_macro::shader_program;
 
 use std::ffi::CString;
@@ -19,5 +18,7 @@ shader_program!(
 );
 
 shader_program!(
-    SimpleShaderProgram{}
+    SimpleShaderProgram{
+        uniform vec3 color;
+    }
 );

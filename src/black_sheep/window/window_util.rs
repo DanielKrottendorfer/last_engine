@@ -31,18 +31,25 @@ pub fn new_sdl_window_with_opengl_context() -> (
     let sdl_gl = sdl_window.gl_create_context().unwrap();
     gl::load_with(|symbol| video_context.gl_get_proc_address(symbol) as *const _);
 
-    // VSYNC Setting => video_context.gl_set_swap_interval(0).unwrap();
-    // video_context.gl_set_swap_interval(0).unwrap();
+    #[cfg(feature = "vsync_off")]
+    video_context.gl_set_swap_interval(0).unwrap();
 
     let event_pump = sdl_context.event_pump().unwrap();
 
     (event_pump, sdl_window, sdl_gl, mouse)
 }
 
+pub fn set_viewport(w: i32, h: i32) {
+    unsafe{
+        gl::Viewport(0,0,w,h);
+    }
+}
+
 pub fn clear_window() {
     unsafe{
         gl::ClearColor(0.0, 0.3, 0.3, 1.0);
-        gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        gl::Clear(gl::COLOR_BUFFER_BIT );
+        //gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 }
 
