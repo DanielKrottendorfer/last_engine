@@ -1,5 +1,7 @@
 use cgmath::{Matrix3, Vector3};
 
+use crate::black_sheep::settings::INIT_WINDOW_SIZE;
+
 pub fn new_sdl_window_with_opengl_context() -> (
     sdl2::EventPump,
     sdl2::video::Window,
@@ -19,7 +21,7 @@ pub fn new_sdl_window_with_opengl_context() -> (
 
     let sdl_window = {
         video_context
-            .window("spam", 1200, 800)
+            .window("spam", INIT_WINDOW_SIZE.0,INIT_WINDOW_SIZE.1)
             .position_centered()
             .resizable()
             .opengl()
@@ -47,7 +49,7 @@ pub fn set_viewport(w: i32, h: i32) {
 pub fn clear_window() {
     unsafe {
         gl::ClearColor(0.0, 0.3, 0.3, 1.0);
-        gl::Clear(gl::COLOR_BUFFER_BIT);
+        gl::Clear(gl::COLOR_BUFFER_BIT|gl::DEPTH_BUFFER_BIT);
         //gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
 }
@@ -56,7 +58,7 @@ pub fn three_d_rendering_setup() {
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::BLEND);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+       gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
     }
 }
 

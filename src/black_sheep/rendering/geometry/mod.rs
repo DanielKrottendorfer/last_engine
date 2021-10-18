@@ -20,7 +20,7 @@ impl Mesh {
     }
 
     pub fn add_floatbuffer<T>(&mut self, data: &[T], attribute_index: u32, attribute_size: i32) {
-        if attribute_size < 0 {
+        if !(attribute_size > 0) {
             panic!("Attribute size needs to be > 0")
         }
 
@@ -28,17 +28,17 @@ impl Mesh {
         set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
 
         self.buffer_ids.push(buffer_id);
-        self.vertex_count = data.len() as i32;
     }
 
     pub fn add_elementarraybuffer(&mut self, elements: &[u32]) {
         let id = buffer_data(elements, gl::ELEMENT_ARRAY_BUFFER);
+        self.vertex_count = elements.len() as i32 ;
         self.buffer_ids.push(id);
     }
 
     fn cleanup(&self) {
         unsafe {
-            println!("mesh cleanup");
+            println!("mesh cleanup {}",self.array_id);
             for id in self.buffer_ids.iter() {
                 gl::DeleteBuffers(1, id);
             }
@@ -47,11 +47,18 @@ impl Mesh {
     }
 }
 
+impl Drop for Mesh {
+    fn drop(&mut self) {
+        self.cleanup();
+    }
+}
+
 pub struct MeshRepo {
     unique_index: UniqueIndex,
     mesh_i_data: Vec<(Mesh, usize)>,
 }
 
+#[derive(Debug,Default)]
 pub struct MeshToken {
     pub uid: usize,
     array_id: u32,
@@ -103,12 +110,5 @@ impl MeshRepo {
         for mesh_i in self.mesh_i_data.iter() {
             mesh_i.0.cleanup();
         }
-    }
-}
-
-impl Drop for MeshRepo {
-    fn drop(&mut self) {
-        println!("meshrepo cleanup");
-        self.cleanup();
     }
 }

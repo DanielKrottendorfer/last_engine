@@ -22,3 +22,9 @@ shader_program!(
         uniform vec3 color;
     }
 );
+
+shader_program!(
+    Color3D{
+        uniform mat4 MVP;
+    }
+);
