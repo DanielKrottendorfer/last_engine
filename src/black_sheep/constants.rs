@@ -27,9 +27,9 @@ pub const SQUARE_NORM: [Vector3<f32>; 6] = [
 pub const ELEMENTS: [u32; 6] = [0, 1, 2, 3, 4, 5];
 
 pub const SIMPLE_TRIANGL: [Vector3<f32>; 3] = [
-    Vector3::new(-1.0,1.0, -1.0),
-    Vector3::new(-1.0,0.5, -1.0),
-    Vector3::new(-0.5,1.0, -1.0),
+    Vector3::new(-1.0, 1.0, -1.0),
+    Vector3::new(-1.0, 0.5, -1.0),
+    Vector3::new(-0.5, 1.0, -1.0),
 ];
 pub const SIMPLE_TRIANGL_COLORS: [Vector3<f32>; 3] = [
     Vector3::new(1.0, 0.0, 0.0),
@@ -43,40 +43,26 @@ pub const CUBE: [Vector3<f32>; 8] = [
     Vector3::new(0.0, 0.0, 1.0),
     Vector3::new(1.0, 0.0, 1.0),
     Vector3::new(1.0, 0.0, 0.0),
-
     Vector3::new(0.0, 1.0, 0.0),
     Vector3::new(0.0, 1.0, 1.0),
     Vector3::new(1.0, 1.0, 1.0),
     Vector3::new(1.0, 1.0, 0.0),
 ];
 pub const CUBE_COLOR: [Vector3<f32>; 8] = [
-    Vector3::new(0.0, 0.5, 0.5),
+    Vector3::new(0.0, 0.0, 0.0),
     Vector3::new(0.0, 0.0, 1.0),
+    Vector3::new(1.0, 0.0, 1.0),
+    Vector3::new(1.0, 0.0, 0.0),
     Vector3::new(0.0, 1.0, 0.0),
     Vector3::new(0.0, 1.0, 1.0),
-    
-    Vector3::new(1.0, 0.0, 0.0),
-    Vector3::new(1.0, 0.0, 1.0),
     Vector3::new(1.0, 1.0, 1.0),
-    Vector3::new(0.7, 0.5, 0.0),
+    Vector3::new(1.0, 1.0, 0.0),
 ];
 pub const CUBE_ELEMENTS: [u32; 36] = [
-    //BOT
-    0,1,2,
-    0,2,3,
-    //TOP
-    4,5,6,
-    4,6,7,
-    //FRONT
-    1,2,6,
-    1,6,5,
-    //BACK
-    3,7,4,
-    3,4,0,
-    //LEFT
-    0,4,5,
-    0,5,1,
-    //RIGHT
-    2,3,7,
-    2,7,6
+    0, 1, 2, 0, 2, 3, //BOT
+    4, 5, 6, 4, 6, 7, //TOP
+    1, 2, 6, 1, 6, 5, //FRONT
+    3, 7, 4, 3, 4, 0, //BACK
+    0, 4, 5, 0, 5, 1, //LEFT
+    2, 3, 7, 2, 7, 6, //RIGHT
 ];

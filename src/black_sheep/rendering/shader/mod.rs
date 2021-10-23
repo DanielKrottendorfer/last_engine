@@ -7,7 +7,7 @@ pub struct ShaderRepo {
     pub imgui: ImguiShaderProgram,
     pub point_cloud: CloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
-    pub color_3d: Color3D
+    pub color_3d: Color3D,
 }
 
 impl ShaderRepo {
@@ -30,9 +30,8 @@ impl ShaderRepo {
             simple.setup(&program);
         }
 
-        let mut color_3d= Color3D::new();
+        let mut color_3d = Color3D::new();
         {
-            
             let program = build_shader_program(COLOR3D_VS_SRC, None, COLOR3D_FS_SRC);
             color_3d.setup(&program);
         }

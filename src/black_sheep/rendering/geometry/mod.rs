@@ -32,13 +32,13 @@ impl Mesh {
 
     pub fn add_elementarraybuffer(&mut self, elements: &[u32]) {
         let id = buffer_data(elements, gl::ELEMENT_ARRAY_BUFFER);
-        self.vertex_count = elements.len() as i32 ;
+        self.vertex_count = elements.len() as i32;
         self.buffer_ids.push(id);
     }
 
     fn cleanup(&self) {
         unsafe {
-            println!("mesh cleanup {}",self.array_id);
+            println!("mesh cleanup {}", self.array_id);
             for id in self.buffer_ids.iter() {
                 gl::DeleteBuffers(1, id);
             }
@@ -58,7 +58,7 @@ pub struct MeshRepo {
     mesh_i_data: Vec<(Mesh, usize)>,
 }
 
-#[derive(Debug,Default)]
+#[derive(Debug, Default)]
 pub struct MeshToken {
     pub uid: usize,
     array_id: u32,

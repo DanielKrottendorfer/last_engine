@@ -8,29 +8,35 @@ mod window;
 #[allow(dead_code)]
 mod constants;
 
-//mod specs_world;
-
-mod world;
-
 pub mod settings;
 
-use world::World;
+mod camera;
+mod transform;
 
-use cgmath::{Deg, ElementWise, Rad, Vector3};
+use cgmath::{Deg, Vector3};
 use rendering::geometry::MeshRepo;
 use rendering::shader::ShaderRepo;
-use window::SDLWindow;
+use sdl2::mouse::MouseButton;
 use window::window_util::*;
+use window::SDLWindow;
 
 use sdl2::event::{Event, WindowEvent};
 
-use crate::black_sheep::{settings::INIT_WINDOW_SIZE, window::window_util::{clear_window, set_viewport}};
+use crate::black_sheep::{
+    settings::INIT_WINDOW_SIZE,
+    window::window_util::{clear_window, set_viewport},
+};
+
+use camera::structs::FlyingEye;
+
+use rendering::geometry::MeshToken;
 
 pub struct BlackSheep {
     window: SDLWindow,
     mesh_repo: MeshRepo,
     shader_repo: ShaderRepo,
-    world: World
+    cam: FlyingEye,
+    meshes: Vec<(transform::Transform, MeshToken)>,
 }
 
 impl BlackSheep {
@@ -39,13 +45,13 @@ impl BlackSheep {
         let window = SDLWindow::new();
         let shader_repo = ShaderRepo::new();
         let mesh_repo = MeshRepo::new();
-        let world = World::new();
-        
+
         Self {
             window,
             mesh_repo,
             shader_repo,
-            world
+            cam: FlyingEye::new(),
+            meshes: Vec::new(),
         }
     }
 
@@ -69,7 +75,9 @@ impl BlackSheep {
 
         let mut window_size = INIT_WINDOW_SIZE;
 
-        self.world.move_cam(Vector3::new(0.0,0.0,5.0));
+        self.cam.move_cam(Vector3::new(0.0, 0.0, 5.0));
+
+        let mut mouse_captured = false;
 
         'mainloop: loop {
             while let Some(event) = self.window.poll_event() {
@@ -84,20 +92,44 @@ impl BlackSheep {
                                 Escape => break 'mainloop,
                                 E => color = Vector3::new(0.0, 1.0, 1.0),
                                 Q => color = Vector3::new(1.0, 0.0, 1.0),
-                                W => self.world.move_cam(Vector3::new(0.0,0.0,-1.0)),
-                                A => self.world.move_cam(Vector3::new(-1.0,0.0,0.0)),
-                                D => self.world.move_cam(Vector3::new(1.0,0.0,0.0)),
-                                S => self.world.move_cam(Vector3::new(0.0,0.0,1.0)),
+                                W => self.cam.move_cam(Vector3::new(0.0, 0.0, -1.0)),
+                                S => self.cam.move_cam(Vector3::new(0.0, 0.0, 1.0)),
+                                D => self.cam.move_cam(Vector3::new(1.0, 0.0, 0.0)),
+                                A => self.cam.move_cam(Vector3::new(-1.0, 0.0, 0.0)),
+                                X => self.cam.move_cam(Vector3::new(0.0, 1.0, 0.0)),
+                                Y => self.cam.move_cam(Vector3::new(0.0, -1.0, 0.0)),
+                                Right => self.cam.rotate_v(Deg(1.0)),
+                                Left => self.cam.rotate_v(Deg(-1.0)),
+                                Up => self.cam.rotate_h(Deg(1.0)),
+                                Down => self.cam.rotate_h(Deg(-1.0)),
                                 _ => (),
                             }
                         } else {
-                            println!("No Valid KeyCode")
+                            println!("No Valid KeyCode");
                         }
-                    }
+                    },
+                    Event::MouseButtonDown{mouse_btn, ..} => {
+                        if MouseButton::Right == mouse_btn {
+                            mouse_captured = true;
+                            self.window.capture_mouse();
+                        }
+                    },
+                    Event::MouseButtonUp{mouse_btn, ..} => {
+                        if MouseButton::Right == mouse_btn {
+                            mouse_captured = false;
+                            self.window.release_mouse();
+                        }
+                    },
+                    Event::MouseMotion{ xrel, yrel, ..} => {
+                        if mouse_captured {
+                            self.cam.rotate_v(Deg(xrel as f32 / 10.0));
+                            self.cam.rotate_h(Deg(yrel as f32 / 10.0));
+                        }
+                    },
                     Event::Window { win_event, .. } => match win_event {
                         WindowEvent::Resized(w, h) => {
                             set_viewport(w, h);
-                            window_size = (w as u32,h as u32);
+                            window_size = (w as u32, h as u32);
                         }
                         _ => (),
                     },
@@ -105,20 +137,20 @@ impl BlackSheep {
                 }
             }
 
-            let view = self.world.get_view();
-            let aspect = window_size.0 as f32/window_size.1 as f32;
+            let view = self.cam.get_i_view(0.0);
+            let aspect = window_size.0 as f32 / window_size.1 as f32;
             let projection = cgmath::perspective(Deg(120.0), aspect, 0.001, 1000.0);
+            
 
             clear_window();
 
             three_d_rendering_setup();
 
             color_shader.use_program();
-            color_shader.set_MVP(projection*view);
+            color_shader.set_MVP(projection * view );
 
             cube.bind_vertex_array();
             cube.draw_elements();
-
 
             simple_shader.use_program();
             simple_shader.set_color(color);

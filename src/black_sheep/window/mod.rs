@@ -34,4 +34,13 @@ impl SDLWindow {
     pub fn swap(&self) {
         self.window.gl_swap_window();
     }
+
+    pub fn capture_mouse(&mut self) {
+        self._mouse_util.show_cursor(false);
+        self._mouse_util.set_relative_mouse_mode(true);
+    }
+    pub fn release_mouse(&mut self) {
+        self._mouse_util.show_cursor(true);
+        self._mouse_util.set_relative_mouse_mode(false);
+    }
 }
