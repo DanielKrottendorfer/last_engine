@@ -1,8 +1,8 @@
-pub struct UniqueIndex(usize);
+pub struct UniqueIndexer(usize);
 
-impl UniqueIndex {
+impl UniqueIndexer {
     pub fn new() -> Self {
-        UniqueIndex(0)
+        UniqueIndexer(0)
     }
     pub fn get_next(&mut self) -> usize {
         let t = self.0;

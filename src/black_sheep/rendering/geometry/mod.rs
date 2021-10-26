@@ -54,7 +54,7 @@ impl Drop for Mesh {
 }
 
 pub struct MeshRepo {
-    unique_index: UniqueIndex,
+    unique_indexer: UniqueIndexer,
     mesh_i_data: Vec<(Mesh, usize)>,
 }
 
@@ -77,13 +77,13 @@ impl MeshToken {
 impl MeshRepo {
     pub fn new() -> Self {
         MeshRepo {
-            unique_index: UniqueIndex::new(),
+            unique_indexer: UniqueIndexer::new(),
             mesh_i_data: Vec::new(),
         }
     }
 
     pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, init_mesh: T) -> MeshToken {
-        let index = self.unique_index.get_next();
+        let index = self.unique_indexer.get_next();
 
         let mut mesh = Mesh::new();
         init_mesh(&mut mesh);
@@ -104,11 +104,5 @@ impl MeshRepo {
             .binary_search_by_key(&uid, |x| x.1 as u32)
             .ok()
             .map(|i| &self.mesh_i_data[i].0)
-    }
-
-    fn cleanup(&self) {
-        for mesh_i in self.mesh_i_data.iter() {
-            mesh_i.0.cleanup();
-        }
     }
 }
