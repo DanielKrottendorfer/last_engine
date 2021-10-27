@@ -1,6 +1,6 @@
 use bitflags::bitflags;
-use cgmath::{InnerSpace, Vector3, Zero};
-use sdl2::{keyboard::Keycode, sys::KeyCode};
+use cgmath::{Vector3, Zero};
+use sdl2::keyboard::Keycode;
 
 use crate::black_sheep::q_i_square_root::q_normalize;
 

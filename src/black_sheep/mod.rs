@@ -16,6 +16,8 @@ mod transform;
 mod gamestate;
 mod q_i_square_root;
 
+mod point_cloud;
+
 use std::time::Duration;
 
 use gamestate::*;
@@ -37,14 +39,11 @@ use crate::black_sheep::{
 
 use camera::structs::FlyingEye;
 
-use rendering::geometry::MeshToken;
-
 pub struct BlackSheep {
     window: SDLWindow,
     mesh_repo: MeshRepo,
     shader_repo: ShaderRepo,
     cam: FlyingEye,
-    meshes: Vec<(transform::Transform, MeshToken)>,
 }
 
 impl BlackSheep {
@@ -59,39 +58,46 @@ impl BlackSheep {
             mesh_repo,
             shader_repo,
             cam: FlyingEye::new(),
-            meshes: Vec::new(),
         }
     }
 
-    pub fn run(mut self) {
+    pub fn run(self) {
         let mut window = self.window;
         let mut mesh_repo = self.mesh_repo;
         let shader_repo = self.shader_repo;
         let mut cam = self.cam;
-        let mut meshes = self.meshes;
         let mut gamestate: GameFlags = Default::default();
         let mut input: KeyboardInputFlags = Default::default();
 
         use constants::*;
-        let triangle = mesh_repo.add_mesh(|mesh| {
-            mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 3);
+        let triangle = mesh_repo.add_mesh("triangle", |mesh| {
+            mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 2);
             mesh.add_elementarraybuffer(&TRIANGLE_ELEMENTS);
         });
 
-        let cube = mesh_repo.add_mesh(|mesh| {
+        let cube = mesh_repo.add_mesh("cube", |mesh| {
             mesh.add_floatbuffer(&CUBE, 0, 3);
             mesh.add_floatbuffer(&CUBE_COLOR, 1, 3);
             mesh.add_elementarraybuffer(&CUBE_ELEMENTS);
         });
 
+        let cube_cloud = mesh_repo.add_mesh("cloud", |mesh| {
+            let (v, c, e) = point_cloud::point_cube(5);
+            mesh.add_floatbuffer(v.as_slice(), 0, 3);
+            mesh.add_floatbuffer(c.as_slice(), 1, 3);
+            mesh.add_elementarraybuffer(e.as_slice());
+        });
+
         let simple_shader = &shader_repo.simple;
         let color_shader = &shader_repo.color_3d;
+        let cloud_shader = &shader_repo.point_cloud;
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
-
         let mut window_size = (INIT_WINDOW_SIZE.0 as f32, INIT_WINDOW_SIZE.1 as f32);
 
-        cam.move_cam(Vector3::new(0.0, 0.0, 5.0));
+        cam.move_cam(Vector3::new(1.5, 1.5, 2.0));
+        cam.rotate_h(Deg(35.0));
+        cam.rotate_v(Deg(-35.0));
 
         let time = std::time::Instant::now();
         let mut previous = time.elapsed();
@@ -180,12 +186,12 @@ impl BlackSheep {
                     if input.contains(kf::Q) {
                         color = Vector3::new(1.0, 0.0, 1.0);
                     } else if input.contains(kf::E) {
-                        color = Vector3::new(1.0, 1.0, 0.0);
-                    } 
-                    
-                    if let Some(v) = get_movement(&mut input){
+                        color = Vector3::new(0.4, 0.0, 0.4);
+                    }
+
+                    if let Some(v) = get_movement(&mut input) {
                         cam.set_movement(v);
-                    }else{
+                    } else {
                         cam.reset_movement();
                     }
                 }
@@ -199,7 +205,7 @@ impl BlackSheep {
 
             let view = cam.get_i_view(i);
             let aspect = window_size.0 / window_size.1;
-            let projection = cgmath::perspective(Deg(90.0), aspect, 0.001, 1000.0);
+            let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
 
             clear_window();
 
@@ -207,15 +213,19 @@ impl BlackSheep {
 
             color_shader.use_program();
             color_shader.set_MVP(projection * view);
-
             cube.bind_vertex_array();
-            cube.draw_elements();
+            cube.draw_triangle_elements();
 
             simple_shader.use_program();
             simple_shader.set_color(color);
-
             triangle.bind_vertex_array();
-            triangle.draw_elements();
+            triangle.draw_triangle_elements();
+
+            cloud_shader.use_program();
+            cloud_shader.set_mv(view);
+            cloud_shader.set_projection(projection);
+            cube_cloud.bind_vertex_array();
+            cube_cloud.draw_point_elements();
 
             window.swap();
         }

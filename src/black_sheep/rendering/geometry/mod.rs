@@ -1,6 +1,8 @@
 mod mesh_util;
 mod unique_index;
 
+use std::collections::HashMap;
+
 use mesh_util::*;
 use unique_index::*;
 
@@ -35,6 +37,15 @@ impl Mesh {
         self.vertex_count = elements.len() as i32;
         self.buffer_ids.push(id);
     }
+    pub fn bind_vertex_array(&self) {
+        mesh_util::bind_vertex_array(self.array_id);
+    }
+    pub fn draw_triangle_elements(&self) {
+        mesh_util::draw_triangle_elements(self.vertex_count);
+    }
+    pub fn draw_point_elements(&self) {
+        mesh_util::draw_point_elements(self.vertex_count);
+    }
 
     fn cleanup(&self) {
         unsafe {
@@ -56,6 +67,7 @@ impl Drop for Mesh {
 pub struct MeshRepo {
     unique_indexer: UniqueIndexer,
     mesh_i_data: Vec<(Mesh, usize)>,
+    mesh_map: HashMap<String, usize>,
 }
 
 #[derive(Debug, Default)]
@@ -69,8 +81,11 @@ impl MeshToken {
     pub fn bind_vertex_array(&self) {
         mesh_util::bind_vertex_array(self.array_id);
     }
-    pub fn draw_elements(&self) {
-        mesh_util::draw_elements(self.vertex_count);
+    pub fn draw_triangle_elements(&self) {
+        mesh_util::draw_triangle_elements(self.vertex_count);
+    }
+    pub fn draw_point_elements(&self) {
+        mesh_util::draw_point_elements(self.vertex_count);
     }
 }
 
@@ -79,10 +94,11 @@ impl MeshRepo {
         MeshRepo {
             unique_indexer: UniqueIndexer::new(),
             mesh_i_data: Vec::new(),
+            mesh_map: HashMap::new(),
         }
     }
 
-    pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, init_mesh: T) -> MeshToken {
+    pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, name: &str, init_mesh: T) -> MeshToken {
         let index = self.unique_indexer.get_next();
 
         let mut mesh = Mesh::new();
@@ -96,13 +112,21 @@ impl MeshRepo {
 
         self.mesh_i_data.push((mesh, index));
 
+        if self.mesh_map.insert(String::from(name), index).is_some() {
+            panic!("name already taken!");
+        }
+
         mesh_token
     }
 
-    pub fn get_mesh(&self, uid: u32) -> Option<&Mesh> {
+    pub fn get_mesh(&self, uid: &usize) -> Option<&Mesh> {
         self.mesh_i_data
-            .binary_search_by_key(&uid, |x| x.1 as u32)
+            .binary_search_by_key(uid, |x| x.1)
             .ok()
             .map(|i| &self.mesh_i_data[i].0)
+    }
+    pub fn get_mesh_by_name(&self, name: &str) -> Option<&Mesh> {
+        let uid = self.mesh_map.get(name)?;
+        self.get_mesh(uid)
     }
 }

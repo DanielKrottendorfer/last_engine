@@ -1,4 +1,4 @@
-use gl::{types::*, TRIANGLES};
+use gl::{types::*, POINTS, TRIANGLES};
 use std::ffi::c_void;
 
 pub fn set_attribute_pointer(index: u32, gl_type: u32, size: i32) {
@@ -58,10 +58,20 @@ pub fn bind_vertex_array(array_id: u32) {
     }
 }
 
-pub fn draw_elements(vertex_count: i32) {
+pub fn draw_triangle_elements(vertex_count: i32) {
     unsafe {
         gl::DrawElements(
             TRIANGLES,
+            vertex_count,
+            gl::UNSIGNED_INT,
+            0 as *const std::ffi::c_void,
+        );
+    }
+}
+pub fn draw_point_elements(vertex_count: i32) {
+    unsafe {
+        gl::DrawElements(
+            POINTS,
             vertex_count,
             gl::UNSIGNED_INT,
             0 as *const std::ffi::c_void,
