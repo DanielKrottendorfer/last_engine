@@ -1,4 +1,4 @@
-use cgmath::{Matrix3, Vector3};
+use cgmath::{Matrix3, Matrix4, Vector3};
 
 use crate::black_sheep::settings::INIT_WINDOW_SIZE;
 
@@ -21,7 +21,7 @@ pub fn new_sdl_window_with_opengl_context() -> (
 
     let sdl_window = {
         video_context
-            .window("spam", INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1)
+            .window("spam", INIT_WINDOW_SIZE[0], INIT_WINDOW_SIZE[1])
             .position_centered()
             .resizable()
             .opengl()
@@ -80,3 +80,23 @@ pub fn view_to_screen(w: f32, h: f32) -> Matrix3<f32> {
         Vector3::new(-1.0, 1.0, 1.0),
     )
 }
+
+pub fn ui_projection_mat(dim: [i32; 2]) -> Matrix4<f32> {
+    let left = 0.0;
+    let right = dim[0] as f32;
+    let top = 0.0;
+    let bottom = dim[1] as f32;
+    let matrix = [
+        [(2.0 / (right - left)), 0.0, 0.0, 0.0],
+        [0.0, (2.0 / (top - bottom)), 0.0, 0.0],
+        [0.0, 0.0, -1.0, 0.0],
+        [
+            (right + left) / (left - right),
+            (top + bottom) / (bottom - top),
+            0.0,
+            1.0,
+        ],
+    ];
+    Matrix4::from(matrix)
+}
+

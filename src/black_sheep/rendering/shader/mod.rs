@@ -4,7 +4,7 @@ use shader_structs::*;
 use shader_util::*;
 
 pub struct ShaderRepo {
-    //pub imgui: ImguiShaderProgram,
+    pub imgui: ImguiShaderProgram,
     pub point_cloud: CloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
     pub color_3d: Color3D,
@@ -18,11 +18,11 @@ impl ShaderRepo {
             point_cloud.setup(&program);
         }
 
-        // let mut imgui = ImguiShaderProgram::new();
-        // {
-        //     let program = build_shader_program(IMGUI_VS_SRC, None, IMGUI_FS_SRC);
-        //     imgui.setup(&program);
-        // }
+        let mut imgui = ImguiShaderProgram::new();
+        {
+            let program = build_shader_program(IMGUI_VS_SRC, None, IMGUI_FS_SRC);
+            imgui.setup(&program);
+        }
 
         let mut simple = SimpleShaderProgram::new();
         {
@@ -37,14 +37,14 @@ impl ShaderRepo {
         }
 
         ShaderRepo {
-            //imgui,
+            imgui,
             point_cloud,
             simple,
             color_3d,
         }
     }
     fn cleanup(&mut self) {
-        //self.imgui.cleanup();
+        self.imgui.cleanup();
         self.point_cloud.cleanup();
         self.simple.cleanup();
         self.color_3d.cleanup();

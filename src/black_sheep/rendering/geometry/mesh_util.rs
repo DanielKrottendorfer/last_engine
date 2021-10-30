@@ -43,6 +43,18 @@ pub fn buffer_data<T>(buffer_data: &[T], buffer_type: GLenum) -> u32 {
     vertex_buffer_id
 }
 
+pub fn update_buffer_data<T>(buffer_data: &[T], vertex_buffer_id: u32, buffer_type: GLenum)  {
+    unsafe {
+        gl::BindBuffer(buffer_type, vertex_buffer_id);
+        gl::BufferSubData(
+            buffer_type,
+            0,
+            (buffer_data.len() * std::mem::size_of::<T>()) as GLsizeiptr,
+            std::mem::transmute(&buffer_data[0])
+        );
+    }
+}
+
 pub fn gen_vertexarray() -> u32 {
     let mut vertex_array_id: u32 = 0;
     unsafe {

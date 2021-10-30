@@ -1,5 +1,6 @@
 mod mesh_util;
 mod unique_index;
+pub mod mesh_imgui;
 
 use std::collections::HashMap;
 
@@ -30,6 +31,10 @@ impl Mesh {
         set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
 
         self.buffer_ids.push(buffer_id);
+    }
+
+    pub fn update_floatbuffer<T>(&self, data: &[T], i: usize) {
+        update_buffer_data(data, self.buffer_ids[i], gl::ARRAY_BUFFER);
     }
 
     pub fn add_elementarraybuffer(&mut self, elements: &[u32]) {
@@ -125,6 +130,7 @@ impl MeshRepo {
             .ok()
             .map(|i| &self.mesh_i_data[i].0)
     }
+    
     pub fn get_mesh_by_name(&self, name: &str) -> Option<&Mesh> {
         let uid = self.mesh_map.get(name)?;
         self.get_mesh(uid)
