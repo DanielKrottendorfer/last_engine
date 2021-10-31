@@ -27,10 +27,9 @@ use cgmath::Vector4;
 use gamestate::*;
 
 use cgmath::{Deg, Vector3};
+use imgui::im_str;
 use imgui::Condition;
 use imgui::Window;
-use imgui::WindowFlags;
-use imgui::im_str;
 use rendering::geometry::MeshRepo;
 use rendering::shader::ShaderRepo;
 use sdl2::mouse::MouseButton;
@@ -42,10 +41,7 @@ use sdl2::event::{Event, WindowEvent};
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_F32;
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_I32;
 use crate::black_sheep::settings::MS_PER_UPDATE;
-use crate::black_sheep::{
-    settings::INIT_WINDOW_SIZE,
-    window::window_util::{clear_window, set_viewport},
-};
+use crate::black_sheep::window::window_util::{clear_window, set_viewport};
 
 use camera::structs::FlyingEye;
 
@@ -102,8 +98,6 @@ impl BlackSheep {
         let color_shader = &shader_repo.color_3d;
         let cloud_shader = &shader_repo.point_cloud;
 
-
-
         let imgui_shader_program = &shader_repo.imgui;
 
         let mut imgui_system = imgui_system::init();
@@ -116,9 +110,8 @@ impl BlackSheep {
         }
         imgui_shader_program.set_tex(0);
 
-        let mut ui_projection = ui_projection_mat([INIT_WINDOW_SIZE_I32[0],INIT_WINDOW_SIZE_I32[0]]);
-
-
+        let mut ui_projection =
+            ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[0]]);
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
         let mut window_size = INIT_WINDOW_SIZE_F32;
@@ -141,6 +134,7 @@ impl BlackSheep {
             lag += elapsed;
             fps += 1;
             if current - last > Duration::from_secs(1) {
+                #[cfg(not(feature = "debug_off"))]
                 println!("fps: {}", fps);
                 last = current;
                 fps = 0;
@@ -148,7 +142,6 @@ impl BlackSheep {
 
             //PROCESS INPUT
             while let Some(event) = window.poll_event() {
-
                 imgui_system.handle_event(&event);
                 match event {
                     Event::Quit { .. } => {
@@ -163,16 +156,16 @@ impl BlackSheep {
                                 gamestate::key_down(key, &mut input);
                             }
                             if let R = key {
-
-                                if let Some(cc) = mesh_repo.get_mesh_by_name("cloud"){
-                                    let new_c:Vec<Vector4<f32>> = (0..64).map(|x| {
-                                        Vector4::new(1.0,0.0,0.0,1.0)
-                                    }).collect();
+                                if let Some(cc) = mesh_repo.get_mesh_by_name("cloud") {
+                                    let new_c: Vec<Vector4<f32>> =
+                                        (0..64).map(|x| Vector4::new(1.0, 0.0, 0.0, 1.0)).collect();
                                     cc.update_floatbuffer(new_c.as_slice(), 1);
+                                    #[cfg(not(feature = "debug_off"))]
                                     println!("update");
                                 }
                             }
                         } else {
+                            #[cfg(not(feature = "debug_off"))]
                             println!("No Valid KeyCode");
                         }
                     }
@@ -180,6 +173,7 @@ impl BlackSheep {
                         if let Some(key) = keycode {
                             gamestate::key_up(key, &mut input);
                         } else {
+                            #[cfg(not(feature = "debug_off"))]
                             println!("No Valid KeyCode");
                         }
                     }
@@ -208,9 +202,9 @@ impl BlackSheep {
                     Event::Window { win_event, .. } => match win_event {
                         WindowEvent::Resized(w, h) => {
                             set_viewport(w, h);
-                            ui_projection = ui_projection_mat([w,h]);
+                            ui_projection = ui_projection_mat([w, h]);
                             window_size = [w as f32, h as f32];
-                        },
+                        }
                         _ => (),
                     },
                     _ => (),
@@ -220,6 +214,18 @@ impl BlackSheep {
             while lag >= MS_PER_UPDATE {
                 //UPDATE
                 cam.update();
+                imgui_system.update(&mut |ui| {
+                    Window::new("Hello world")
+                        .size([300.0, 210.0], Condition::Once)
+                        .position([0.0, 0.0], Condition::Once)
+                        //.flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
+                        .build(&ui, || {
+                            ui.text("Hello world!");
+                            ui.text("こんにちは世界！");
+                            ui.text("This...is...imgui-rs!");
+                            ui.separator();
+                        });
+                });
 
                 //HANDLE INPUT
                 {
@@ -268,26 +274,14 @@ impl BlackSheep {
             cube_cloud.bind_vertex_array();
             cube_cloud.draw_point_elements();
 
-
             ui_rendering_setup();
 
             imgui_shader_program.use_program();
             imgui_shader_program.set_tex(0);
-    
-            imgui_shader_program.set_matrix(ui_projection);
 
-            imgui_system.draw(&mut |ui| {
-                Window::new(im_str!("Hello world"))
-                    .size([300.0, 210.0], Condition::Once)
-                    .position([0.0, 0.0], Condition::Once)
-                    .flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
-                    .build(&ui, || {
-                        ui.text(im_str!("Hello world!"));
-                        ui.text(im_str!("こんにちは世界！"));
-                        ui.text(im_str!("This...is...imgui-rs!"));
-                        ui.separator();
-                    });
-            });
+            imgui_shader_program.set_matrix(ui_projection);
+            imgui_system.draw();
+
             window.swap();
         }
     }

@@ -99,4 +99,3 @@ pub fn ui_projection_mat(dim: [i32; 2]) -> Matrix4<f32> {
     ];
     Matrix4::from(matrix)
 }
-

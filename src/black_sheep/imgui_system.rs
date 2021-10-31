@@ -1,13 +1,17 @@
+use std::borrow::Borrow;
+
 use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
 use sdl2::{event::Event, keyboard::Keycode};
 
-use super::{loader, rendering::geometry::mesh_imgui::{ImguiMesh, new_imguimesh}};
-
+use super::{
+    loader,
+    rendering::geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
+};
 
 pub struct ImguiSystem {
     pub imgui: Context,
     frame_update_counter: u8,
-    draw_data: Vec<ImguiMesh>,
+    mesh_vec: Vec<ImguiMesh>,
 }
 
 impl ImguiSystem {
@@ -114,36 +118,39 @@ impl ImguiSystem {
             _ => (),
         }
 
-        if io.want_capture_keyboard || io.want_capture_keyboard {
+        if io.want_capture_keyboard || io.want_capture_mouse {
             self.reset_update_frame_counter();
         }
     }
 
     pub fn reset_update_frame_counter(&mut self) {
-        self.frame_update_counter = 2;
+        self.frame_update_counter = 3;
     }
 
-    pub fn draw<F: FnMut(&Ui)>(&mut self, run_ui: &mut F) {
+    pub fn update<F: FnMut(&Ui)>(&mut self, run_ui: &mut F) {
         let ui = self.imgui.frame();
         run_ui(&ui);
 
         if self.frame_update_counter > 0 {
-            self.draw_data.iter().for_each(|mesh| {
-                mesh.cleanup();
-            });
-            self.draw_data = new_imguimesh(ui.render());
+            let draw_data = ui.render();
+
+            if draw_data.draw_lists_count() != self.mesh_vec.len() {
+                self.mesh_vec = imguimesh_from_drawdata(draw_data);
+            } else {
+                let draw_list = draw_data.draw_lists();
+                for (mesh, drawdata) in self.mesh_vec.iter_mut().zip(draw_list) {
+                    mesh.update_vertex_buffer(drawdata);
+                }
+            }
+
             self.frame_update_counter -= 1;
         }
-
-        self.draw_data.iter().for_each(|mesh| {
-            mesh.bind_vertex_array();
-            mesh.draw();
-        });
     }
 
-    fn cleanup(&self) {
-        self.draw_data.iter().for_each(|mesh| {
-            mesh.cleanup();
+    pub fn draw(&self) {
+        self.mesh_vec.iter().for_each(|mesh| {
+            mesh.bind_vertex_array();
+            mesh.draw();
         });
     }
 }
@@ -178,12 +185,6 @@ pub fn init() -> ImguiSystem {
     ImguiSystem {
         imgui,
         frame_update_counter: 2,
-        draw_data: Vec::new(),
-    }
-}
-
-impl Drop for ImguiSystem{
-    fn drop(&mut self) {
-        self.cleanup();
+        mesh_vec: Vec::new(),
     }
 }

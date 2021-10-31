@@ -17,10 +17,14 @@ pub fn load_texture_from_path(path: &str) -> Option<u32> {
 
     let dim = im.dimensions();
 
-    Some(gen_texture(im.as_ptr() as *mut std::ffi::c_void, dim, true))
+    Some(gen_texture(
+        im.as_ptr() as *mut std::ffi::c_void,
+        (dim.0 as i32, dim.1 as i32),
+        true,
+    ))
 }
 
-pub fn gen_texture(data: *mut std::ffi::c_void, dim: (u32, u32), mipmap: bool) -> u32 {
+pub fn gen_texture(data: *mut std::ffi::c_void, dim: (i32, i32), mipmap: bool) -> u32 {
     let mut texture = 0;
     unsafe {
         gl::GenTextures(1, &mut texture);
@@ -29,8 +33,8 @@ pub fn gen_texture(data: *mut std::ffi::c_void, dim: (u32, u32), mipmap: bool) -
             gl::TEXTURE_2D,
             0,
             gl::RGBA as i32,
-            dim.0 as i32,
-            dim.1 as i32,
+            dim.0,
+            dim.1,
             0,
             gl::RGBA,
             gl::UNSIGNED_BYTE,
@@ -59,6 +63,9 @@ pub fn gen_texture(data: *mut std::ffi::c_void, dim: (u32, u32), mipmap: bool) -
 pub fn load_texture_fontatlas(atlas: &FontAtlasTexture) -> u32 {
     // let im:ImageBuffer<Rgba<u8>,&[u8]> = ImageBuffer::from_raw(atlas.width, atlas.height, atlas.data).unwrap();
     // im.save("./image.png").unwrap();
-    let dim = (atlas.width, atlas.height);
-    gen_texture(atlas.data.as_ptr() as *mut std::ffi::c_void, dim, false)
+    gen_texture(
+        atlas.data.as_ptr() as *mut std::ffi::c_void,
+        (atlas.width as i32, atlas.height as i32),
+        false,
+    )
 }

@@ -1,6 +1,6 @@
+pub mod imgui_mesh;
 mod mesh_util;
 mod unique_index;
-pub mod mesh_imgui;
 
 use std::collections::HashMap;
 
@@ -27,7 +27,7 @@ impl Mesh {
             panic!("Attribute size needs to be > 0")
         }
 
-        let buffer_id = buffer_data(data, gl::ARRAY_BUFFER);
+        let buffer_id = buffer_data_static(data, gl::ARRAY_BUFFER);
         set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
 
         self.buffer_ids.push(buffer_id);
@@ -38,7 +38,7 @@ impl Mesh {
     }
 
     pub fn add_elementarraybuffer(&mut self, elements: &[u32]) {
-        let id = buffer_data(elements, gl::ELEMENT_ARRAY_BUFFER);
+        let id = buffer_data_static(elements, gl::ELEMENT_ARRAY_BUFFER);
         self.vertex_count = elements.len() as i32;
         self.buffer_ids.push(id);
     }
@@ -54,6 +54,7 @@ impl Mesh {
 
     fn cleanup(&self) {
         unsafe {
+            #[cfg(not(feature = "debug_off"))]
             println!("mesh cleanup {}", self.array_id);
             for id in self.buffer_ids.iter() {
                 gl::DeleteBuffers(1, id);
@@ -130,7 +131,7 @@ impl MeshRepo {
             .ok()
             .map(|i| &self.mesh_i_data[i].0)
     }
-    
+
     pub fn get_mesh_by_name(&self, name: &str) -> Option<&Mesh> {
         let uid = self.mesh_map.get(name)?;
         self.get_mesh(uid)

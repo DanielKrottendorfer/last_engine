@@ -25,7 +25,7 @@ pub fn set_attribute_pointer_for_nerds(
     }
 }
 
-pub fn buffer_data<T>(buffer_data: &[T], buffer_type: GLenum) -> u32 {
+pub fn buffer_data_static<T>(buffer_data: &[T], buffer_type: GLenum) -> u32 {
     let mut vertex_buffer_id = 0;
 
     unsafe {
@@ -42,17 +42,43 @@ pub fn buffer_data<T>(buffer_data: &[T], buffer_type: GLenum) -> u32 {
 
     vertex_buffer_id
 }
+pub fn buffer_data_dynamic<T>(buffer_data: &[T], buffer_type: GLenum) -> u32 {
+    let mut vertex_buffer_id = 0;
 
-pub fn update_buffer_data<T>(buffer_data: &[T], vertex_buffer_id: u32, buffer_type: GLenum)  {
     unsafe {
+        // Create a Vertex Buffer Object and copy the vertex data to it
+        gl::GenBuffers(1, &mut vertex_buffer_id);
         gl::BindBuffer(buffer_type, vertex_buffer_id);
-        gl::BufferSubData(
+        gl::BufferData(
             buffer_type,
-            0,
             (buffer_data.len() * std::mem::size_of::<T>()) as GLsizeiptr,
-            std::mem::transmute(&buffer_data[0])
+            std::mem::transmute(&buffer_data[0]),
+            gl::DYNAMIC_DRAW,
         );
     }
+
+    vertex_buffer_id
+}
+
+pub fn update_buffer_data<T>(buffer_data: &[T], buffer_id: u32, buffer_type: GLenum) {
+    unsafe {
+        gl::BindBuffer(buffer_type, buffer_id);
+        gl::BufferData(
+            buffer_type,
+            (buffer_data.len() * std::mem::size_of::<T>()) as GLsizeiptr,
+            std::mem::transmute(&buffer_data[0]),
+            gl::DYNAMIC_DRAW,
+        );
+    }
+    // unsafe {
+    //     gl::BindBuffer(buffer_type, buffer_id);
+    //     gl::BufferSubData(
+    //         buffer_type,
+    //         0,
+    //         (buffer_data.len() * std::mem::size_of::<T>()) as GLsizeiptr,
+    //         std::mem::transmute(&buffer_data[0]),
+    //     );
+    // }
 }
 
 pub fn gen_vertexarray() -> u32 {

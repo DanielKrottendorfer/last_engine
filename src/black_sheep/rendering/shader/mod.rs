@@ -53,6 +53,7 @@ impl ShaderRepo {
 
 impl Drop for ShaderRepo {
     fn drop(&mut self) {
+        #[cfg(not(feature = "debug_off"))]
         println!("shaderrepo cleanup");
         self.cleanup();
     }
