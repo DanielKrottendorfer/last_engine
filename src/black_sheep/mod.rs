@@ -27,7 +27,6 @@ use cgmath::Vector4;
 use gamestate::*;
 
 use cgmath::{Deg, Vector3};
-use imgui::im_str;
 use imgui::Condition;
 use imgui::Window;
 use rendering::geometry::MeshRepo;
@@ -88,14 +87,14 @@ impl BlackSheep {
         // });
 
         let cube_cloud = mesh_repo.add_mesh("cloud", |mesh| {
-            let (v, c, e) = point_cloud::point_cube(4);
+            let (v, c, e) = point_cloud::point_cube(5);
             mesh.add_floatbuffer(v.as_slice(), 0, 3);
             mesh.add_floatbuffer(c.as_slice(), 1, 4);
             mesh.add_elementarraybuffer(e.as_slice());
         });
 
         let simple_shader = &shader_repo.simple;
-        let color_shader = &shader_repo.color_3d;
+        let _color_shader = &shader_repo.color_3d;
         let cloud_shader = &shader_repo.point_cloud;
 
         let imgui_shader_program = &shader_repo.imgui;
@@ -116,7 +115,7 @@ impl BlackSheep {
         let mut color = Vector3::new(1.0, 0.0, 1.0);
         let mut window_size = INIT_WINDOW_SIZE_F32;
 
-        cam.move_cam(Vector3::new(3.5, 3.5, 4.0));
+        cam.move_cam(Vector3::new(4.5, 4.5, 4.0));
         cam.rotate_h(Deg(35.0));
         cam.rotate_v(Deg(-35.0));
 
@@ -157,8 +156,9 @@ impl BlackSheep {
                             }
                             if let R = key {
                                 if let Some(cc) = mesh_repo.get_mesh_by_name("cloud") {
-                                    let new_c: Vec<Vector4<f32>> =
-                                        (0..64).map(|x| Vector4::new(1.0, 0.0, 0.0, 1.0)).collect();
+                                    let new_c: Vec<Vector4<f32>> = (0..cc.vertex_count)
+                                        .map(|_x| Vector4::new(1.0, 0.0, 0.0, 1.0))
+                                        .collect();
                                     cc.update_floatbuffer(new_c.as_slice(), 1);
                                     #[cfg(not(feature = "debug_off"))]
                                     println!("update");
@@ -216,13 +216,15 @@ impl BlackSheep {
                 cam.update();
                 imgui_system.update(&mut |ui| {
                     Window::new("Hello world")
-                        .size([300.0, 210.0], Condition::Once)
+                        // .size([300.0, 210.0], Condition::Once)
                         .position([0.0, 0.0], Condition::Once)
                         //.flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
                         .build(&ui, || {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
                             ui.text("This...is...imgui-rs!");
+                            ui.text(format!("{:?}", cam.position));
+                            ui.text(format!("{:#?}", cam.orientation));
                             ui.separator();
                         });
                 });
@@ -278,7 +280,6 @@ impl BlackSheep {
 
             imgui_shader_program.use_program();
             imgui_shader_program.set_tex(0);
-
             imgui_shader_program.set_matrix(ui_projection);
             imgui_system.draw();
 

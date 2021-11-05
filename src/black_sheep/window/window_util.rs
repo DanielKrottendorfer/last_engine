@@ -1,6 +1,5 @@
-use cgmath::{Matrix3, Matrix4, Vector3};
-
 use crate::black_sheep::settings::INIT_WINDOW_SIZE;
+use cgmath::Matrix4;
 
 pub fn new_sdl_window_with_opengl_context() -> (
     sdl2::EventPump,
@@ -71,14 +70,6 @@ pub fn ui_rendering_setup() {
         gl::Disable(gl::DEPTH_TEST);
         //gl::Enable(gl::SCISSOR_TEST);
     }
-}
-
-pub fn view_to_screen(w: f32, h: f32) -> Matrix3<f32> {
-    Matrix3::from_cols(
-        Vector3::new(2.0 / w, 0.0, 0.0),
-        Vector3::new(0.0, -2.0 / h, 0.0),
-        Vector3::new(-1.0, 1.0, 1.0),
-    )
 }
 
 pub fn ui_projection_mat(dim: [i32; 2]) -> Matrix4<f32> {

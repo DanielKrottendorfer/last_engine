@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
 use sdl2::{event::Event, keyboard::Keycode};
 
@@ -131,20 +129,20 @@ impl ImguiSystem {
         let ui = self.imgui.frame();
         run_ui(&ui);
 
-        if self.frame_update_counter > 0 {
-            let draw_data = ui.render();
+        //if self.frame_update_counter > 0 {
+        let draw_data = ui.render();
 
-            if draw_data.draw_lists_count() != self.mesh_vec.len() {
-                self.mesh_vec = imguimesh_from_drawdata(draw_data);
-            } else {
-                let draw_list = draw_data.draw_lists();
-                for (mesh, drawdata) in self.mesh_vec.iter_mut().zip(draw_list) {
-                    mesh.update_vertex_buffer(drawdata);
-                }
+        if draw_data.draw_lists_count() != self.mesh_vec.len() {
+            self.mesh_vec = imguimesh_from_drawdata(draw_data);
+        } else {
+            let draw_list = draw_data.draw_lists();
+            for (mesh, drawdata) in self.mesh_vec.iter_mut().zip(draw_list) {
+                mesh.update_vertex_buffer(drawdata);
             }
-
-            self.frame_update_counter -= 1;
         }
+
+        //     self.frame_update_counter -= 1;
+        // }
     }
 
     pub fn draw(&self) {

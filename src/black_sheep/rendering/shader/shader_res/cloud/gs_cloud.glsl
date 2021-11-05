@@ -14,11 +14,11 @@ uniform mat4 projection;
 
 void build_house(vec4 position)
 {    
-    gl_Position = projection * (position + vec4(-0.02,  -0.02, 0.0, 0.0));    // 3:top-left
+    gl_Position = projection * (position + vec4(-0.02,  -0.02, 0.0, 0.0));    // 3:bot-left
     EmitVertex();
-    gl_Position = projection * (position + vec4( 0.02,  -0.02, 0.0, 0.0));    // 4:top-right
+    gl_Position = projection * (position + vec4( 0.02,  -0.02, 0.0, 0.0));    // 4:bot-right
     EmitVertex();
-    gl_Position = projection * (position + vec4( 0.0,  0.04, 0.0, 0.0));    // 5:top
+    gl_Position = projection * (position + vec4( 0.0,  0.02, 0.0, 0.0));    // 5:top
     EmitVertex();
     EndPrimitive();
 }

@@ -1,6 +1,4 @@
-use cgmath::{Vector2, Vector3};
 use imgui::FontAtlasTexture;
-use std::path::Path;
 
 pub fn load_texture_from_path(path: &str) -> Option<u32> {
     use image::io::Reader as ImageReader;
