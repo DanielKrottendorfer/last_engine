@@ -8,6 +8,7 @@ pub struct ShaderRepo {
     pub point_cloud: CloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
     pub color_3d: Color3D,
+    pub gizmo: GizmpProgram,
 }
 
 impl ShaderRepo {
@@ -36,11 +37,18 @@ impl ShaderRepo {
             color_3d.setup(&program);
         }
 
+        let mut gizmo = GizmpProgram::new();
+        {
+            let program = build_shader_program(GIZMO_VS, Some(GIZMO_GS), GIZMO_FS);
+            gizmo.setup(&program);
+        }
+
         ShaderRepo {
             imgui,
             point_cloud,
             simple,
             color_3d,
+            gizmo,
         }
     }
     fn cleanup(&mut self) {
@@ -48,6 +56,7 @@ impl ShaderRepo {
         self.point_cloud.cleanup();
         self.simple.cleanup();
         self.color_3d.cleanup();
+        self.gizmo.cleanup();
     }
 }
 

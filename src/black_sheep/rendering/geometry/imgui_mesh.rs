@@ -1,4 +1,7 @@
-use imgui::{DrawData, DrawList};
+use std::{borrow::BorrowMut, ffi::{CStr, CString}};
+
+use gl::types::{GLint, GLshort, GLushort};
+use imgui::{DrawCmdParams, DrawData, DrawList, internal::RawWrapper};
 
 use super::mesh_util::*;
 
@@ -7,7 +10,7 @@ pub struct ImguiMesh {
     vertex_array_id: u32,
     vertex_buffer_id: u32,
     element_buffer_id: u32,
-    pub vertex_count: i32,
+    draw_params: Vec<(i32,DrawCmdParams)>
 }
 
 impl ImguiMesh {
@@ -15,13 +18,14 @@ impl ImguiMesh {
         vertex_array_id: u32,
         vertex_buffer_id: u32,
         element_buffer_id: u32,
+        draw_params: Vec<(i32,DrawCmdParams)>,
         vertex_count: i32,
-    ) -> ImguiMesh {
-        ImguiMesh {
+    ) -> Self {
+        Self {
             vertex_array_id,
             vertex_buffer_id,
             element_buffer_id,
-            vertex_count,
+            draw_params
         }
     }
     pub fn bind_vertex_array(&self) {
@@ -30,22 +34,39 @@ impl ImguiMesh {
         }
     }
     pub fn draw(&self) {
-        unsafe {
-            gl::DrawElements(
-                gl::TRIANGLES,
-                self.vertex_count,
-                gl::UNSIGNED_SHORT,
-                0 as *const std::ffi::c_void,
-            );
+        for dp in self.draw_params.iter(){
+            let count = dp.0;
+            let offset = dp.1.idx_offset * std::mem::size_of::<GLushort>();
+            let (left, up, right, down) = (dp.1.clip_rect[0],dp.1.clip_rect[1],dp.1.clip_rect[2],dp.1.clip_rect[3]);
+            unsafe {
+                //gl::Scissor(left as i32,down as i32,(right-left) as i32,(down-up) as i32);
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    count, 
+                    gl::UNSIGNED_SHORT,
+                    offset as u16  as *const std::ffi::c_void,
+                );
+            }
         }
     }
+    
     pub fn update_vertex_buffer(&mut self, draw_list: &DrawList) {
         let vtx_buffer = draw_list.vtx_buffer();
         let idx_buffer = draw_list.idx_buffer();
 
-        bind_vertex_array(self.vertex_array_id);
+        
+        self.draw_params = draw_list.commands().map(|d| {
+            match d {
+                imgui::DrawCmd::Elements { count, cmd_params } => {
+                    (count as i32,cmd_params)
+                }
+                imgui::DrawCmd::ResetRenderState => todo!(),
+                imgui::DrawCmd::RawCallback {..} => todo!(),
+            }
+        }).collect::<Vec<(i32,DrawCmdParams)>>();
 
-        self.vertex_count = idx_buffer.len() as i32;
+
+        bind_vertex_array(self.vertex_array_id);
 
         update_buffer_data(vtx_buffer, self.vertex_buffer_id, gl::ARRAY_BUFFER);
         update_buffer_data(idx_buffer, self.element_buffer_id, gl::ELEMENT_ARRAY_BUFFER);
@@ -72,6 +93,18 @@ pub fn imguimesh_from_drawdata(draw_data: &DrawData) -> Vec<ImguiMesh> {
     draw_data
         .draw_lists()
         .map(|draw_list| {
+
+            let draw_params = draw_list.commands().map(|d| {
+                match d {
+                    imgui::DrawCmd::Elements { count, cmd_params } => {
+                        println!("{:?}",cmd_params.clip_rect);
+                        (count as i32,cmd_params)
+                    }
+                    imgui::DrawCmd::ResetRenderState => todo!(),
+                    imgui::DrawCmd::RawCallback {..} => todo!(),
+                }
+            }).collect::<Vec<(i32,DrawCmdParams)>>();
+
             let vtx_buffer = draw_list.vtx_buffer();
             let idx_buffer = draw_list.idx_buffer();
 
@@ -90,6 +123,7 @@ pub fn imguimesh_from_drawdata(draw_data: &DrawData) -> Vec<ImguiMesh> {
                 vertex_array_id,
                 vertex_buffer_id,
                 element_buffer_id,
+                draw_params,
                 vertex_count,
             )
         })

@@ -21,13 +21,19 @@ mod point_cloud;
 mod imgui_system;
 mod loader;
 
+use std::borrow::Borrow;
+use std::borrow::BorrowMut;
 use std::time::Duration;
 
+use cgmath::Array;
 use cgmath::Vector4;
 use gamestate::*;
 
 use cgmath::{Deg, Vector3};
+use imgui::ColorPicker;
 use imgui::Condition;
+use imgui::Image;
+use imgui::TextureId;
 use imgui::Window;
 use rendering::geometry::MeshRepo;
 use rendering::shader::ShaderRepo;
@@ -37,6 +43,7 @@ use window::SDLWindow;
 
 use sdl2::event::{Event, WindowEvent};
 
+use crate::black_sheep::loader::load_texture_from_path;
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_F32;
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_I32;
 use crate::black_sheep::settings::MS_PER_UPDATE;
@@ -74,10 +81,17 @@ impl BlackSheep {
         let mut gamestate: GameFlags = Default::default();
         let mut input: KeyboardInputFlags = Default::default();
 
+        init_rendering_setup();
+
         use constants::*;
         let triangle = mesh_repo.add_mesh("triangle", |mesh| {
             mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 2);
             mesh.add_elementarraybuffer(&TRIANGLE_ELEMENTS);
+        });
+
+        let gizmo = mesh_repo.add_mesh("gizmo", |mesh| {
+            mesh.add_floatbuffer(&GIZMO_VECS, 0, 3);
+            mesh.add_elementarraybuffer(&GITMO_ELEMENTS);
         });
 
         // let cube = mesh_repo.add_mesh("cube", |mesh| {
@@ -96,17 +110,22 @@ impl BlackSheep {
         let simple_shader = &shader_repo.simple;
         let _color_shader = &shader_repo.color_3d;
         let cloud_shader = &shader_repo.point_cloud;
-
         let imgui_shader_program = &shader_repo.imgui;
+        let gizmo_shader_program = &shader_repo.gizmo;
 
         let mut imgui_system = imgui_system::init();
         imgui_system.imgui.io_mut().display_size = INIT_WINDOW_SIZE_F32;
         let font_texture = imgui_system.load_font_atlas_texture();
 
+        let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
+
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, font_texture);
+            gl::ActiveTexture(gl::TEXTURE0 + 1);
+            gl::BindTexture(gl::TEXTURE_2D, nice_image);
         }
+
         imgui_shader_program.set_tex(0);
 
         let mut ui_projection =
@@ -125,6 +144,8 @@ impl BlackSheep {
         let mut last = Duration::from_secs(0);
 
         let mut fps = 0;
+
+        let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
         'mainloop: loop {
             let current = time.elapsed();
@@ -157,7 +178,7 @@ impl BlackSheep {
                             if let R = key {
                                 if let Some(cc) = mesh_repo.get_mesh_by_name("cloud") {
                                     let new_c: Vec<Vector4<f32>> = (0..cc.vertex_count)
-                                        .map(|_x| Vector4::new(1.0, 0.0, 0.0, 1.0))
+                                        .map(|_x| Vector4::from(t_color))
                                         .collect();
                                     cc.update_floatbuffer(new_c.as_slice(), 1);
                                     #[cfg(not(feature = "debug_off"))]
@@ -215,17 +236,31 @@ impl BlackSheep {
                 //UPDATE
                 cam.update();
                 imgui_system.update(&mut |ui| {
+                    use imgui::WindowFlags;
+
                     Window::new("Hello world")
                         // .size([300.0, 210.0], Condition::Once)
-                        .position([0.0, 0.0], Condition::Once)
-                        //.flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
+                        .position([0.0, 0.0], Condition::Always)
+                        .flags(WindowFlags::NO_MOVE)
                         .build(&ui, || {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
                             ui.text("This...is...imgui-rs!");
                             ui.text(format!("{:?}", cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
-                            ui.separator();
+                        });
+                    Window::new("Image")
+                        .size([300.0, window_size[1] - 300.0], Condition::Once)
+                        .position([window_size[0] - 300.0, 0.0], Condition::Always)
+                        .flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
+                        .build(&ui, || {
+                            ui.text("Hello world!");
+                            ui.text("こんにちは世界！");
+                            ui.text("This...is...imgui-rs!");
+                            ui.text(format!("{:?}", cam.position));
+                            ui.text(format!("{:#?}", cam.orientation));
+                            ColorPicker::new("color_picker", &mut t_color).build(ui);
+                            Image::new(TextureId::new(1), [300.0, 300.0]).build(ui);
                         });
                 });
 
@@ -256,8 +291,8 @@ impl BlackSheep {
             let aspect = window_size[0] / window_size[1];
             let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
 
-            clear_window();
 
+            clear_window();
             three_d_rendering_setup();
 
             // color_shader.use_program();
@@ -269,6 +304,11 @@ impl BlackSheep {
             simple_shader.set_color(color);
             triangle.bind_vertex_array();
             triangle.draw_triangle_elements();
+
+            gizmo_shader_program.use_program();
+            gizmo_shader_program.set_view(view);
+            gizmo.bind_vertex_array();
+            gizmo.draw_point_elements();
 
             cloud_shader.use_program();
             cloud_shader.set_mv(view);

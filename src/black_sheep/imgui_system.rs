@@ -129,7 +129,6 @@ impl ImguiSystem {
         let ui = self.imgui.frame();
         run_ui(&ui);
 
-        //if self.frame_update_counter > 0 {
         let draw_data = ui.render();
 
         if draw_data.draw_lists_count() != self.mesh_vec.len() {
@@ -140,9 +139,6 @@ impl ImguiSystem {
                 mesh.update_vertex_buffer(drawdata);
             }
         }
-
-        //     self.frame_update_counter -= 1;
-        // }
     }
 
     pub fn draw(&self) {

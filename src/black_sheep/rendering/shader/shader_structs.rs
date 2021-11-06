@@ -28,3 +28,10 @@ shader_program!(
         uniform mat4 MVP;
     }
 );
+
+shader_program!(
+    GizmpProgram{
+        uniform mat4 view;
+        //uniform mat4 projection;
+    }
+);

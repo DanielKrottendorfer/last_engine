@@ -66,3 +66,10 @@ pub const CUBE_ELEMENTS: [u32; 36] = [
     0, 4, 5, 0, 5, 1, //LEFT
     2, 3, 7, 2, 7, 6, //RIGHT
 ];
+
+pub const GIZMO_VECS: [Vector3<f32>; 3] = [
+    Vector3::new(1.0, 0.0, 0.0),
+    Vector3::new(0.0, 1.0, 0.0),
+    Vector3::new(0.0, 0.0, 1.0),
+];
+pub const GITMO_ELEMENTS: [u32; 3] = [0, 1, 2];
