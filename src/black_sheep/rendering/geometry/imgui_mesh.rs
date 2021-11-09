@@ -48,13 +48,12 @@ impl ImguiMesh {
             );
 
             set_texture(dp.1.texture_id.id() as i32);
-            println!("{}",dp.1.texture_id.id());
             unsafe {
                 gl::Scissor(
-                    (left) as i32 ,
-                    (down) as i32 ,
-                    (right - left) as i32 ,
-                    (up- down) as i32 ,
+                    (left) as i32,
+                    (down) as i32,
+                    (right - left) as i32,
+                    (up - down) as i32,
                 );
                 gl::DrawElements(
                     gl::TRIANGLES,

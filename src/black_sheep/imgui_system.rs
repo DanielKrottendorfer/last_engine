@@ -1,5 +1,5 @@
 use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, TextureId, Ui};
-use sdl2::{event::Event};
+use sdl2::event::Event;
 
 use super::{
     loader,
@@ -141,10 +141,13 @@ impl ImguiSystem {
         }
     }
 
-    pub fn draw<F>(&self, set_texture:F) where F: Fn(i32) {
+    pub fn draw<F>(&self, set_texture: F)
+    where
+        F: Fn(i32),
+    {
         self.mesh_vec.iter().for_each(|mesh| {
             mesh.bind_vertex_array();
-            mesh.draw(self.imgui.io().display_size,&set_texture);
+            mesh.draw(self.imgui.io().display_size, &set_texture);
         });
     }
 }

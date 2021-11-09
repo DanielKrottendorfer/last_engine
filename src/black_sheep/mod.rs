@@ -44,6 +44,7 @@ use window::SDLWindow;
 use sdl2::event::{Event, WindowEvent};
 
 use crate::black_sheep::loader::load_texture_from_path;
+use crate::black_sheep::rendering::rendertarget;
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_F32;
 use crate::black_sheep::settings::INIT_WINDOW_SIZE_I32;
 use crate::black_sheep::settings::MS_PER_UPDATE;
@@ -118,15 +119,16 @@ impl BlackSheep {
         let font_texture = imgui_system.load_font_atlas_texture();
 
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
-
-        println!("{} {}",font_texture,nice_image);
+        let render_target = rendering::rendertarget::RenderTarget::new(300, 300);
 
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             gl::BindTexture(gl::TEXTURE_2D, font_texture);
             gl::ActiveTexture(gl::TEXTURE0 + 1);
-            gl::BindTexture(gl::TEXTURE_2D, nice_image);
+            render_target.bind_texture();
+            //gl::BindTexture(gl::TEXTURE_2D, nice_image);
         }
+        rendertarget::unbind_framebuffer();
 
         imgui_shader_program.set_tex(0);
 
@@ -135,6 +137,7 @@ impl BlackSheep {
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
         let mut window_size_f32 = INIT_WINDOW_SIZE_F32;
+        let mut window_size_i32 = INIT_WINDOW_SIZE_I32;
 
         cam.move_cam(Vector3::new(4.5, 4.5, 4.0));
         cam.rotate_h(Deg(35.0));
@@ -227,6 +230,7 @@ impl BlackSheep {
                             set_viewport(w, h);
                             ui_projection = ui_projection_mat([w, h]);
                             window_size_f32 = [w as f32, h as f32];
+                            window_size_i32 = [w, h];
                         }
                         _ => (),
                     },
@@ -261,8 +265,12 @@ impl BlackSheep {
                             ui.text("This...is...imgui-rs!");
                             ui.text(format!("{:?}", cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
-                            ColorPicker::new("color_picker", &mut t_color).build(ui);
-                            Image::new(TextureId::new(1), [300.0, 300.0]).build(ui);
+                            //ColorPicker::new("color_picker", &mut t_color).build(ui);
+                            Image::new(
+                                TextureId::new(render_target.frame_buffer as usize),
+                                [300.0, 300.0],
+                            )
+                            .build(ui);
                         });
                 });
 
@@ -294,6 +302,7 @@ impl BlackSheep {
             let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
 
             three_d_rendering_setup();
+            clear_color(0.0, 0.3, 0.3, 1.0);
             clear_window();
 
             // color_shader.use_program();
@@ -306,25 +315,38 @@ impl BlackSheep {
             triangle.bind_vertex_array();
             triangle.draw_triangle_elements();
 
-            gizmo_shader_program.use_program();
-            gizmo_shader_program.set_view(view);
-            gizmo.bind_vertex_array();
-            gizmo.draw_point_elements();
-
             cloud_shader.use_program();
             cloud_shader.set_mv(view);
             cloud_shader.set_projection(projection);
             cube_cloud.bind_vertex_array();
             cube_cloud.draw_point_elements();
 
+            render_target.bind_framebuffer();
+            clear_color(0.1, 0.1, 0.1, 1.0);
+            clear_window();
+            set_viewport(300, 300);
+            gizmo_shader_program.use_program();
+            gizmo_shader_program.set_view(view);
+            gizmo.bind_vertex_array();
+            gizmo.draw_point_elements();
+            rendertarget::unbind_framebuffer();
+            set_viewport(window_size_i32[0], window_size_i32[1]);
+
             ui_rendering_setup();
 
             imgui_shader_program.use_program();
             //imgui_shader_program.set_tex(0);
             imgui_shader_program.set_matrix(ui_projection);
-            imgui_system.draw(|t|{imgui_shader_program.set_tex(t)});
+            imgui_system.draw(|t| imgui_shader_program.set_tex(t));
 
             window.swap();
+        }
+
+
+        render_target.cleanup();
+        unsafe{
+            gl::DeleteTextures(1, &font_texture);
+            gl::DeleteTextures(1, &nice_image);
         }
     }
 }

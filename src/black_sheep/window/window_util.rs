@@ -47,8 +47,13 @@ pub fn set_viewport(w: i32, h: i32) {
 
 pub fn clear_window() {
     unsafe {
-        gl::ClearColor(0.0, 0.3, 0.3, 1.0);
         gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+    }
+}
+
+pub fn clear_color(red: f32, green: f32, blue: f32, alpha: f32) {
+    unsafe{
+        gl::ClearColor(red,green,blue,alpha);
     }
 }
 
