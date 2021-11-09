@@ -83,6 +83,8 @@ impl BlackSheep {
         let mut input: KeyboardInputFlags = Default::default();
 
         //init_rendering_setup();
+        let mut window_size_f32 = INIT_WINDOW_SIZE_F32;
+        let mut window_size_i32 = INIT_WINDOW_SIZE_I32;
 
         use constants::*;
         let triangle = mesh_repo.add_mesh("triangle", |mesh| {
@@ -119,13 +121,19 @@ impl BlackSheep {
         let font_texture = imgui_system.load_font_atlas_texture();
 
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
-        let render_target = rendering::rendertarget::RenderTarget::new(300, 300);
+        let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
+        let rt_main = rendering::rendertarget::RenderTarget::new(
+            window_size_i32[0] - 300,
+            window_size_i32[1],
+        );
 
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             gl::BindTexture(gl::TEXTURE_2D, font_texture);
             gl::ActiveTexture(gl::TEXTURE0 + 1);
-            render_target.bind_texture();
+            rt_gizmo.bind_texture();
+            gl::ActiveTexture(gl::TEXTURE0 + 2);
+            rt_main.bind_texture();
             //gl::BindTexture(gl::TEXTURE_2D, nice_image);
         }
         rendertarget::unbind_framebuffer();
@@ -136,8 +144,6 @@ impl BlackSheep {
             ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[0]]);
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
-        let mut window_size_f32 = INIT_WINDOW_SIZE_F32;
-        let mut window_size_i32 = INIT_WINDOW_SIZE_I32;
 
         cam.move_cam(Vector3::new(4.5, 4.5, 4.0));
         cam.rotate_h(Deg(35.0));
@@ -231,6 +237,7 @@ impl BlackSheep {
                             ui_projection = ui_projection_mat([w, h]);
                             window_size_f32 = [w as f32, h as f32];
                             window_size_i32 = [w, h];
+                            rt_main.resize(window_size_i32[0] - 300, window_size_i32[1]);
                         }
                         _ => (),
                     },
@@ -244,30 +251,42 @@ impl BlackSheep {
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
 
-                    Window::new("Hello world")
-                        // .size([300.0, 210.0], Condition::Once)
+                    Window::new("Main")
+                        .size(
+                            [window_size_f32[0] - 300.0, window_size_f32[1]],
+                            Condition::Always,
+                        )
                         .position([0.0, 0.0], Condition::Always)
-                        .flags(WindowFlags::NO_MOVE)
+                        .flags(
+                            WindowFlags::NO_MOVE
+                                | WindowFlags::NO_RESIZE
+                                | WindowFlags::NO_COLLAPSE
+                                | WindowFlags::NO_TITLE_BAR,
+                        )
                         .build(&ui, || {
-                            ui.text("Hello world!");
-                            ui.text("こんにちは世界！");
-                            ui.text("This...is...imgui-rs!");
-                            ui.text(format!("{:?}", cam.position));
-                            ui.text(format!("{:#?}", cam.orientation));
+                            Image::new(
+                                TextureId::new(rt_main.frame_buffer as usize),
+                                [window_size_f32[0] - 300.0, window_size_f32[1]],
+                            )
+                            .build(ui);
                         });
                     Window::new("Image")
-                        .size([300.0, window_size_f32[1] - 300.0], Condition::Once)
+                        .size([300.0, window_size_f32[1]], Condition::Always)
                         .position([window_size_f32[0] - 300.0, 0.0], Condition::Always)
-                        .flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
+                        .flags(
+                            WindowFlags::NO_MOVE
+                                | WindowFlags::NO_RESIZE
+                                | WindowFlags::NO_COLLAPSE,
+                        )
                         .build(&ui, || {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
                             ui.text("This...is...imgui-rs!");
                             ui.text(format!("{:?}", cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
-                            //ColorPicker::new("color_picker", &mut t_color).build(ui);
+                            ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(
-                                TextureId::new(render_target.frame_buffer as usize),
+                                TextureId::new(rt_gizmo.frame_buffer as usize),
                                 [300.0, 300.0],
                             )
                             .build(ui);
@@ -298,18 +317,20 @@ impl BlackSheep {
             let i = lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32();
 
             let view = cam.get_i_view(i);
-            let aspect = window_size_f32[0] / window_size_f32[1];
+            let aspect = (window_size_f32[0] - 300.0) / window_size_f32[1];
             let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
 
             three_d_rendering_setup();
-            clear_color(0.0, 0.3, 0.3, 1.0);
-            clear_window();
 
             // color_shader.use_program();
             // color_shader.set_MVP(projection * view);
             // cube.bind_vertex_array();
             // cube.draw_triangle_elements();
 
+            rt_main.bind_framebuffer();
+            clear_color(0.0, 0.3, 0.3, 1.0);
+            clear_window();
+            set_viewport(window_size_i32[0] - 300, window_size_i32[1]);
             simple_shader.use_program();
             simple_shader.set_color(color);
             triangle.bind_vertex_array();
@@ -320,8 +341,9 @@ impl BlackSheep {
             cloud_shader.set_projection(projection);
             cube_cloud.bind_vertex_array();
             cube_cloud.draw_point_elements();
+            rendertarget::unbind_framebuffer();
 
-            render_target.bind_framebuffer();
+            rt_gizmo.bind_framebuffer();
             clear_color(0.1, 0.1, 0.1, 1.0);
             clear_window();
             set_viewport(300, 300);
@@ -330,8 +352,8 @@ impl BlackSheep {
             gizmo.bind_vertex_array();
             gizmo.draw_point_elements();
             rendertarget::unbind_framebuffer();
-            set_viewport(window_size_i32[0], window_size_i32[1]);
 
+            set_viewport(window_size_i32[0], window_size_i32[1]);
             ui_rendering_setup();
 
             imgui_shader_program.use_program();
@@ -342,9 +364,8 @@ impl BlackSheep {
             window.swap();
         }
 
-
-        render_target.cleanup();
-        unsafe{
+        rt_gizmo.cleanup();
+        unsafe {
             gl::DeleteTextures(1, &font_texture);
             gl::DeleteTextures(1, &nice_image);
         }

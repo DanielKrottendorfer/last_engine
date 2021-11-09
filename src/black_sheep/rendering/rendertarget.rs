@@ -34,11 +34,29 @@ impl RenderTarget {
         }
     }
 
-    pub fn cleanup(self) {
-        unsafe{
-            gl::DeleteTextures(1,&self.texture);
-            gl::DeleteFramebuffers(1,&self.frame_buffer);
+    pub fn resize(&self, width: i32, height: i32) {
+        unsafe {
+            gl::BindTexture(gl::TEXTURE_2D, self.texture);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                gl::RGBA as i32,
+                width,
+                height,
+                0,
+                gl::RGBA,
+                gl::UNSIGNED_BYTE,
+                0 as *const std::ffi::c_void,
+            );
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
+            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        }
+    }
 
+    pub fn cleanup(self) {
+        unsafe {
+            gl::DeleteTextures(1, &self.texture);
+            gl::DeleteFramebuffers(1, &self.frame_buffer);
         }
     }
 }

@@ -12,7 +12,6 @@ void main()
 {
     vs_out.color = vec4(position,1.0);
 
-    vec4 temp = view * vec4(position, 0.0);
-    temp.y *= (-1);
-    gl_Position = temp;
+    gl_Position = view * vec4(position, 0.0);
+    gl_Position.y = -gl_Position.y;
 }

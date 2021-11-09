@@ -52,8 +52,8 @@ pub fn clear_window() {
 }
 
 pub fn clear_color(red: f32, green: f32, blue: f32, alpha: f32) {
-    unsafe{
-        gl::ClearColor(red,green,blue,alpha);
+    unsafe {
+        gl::ClearColor(red, green, blue, alpha);
     }
 }
 
