@@ -1,5 +1,5 @@
-use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, Ui};
-use sdl2::{event::Event, keyboard::Keycode};
+use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, TextureId, Ui};
+use sdl2::{event::Event};
 
 use super::{
     loader,
@@ -141,10 +141,10 @@ impl ImguiSystem {
         }
     }
 
-    pub fn draw(&self) {
+    pub fn draw<F>(&self, set_texture:F) where F: Fn(i32) {
         self.mesh_vec.iter().for_each(|mesh| {
             mesh.bind_vertex_array();
-            mesh.draw();
+            mesh.draw(self.imgui.io().display_size,&set_texture);
         });
     }
 }
@@ -152,7 +152,7 @@ impl ImguiSystem {
 pub fn init() -> ImguiSystem {
     let mut imgui = Context::create();
 
-    imgui.io_mut()[Key::Backspace] = Keycode::Backspace as u32;
+    imgui.io_mut()[Key::Backspace] = sdl2::keyboard::Keycode::Backspace as u32;
 
     let hidpi_factor = 1.0;
     let font_size = 13.0 * hidpi_factor;
@@ -173,6 +173,8 @@ pub fn init() -> ImguiSystem {
             }),
         },
     ]);
+
+    imgui.fonts().tex_id = TextureId::new(1);
 
     imgui.io_mut().font_global_scale = 1.0 / hidpi_factor;
 

@@ -1,7 +1,10 @@
-use std::{borrow::BorrowMut, ffi::{CStr, CString}};
+use std::{
+    borrow::BorrowMut,
+    ffi::{CStr, CString},
+};
 
 use gl::types::{GLint, GLshort, GLushort};
-use imgui::{DrawCmdParams, DrawData, DrawList, internal::RawWrapper};
+use imgui::{internal::RawWrapper, DrawCmdParams, DrawData, DrawList};
 
 use super::mesh_util::*;
 
@@ -10,7 +13,7 @@ pub struct ImguiMesh {
     vertex_array_id: u32,
     vertex_buffer_id: u32,
     element_buffer_id: u32,
-    draw_params: Vec<(i32,DrawCmdParams)>
+    draw_params: Vec<(i32, DrawCmdParams)>,
 }
 
 impl ImguiMesh {
@@ -18,14 +21,14 @@ impl ImguiMesh {
         vertex_array_id: u32,
         vertex_buffer_id: u32,
         element_buffer_id: u32,
-        draw_params: Vec<(i32,DrawCmdParams)>,
+        draw_params: Vec<(i32, DrawCmdParams)>,
         vertex_count: i32,
     ) -> Self {
         Self {
             vertex_array_id,
             vertex_buffer_id,
             element_buffer_id,
-            draw_params
+            draw_params,
         }
     }
     pub fn bind_vertex_array(&self) {
@@ -33,38 +36,48 @@ impl ImguiMesh {
             gl::BindVertexArray(self.vertex_array_id);
         }
     }
-    pub fn draw(&self) {
-        for dp in self.draw_params.iter(){
+    pub fn draw<T: Fn(i32)>(&self, window_size: [f32; 2], set_texture: T) {
+        for dp in self.draw_params.iter() {
             let count = dp.0;
             let offset = dp.1.idx_offset * std::mem::size_of::<GLushort>();
-            let (left, up, right, down) = (dp.1.clip_rect[0],dp.1.clip_rect[1],dp.1.clip_rect[2],dp.1.clip_rect[3]);
+            let (left, up, right, down) = (
+                dp.1.clip_rect[0],
+                window_size[1] - dp.1.clip_rect[1],
+                dp.1.clip_rect[2],
+                window_size[1] - dp.1.clip_rect[3],
+            );
+
+            set_texture(dp.1.texture_id.id() as i32);
+            println!("{}",dp.1.texture_id.id());
             unsafe {
-                //gl::Scissor(left as i32,down as i32,(right-left) as i32,(down-up) as i32);
+                gl::Scissor(
+                    (left) as i32 ,
+                    (down) as i32 ,
+                    (right - left) as i32 ,
+                    (up- down) as i32 ,
+                );
                 gl::DrawElements(
                     gl::TRIANGLES,
-                    count, 
+                    count,
                     gl::UNSIGNED_SHORT,
-                    offset as u16  as *const std::ffi::c_void,
+                    offset as u16 as *const std::ffi::c_void,
                 );
             }
         }
     }
-    
+
     pub fn update_vertex_buffer(&mut self, draw_list: &DrawList) {
         let vtx_buffer = draw_list.vtx_buffer();
         let idx_buffer = draw_list.idx_buffer();
 
-        
-        self.draw_params = draw_list.commands().map(|d| {
-            match d {
-                imgui::DrawCmd::Elements { count, cmd_params } => {
-                    (count as i32,cmd_params)
-                }
+        self.draw_params = draw_list
+            .commands()
+            .map(|d| match d {
+                imgui::DrawCmd::Elements { count, cmd_params } => (count as i32, cmd_params),
                 imgui::DrawCmd::ResetRenderState => todo!(),
-                imgui::DrawCmd::RawCallback {..} => todo!(),
-            }
-        }).collect::<Vec<(i32,DrawCmdParams)>>();
-
+                imgui::DrawCmd::RawCallback { .. } => todo!(),
+            })
+            .collect::<Vec<(i32, DrawCmdParams)>>();
 
         bind_vertex_array(self.vertex_array_id);
 
@@ -93,17 +106,14 @@ pub fn imguimesh_from_drawdata(draw_data: &DrawData) -> Vec<ImguiMesh> {
     draw_data
         .draw_lists()
         .map(|draw_list| {
-
-            let draw_params = draw_list.commands().map(|d| {
-                match d {
-                    imgui::DrawCmd::Elements { count, cmd_params } => {
-                        println!("{:?}",cmd_params.clip_rect);
-                        (count as i32,cmd_params)
-                    }
+            let draw_params = draw_list
+                .commands()
+                .map(|d| match d {
+                    imgui::DrawCmd::Elements { count, cmd_params } => (count as i32, cmd_params),
                     imgui::DrawCmd::ResetRenderState => todo!(),
-                    imgui::DrawCmd::RawCallback {..} => todo!(),
-                }
-            }).collect::<Vec<(i32,DrawCmdParams)>>();
+                    imgui::DrawCmd::RawCallback { .. } => todo!(),
+                })
+                .collect::<Vec<(i32, DrawCmdParams)>>();
 
             let vtx_buffer = draw_list.vtx_buffer();
             let idx_buffer = draw_list.idx_buffer();

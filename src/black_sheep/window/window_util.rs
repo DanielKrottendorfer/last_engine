@@ -52,24 +52,44 @@ pub fn clear_window() {
     }
 }
 
-pub fn init_rendering_setup(){
-    unsafe {
-        gl::Enable(gl::BLEND);
-        gl::BlendEquation(gl::FUNC_ADD);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        //gl::Enable(gl::SCISSOR_TEST);
-    }
-}
+// pub fn init_rendering_setup(){
+//     unsafe {
+//         gl::Enable(gl::BLEND);
+//         gl::BlendEquation(gl::FUNC_ADD);
+//         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+//     }
+// }
 
+// pub fn three_d_rendering_setup() {
+
+//     unsafe {
+//         gl::Disable(gl::SCISSOR_TEST);
+//         gl::Enable(gl::DEPTH_TEST);
+//     }
+// }
+// pub fn ui_rendering_setup() {
+//     unsafe {
+//         gl::Enable(gl::SCISSOR_TEST);
+//         gl::Disable(gl::DEPTH_TEST);
+//     }
+// }
 pub fn three_d_rendering_setup() {
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::BLEND);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl::Disable(gl::SCISSOR_TEST);
     }
 }
 
 pub fn ui_rendering_setup() {
     unsafe {
+        gl::Enable(gl::BLEND);
+        gl::BlendEquation(gl::FUNC_ADD);
+        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        gl::Disable(gl::CULL_FACE);
         gl::Disable(gl::DEPTH_TEST);
+        gl::Enable(gl::SCISSOR_TEST);
     }
 }
 

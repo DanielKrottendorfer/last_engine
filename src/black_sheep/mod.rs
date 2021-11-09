@@ -81,7 +81,7 @@ impl BlackSheep {
         let mut gamestate: GameFlags = Default::default();
         let mut input: KeyboardInputFlags = Default::default();
 
-        init_rendering_setup();
+        //init_rendering_setup();
 
         use constants::*;
         let triangle = mesh_repo.add_mesh("triangle", |mesh| {
@@ -119,8 +119,10 @@ impl BlackSheep {
 
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
 
+        println!("{} {}",font_texture,nice_image);
+
         unsafe {
-            gl::ActiveTexture(gl::TEXTURE0);
+            gl::ActiveTexture(gl::TEXTURE0 + 0);
             gl::BindTexture(gl::TEXTURE_2D, font_texture);
             gl::ActiveTexture(gl::TEXTURE0 + 1);
             gl::BindTexture(gl::TEXTURE_2D, nice_image);
@@ -132,7 +134,7 @@ impl BlackSheep {
             ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[0]]);
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
-        let mut window_size = INIT_WINDOW_SIZE_F32;
+        let mut window_size_f32 = INIT_WINDOW_SIZE_F32;
 
         cam.move_cam(Vector3::new(4.5, 4.5, 4.0));
         cam.rotate_h(Deg(35.0));
@@ -224,7 +226,7 @@ impl BlackSheep {
                         WindowEvent::Resized(w, h) => {
                             set_viewport(w, h);
                             ui_projection = ui_projection_mat([w, h]);
-                            window_size = [w as f32, h as f32];
+                            window_size_f32 = [w as f32, h as f32];
                         }
                         _ => (),
                     },
@@ -250,8 +252,8 @@ impl BlackSheep {
                             ui.text(format!("{:#?}", cam.orientation));
                         });
                     Window::new("Image")
-                        .size([300.0, window_size[1] - 300.0], Condition::Once)
-                        .position([window_size[0] - 300.0, 0.0], Condition::Always)
+                        .size([300.0, window_size_f32[1] - 300.0], Condition::Once)
+                        .position([window_size_f32[0] - 300.0, 0.0], Condition::Always)
                         .flags(WindowFlags::NO_MOVE | WindowFlags::NO_RESIZE)
                         .build(&ui, || {
                             ui.text("Hello world!");
@@ -288,12 +290,11 @@ impl BlackSheep {
             let i = lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32();
 
             let view = cam.get_i_view(i);
-            let aspect = window_size[0] / window_size[1];
+            let aspect = window_size_f32[0] / window_size_f32[1];
             let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
 
-
-            clear_window();
             three_d_rendering_setup();
+            clear_window();
 
             // color_shader.use_program();
             // color_shader.set_MVP(projection * view);
@@ -319,9 +320,9 @@ impl BlackSheep {
             ui_rendering_setup();
 
             imgui_shader_program.use_program();
-            imgui_shader_program.set_tex(0);
+            //imgui_shader_program.set_tex(0);
             imgui_shader_program.set_matrix(ui_projection);
-            imgui_system.draw();
+            imgui_system.draw(|t|{imgui_shader_program.set_tex(t)});
 
             window.swap();
         }

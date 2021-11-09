@@ -8,7 +8,7 @@ pub fn load_texture_from_path(path: &str) -> Option<u32> {
         Err(_) => return None,
     };
 
-    let im = match im {
+    let im = match im.flipv() {
         image::DynamicImage::ImageRgba8(img) => img,
         img => img.to_rgba8(),
     };
