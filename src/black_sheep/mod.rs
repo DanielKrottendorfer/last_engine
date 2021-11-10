@@ -132,9 +132,9 @@ impl BlackSheep {
             gl::BindTexture(gl::TEXTURE_2D, font_texture);
             gl::ActiveTexture(gl::TEXTURE0 + 1);
             rt_gizmo.bind_texture();
+            //gl::BindTexture(gl::TEXTURE_2D, nice_image);
             gl::ActiveTexture(gl::TEXTURE0 + 2);
             rt_main.bind_texture();
-            //gl::BindTexture(gl::TEXTURE_2D, nice_image);
         }
         rendertarget::unbind_framebuffer();
 
@@ -265,7 +265,7 @@ impl BlackSheep {
                         )
                         .build(&ui, || {
                             Image::new(
-                                TextureId::new(rt_main.frame_buffer as usize),
+                                TextureId::new(2 as usize),
                                 [window_size_f32[0] - 300.0, window_size_f32[1]],
                             )
                             .build(ui);
@@ -286,7 +286,7 @@ impl BlackSheep {
                             ui.text(format!("{:#?}", cam.orientation));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(
-                                TextureId::new(rt_gizmo.frame_buffer as usize),
+                                TextureId::new(2 as usize),
                                 [300.0, 300.0],
                             )
                             .build(ui);
@@ -327,6 +327,16 @@ impl BlackSheep {
             // cube.bind_vertex_array();
             // cube.draw_triangle_elements();
 
+            rt_gizmo.bind_framebuffer();
+            clear_color(0.1, 0.1, 0.1, 1.0);
+            clear_window();
+            set_viewport(300, 300);
+            gizmo_shader_program.use_program();
+            gizmo_shader_program.set_view(view);
+            gizmo.bind_vertex_array();
+            gizmo.draw_point_elements();
+            rendertarget::unbind_framebuffer();
+
             rt_main.bind_framebuffer();
             clear_color(0.0, 0.3, 0.3, 1.0);
             clear_window();
@@ -343,15 +353,6 @@ impl BlackSheep {
             cube_cloud.draw_point_elements();
             rendertarget::unbind_framebuffer();
 
-            rt_gizmo.bind_framebuffer();
-            clear_color(0.1, 0.1, 0.1, 1.0);
-            clear_window();
-            set_viewport(300, 300);
-            gizmo_shader_program.use_program();
-            gizmo_shader_program.set_view(view);
-            gizmo.bind_vertex_array();
-            gizmo.draw_point_elements();
-            rendertarget::unbind_framebuffer();
 
             set_viewport(window_size_i32[0], window_size_i32[1]);
             ui_rendering_setup();
@@ -364,7 +365,6 @@ impl BlackSheep {
             window.swap();
         }
 
-        rt_gizmo.cleanup();
         unsafe {
             gl::DeleteTextures(1, &font_texture);
             gl::DeleteTextures(1, &nice_image);

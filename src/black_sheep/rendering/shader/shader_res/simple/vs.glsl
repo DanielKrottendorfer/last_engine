@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 // Input vertex data, different for all executions of this shader.
 in layout (location = 0) vec2 position;

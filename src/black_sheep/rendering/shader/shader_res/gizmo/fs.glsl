@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 out layout (location = 0) vec4 out_color;
 

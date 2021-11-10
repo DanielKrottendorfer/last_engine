@@ -53,7 +53,7 @@ impl RenderTarget {
         }
     }
 
-    pub fn cleanup(self) {
+    pub fn cleanup(&self) {
         unsafe {
             gl::DeleteTextures(1, &self.texture);
             gl::DeleteFramebuffers(1, &self.frame_buffer);
@@ -96,4 +96,11 @@ pub fn gen_texture(width: i32, height: i32) -> u32 {
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
     }
     texture_name
+}
+
+impl Drop for RenderTarget{
+    fn drop(&mut self) {
+        println!("cleanup RenderTarget t:{}, fb:{}",self.texture,self.frame_buffer);
+        self.cleanup();
+    }
 }

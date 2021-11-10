@@ -11,7 +11,7 @@ pub fn new_sdl_window_with_opengl_context() -> (
     let video_context = sdl_context.video().unwrap();
 
     video_context.gl_attr().set_context_minor_version(4);
-    video_context.gl_attr().set_context_minor_version(6);
+    video_context.gl_attr().set_context_minor_version(5);
 
     video_context.gl_attr().set_double_buffer(true);
     video_context.gl_attr().set_depth_size(24);
