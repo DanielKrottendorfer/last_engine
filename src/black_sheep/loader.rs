@@ -1,6 +1,8 @@
 use imgui::FontAtlasTexture;
 
-pub fn load_texture_from_path(path: &str) -> Option<u32> {
+use super::rendering::Texture;
+
+pub fn load_texture_from_path(path: &str) -> Option<Texture> {
     use image::io::Reader as ImageReader;
 
     let im = match ImageReader::open(path) {
@@ -22,7 +24,7 @@ pub fn load_texture_from_path(path: &str) -> Option<u32> {
     ))
 }
 
-pub fn gen_texture(data: *mut std::ffi::c_void, dim: (i32, i32), mipmap: bool) -> u32 {
+pub fn gen_texture(data: *mut std::ffi::c_void, dim: (i32, i32), mipmap: bool) -> Texture {
     let mut texture = 0;
     unsafe {
         gl::GenTextures(1, &mut texture);
@@ -55,10 +57,10 @@ pub fn gen_texture(data: *mut std::ffi::c_void, dim: (i32, i32), mipmap: bool) -
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
         }
     }
-    texture
+    Texture::new(texture)
 }
 
-pub fn load_texture_fontatlas(atlas: &FontAtlasTexture) -> u32 {
+pub fn load_texture_fontatlas(atlas: &FontAtlasTexture) -> Texture {
     // let im:ImageBuffer<Rgba<u8>,&[u8]> = ImageBuffer::from_raw(atlas.width, atlas.height, atlas.data).unwrap();
     // im.save("./image.png").unwrap();
     gen_texture(

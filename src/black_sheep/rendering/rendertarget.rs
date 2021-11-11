@@ -98,9 +98,13 @@ pub fn gen_texture(width: i32, height: i32) -> u32 {
     texture_name
 }
 
-impl Drop for RenderTarget{
+impl Drop for RenderTarget {
     fn drop(&mut self) {
-        println!("cleanup RenderTarget t:{}, fb:{}",self.texture,self.frame_buffer);
+        #[cfg(not(feature = "debug_off"))]
+        println!(
+            "cleanup RenderTarget t:{}, fb:{}",
+            self.texture, self.frame_buffer
+        );
         self.cleanup();
     }
 }

@@ -3,7 +3,10 @@ use sdl2::event::Event;
 
 use super::{
     loader,
-    rendering::geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
+    rendering::{
+        geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
+        Texture,
+    },
 };
 
 pub struct ImguiSystem {
@@ -13,7 +16,7 @@ pub struct ImguiSystem {
 }
 
 impl ImguiSystem {
-    pub fn load_font_atlas_texture(&mut self) -> u32 {
+    pub fn load_font_atlas_texture(&mut self) -> Texture {
         let mut fonts = self.imgui.fonts();
         let atlas = fonts.build_rgba32_texture();
         loader::load_texture_fontatlas(&atlas)

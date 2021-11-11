@@ -44,3 +44,10 @@ impl SDLWindow {
         self._mouse_util.set_relative_mouse_mode(false);
     }
 }
+
+impl Drop for SDLWindow{
+    fn drop(&mut self) {
+        #[cfg(not(feature = "debug_off"))]
+        println!("cleanup window");
+    }
+}

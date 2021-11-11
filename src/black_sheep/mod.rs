@@ -21,20 +21,13 @@ mod point_cloud;
 mod imgui_system;
 mod loader;
 
-use std::borrow::Borrow;
-use std::borrow::BorrowMut;
 use std::time::Duration;
 
-use cgmath::Array;
 use cgmath::Vector4;
 use gamestate::*;
 
 use cgmath::{Deg, Vector3};
-use imgui::ColorPicker;
-use imgui::Condition;
-use imgui::Image;
-use imgui::TextureId;
-use imgui::Window;
+use imgui::{ColorPicker, Condition, Image, StyleVar, TextureId, Window};
 use rendering::geometry::MeshRepo;
 use rendering::shader::ShaderRepo;
 use sdl2::mouse::MouseButton;
@@ -45,9 +38,7 @@ use sdl2::event::{Event, WindowEvent};
 
 use crate::black_sheep::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
-use crate::black_sheep::settings::INIT_WINDOW_SIZE_F32;
-use crate::black_sheep::settings::INIT_WINDOW_SIZE_I32;
-use crate::black_sheep::settings::MS_PER_UPDATE;
+use crate::black_sheep::settings::*;
 use crate::black_sheep::window::window_util::{clear_window, set_viewport};
 
 use camera::structs::FlyingEye;
@@ -118,30 +109,22 @@ impl BlackSheep {
 
         let mut imgui_system = imgui_system::init();
         imgui_system.imgui.io_mut().display_size = INIT_WINDOW_SIZE_F32;
-        let font_texture = imgui_system.load_font_atlas_texture();
 
-        let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
         let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
         let rt_main = rendering::rendertarget::RenderTarget::new(
             window_size_i32[0] - 300,
             window_size_i32[1],
         );
 
-        unsafe {
-            gl::ActiveTexture(gl::TEXTURE0 + 0);
-            gl::BindTexture(gl::TEXTURE_2D, font_texture);
-            gl::ActiveTexture(gl::TEXTURE0 + 1);
-            rt_gizmo.bind_texture();
-            //gl::BindTexture(gl::TEXTURE_2D, nice_image);
-            gl::ActiveTexture(gl::TEXTURE0 + 2);
-            rt_main.bind_texture();
-        }
+        let font_texture = imgui_system.load_font_atlas_texture();
+        let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
+
         rendertarget::unbind_framebuffer();
 
         imgui_shader_program.set_tex(0);
 
         let mut ui_projection =
-            ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[0]]);
+            ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[1]]);
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
 
@@ -163,12 +146,14 @@ impl BlackSheep {
             let elapsed = current - previous;
             previous = current;
             lag += elapsed;
-            fps += 1;
-            if current - last > Duration::from_secs(1) {
-                #[cfg(not(feature = "debug_off"))]
-                println!("fps: {}", fps);
-                last = current;
-                fps = 0;
+            #[cfg(not(feature = "fps_off"))]
+            {
+                fps += 1;
+                if current - last > Duration::from_secs(1) {
+                    println!("fps: {}", fps);
+                    last = current;
+                    fps = 0;
+                }
             }
 
             //PROCESS INPUT
@@ -250,7 +235,7 @@ impl BlackSheep {
                 cam.update();
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
-
+                    let a = ui.push_style_var(StyleVar::WindowPadding([0.0, 0.0]));
                     Window::new("Main")
                         .size(
                             [window_size_f32[0] - 300.0, window_size_f32[1]],
@@ -270,13 +255,15 @@ impl BlackSheep {
                             )
                             .build(ui);
                         });
+                    a.pop();
                     Window::new("Image")
                         .size([300.0, window_size_f32[1]], Condition::Always)
                         .position([window_size_f32[0] - 300.0, 0.0], Condition::Always)
                         .flags(
                             WindowFlags::NO_MOVE
                                 | WindowFlags::NO_RESIZE
-                                | WindowFlags::NO_COLLAPSE,
+                                | WindowFlags::NO_COLLAPSE
+                                | WindowFlags::NO_TITLE_BAR,
                         )
                         .build(&ui, || {
                             ui.text("Hello world!");
@@ -285,11 +272,8 @@ impl BlackSheep {
                             ui.text(format!("{:?}", cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
-                            Image::new(
-                                TextureId::new(2 as usize),
-                                [300.0, 300.0],
-                            )
-                            .build(ui);
+                            Image::new(TextureId::new(3 as usize), [300.0, 300.0]).build(ui);
+                            Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
                         });
                 });
 
@@ -313,6 +297,16 @@ impl BlackSheep {
             }
 
             //RENDER
+            unsafe {
+                gl::ActiveTexture(gl::TEXTURE0 + 0);
+                font_texture.bind();
+                gl::ActiveTexture(gl::TEXTURE0 + 1);
+                nice_image.bind();
+                gl::ActiveTexture(gl::TEXTURE0 + 2);
+                rt_main.bind_texture();
+                gl::ActiveTexture(gl::TEXTURE0 + 3);
+                rt_gizmo.bind_texture();
+            }
 
             let i = lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32();
 
@@ -353,21 +347,14 @@ impl BlackSheep {
             cube_cloud.draw_point_elements();
             rendertarget::unbind_framebuffer();
 
-
             set_viewport(window_size_i32[0], window_size_i32[1]);
             ui_rendering_setup();
 
             imgui_shader_program.use_program();
-            //imgui_shader_program.set_tex(0);
             imgui_shader_program.set_matrix(ui_projection);
             imgui_system.draw(|t| imgui_shader_program.set_tex(t));
 
             window.swap();
-        }
-
-        unsafe {
-            gl::DeleteTextures(1, &font_texture);
-            gl::DeleteTextures(1, &nice_image);
         }
     }
 }

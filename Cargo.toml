@@ -21,3 +21,4 @@ shader_macro = {git = "https://github.com/DanielKrottendorfer/gl_shader_macro.gi
 [features]
 vsync_off = []
 debug_off = []
+fps_off = []
