@@ -1,6 +1,8 @@
 use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, TextureId, Ui};
 use sdl2::event::Event;
 
+use crate::black_sheep::settings::INIT_WINDOW_SIZE_F32;
+
 use super::rendering::{
     geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
     loader, Texture,
@@ -181,6 +183,7 @@ pub fn init() -> ImguiSystem {
 
     imgui.io_mut().font_global_scale = 1.0 / hidpi_factor;
 
+    imgui.io_mut().display_size = INIT_WINDOW_SIZE_F32;
     ImguiSystem {
         imgui,
         frame_update_counter: 2,

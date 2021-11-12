@@ -20,6 +20,8 @@ mod point_cloud;
 
 mod imgui_system;
 
+mod setup;
+
 use std::time::Duration;
 
 use cgmath::Matrix4;
@@ -36,6 +38,7 @@ use window::SDLWindow;
 
 use sdl2::event::{Event, WindowEvent};
 
+use crate::black_sheep::rendering::geometry::MeshToken;
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
 use crate::black_sheep::settings::*;
@@ -77,29 +80,11 @@ impl BlackSheep {
         let mut window_size_f32 = INIT_WINDOW_SIZE_F32;
         let mut window_size_i32 = INIT_WINDOW_SIZE_I32;
 
-        use constants::*;
-        let triangle = mesh_repo.add_mesh("triangle", |mesh| {
-            mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 2);
-            mesh.add_elementarraybuffer(&TRIANGLE_ELEMENTS);
-        });
-
-        let gizmo = mesh_repo.add_mesh("gizmo", |mesh| {
-            mesh.add_floatbuffer(&GIZMO_VECS, 0, 3);
-            mesh.add_elementarraybuffer(&GITMO_ELEMENTS);
-        });
-
-        let cube = mesh_repo.add_mesh("cube", |mesh| {
-            mesh.add_floatbuffer(&CUBE, 0, 3);
-            mesh.add_floatbuffer(&CUBE_COLOR, 1, 3);
-            mesh.add_elementarraybuffer(&CUBE_ELEMENTS);
-        });
-
-        let cube_cloud = mesh_repo.add_mesh("cloud", |mesh| {
-            let (v, c, e) = point_cloud::point_cube(5);
-            mesh.add_floatbuffer(v.as_slice(), 0, 3);
-            mesh.add_floatbuffer(c.as_slice(), 1, 4);
-            mesh.add_elementarraybuffer(e.as_slice());
-        });
+        setup::init_mesh(&mut mesh_repo);
+        let triangle = MeshToken::from(mesh_repo.get_mesh_by_name("triangle").unwrap());
+        let gizmo = MeshToken::from(mesh_repo.get_mesh_by_name("gizmo").unwrap());
+        let cube = MeshToken::from(mesh_repo.get_mesh_by_name("cube").unwrap());
+        let cube_cloud = MeshToken::from(mesh_repo.get_mesh_by_name("cloud").unwrap());
 
         let simple_shader = &shader_repo.simple;
         let color_shader = &shader_repo.color_3d;
@@ -108,29 +93,24 @@ impl BlackSheep {
         let gizmo_shader_program = &shader_repo.gizmo;
 
         let mut imgui_system = imgui_system::init();
-        imgui_system.imgui.io_mut().display_size = INIT_WINDOW_SIZE_F32;
 
         let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
         let rt_main = rendering::rendertarget::RenderTarget::new(
             window_size_i32[0] - 300,
             window_size_i32[1],
         );
+        rendertarget::unbind_framebuffer();
 
         let font_texture = imgui_system.load_font_atlas_texture();
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
 
-        rendertarget::unbind_framebuffer();
-
-        imgui_shader_program.set_tex(0);
-
         let mut ui_projection =
             ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[1]]);
 
-        let mut color = Vector3::new(1.0, 0.0, 1.0);
+        let mut simple_color = Vector3::new(1.0, 0.0, 1.0);
 
-        cam.move_cam(Vector3::new(1.25, 1.0, 1.5));
+        cam.move_cam(Vector3::new(1.35, 1.35, 2.0));
         cam.rotate_h(Deg(35.0));
-        cam.rotate_v(Deg(-35.0));
 
         let time = std::time::Instant::now();
         let mut previous = time.elapsed();
@@ -288,9 +268,9 @@ impl BlackSheep {
                 {
                     use KeyboardInputFlags as kf;
                     if input.contains(kf::Q) {
-                        color = Vector3::new(1.0, 0.0, 1.0);
+                        simple_color = Vector3::new(1.0, 0.0, 1.0);
                     } else if input.contains(kf::E) {
-                        color = Vector3::new(0.4, 0.0, 0.4);
+                        simple_color = Vector3::new(0.4, 0.0, 0.4);
                     }
 
                     if let Some(v) = get_movement(&mut input) {
@@ -325,21 +305,24 @@ impl BlackSheep {
 
             rt_gizmo.bind_framebuffer();
             three_d_rendering_setup();
+
             clear_color(0.1, 0.1, 0.1, 1.0);
             clear_window();
             set_viewport(300, 300);
+
             gizmo_shader_program.use_program();
             gizmo_shader_program.set_view(view);
             gizmo.bind_vertex_array();
             gizmo.draw_point_elements();
-            rendertarget::unbind_framebuffer();
 
             rt_main.bind_framebuffer();
+
             clear_color(0.0, 0.3, 0.3, 1.0);
             clear_window();
             set_viewport(window_size_i32[0] - 300, window_size_i32[1]);
+
             simple_shader.use_program();
-            simple_shader.set_color(color);
+            simple_shader.set_color(simple_color);
             triangle.bind_vertex_array();
             triangle.draw_triangle_elements();
 
