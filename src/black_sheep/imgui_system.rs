@@ -1,12 +1,9 @@
 use imgui::{Context, FontConfig, FontGlyphRanges, FontSource, Key, TextureId, Ui};
 use sdl2::event::Event;
 
-use super::{
-    loader,
-    rendering::{
-        geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
-        Texture,
-    },
+use super::rendering::{
+    geometry::imgui_mesh::{imguimesh_from_drawdata, ImguiMesh},
+    loader, Texture,
 };
 
 pub struct ImguiSystem {

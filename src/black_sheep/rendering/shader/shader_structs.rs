@@ -32,6 +32,5 @@ shader_program!(
 shader_program!(
     GizmpProgram{
         uniform mat4 view;
-        //uniform mat4 projection;
     }
 );

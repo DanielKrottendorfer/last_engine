@@ -45,9 +45,9 @@ impl SDLWindow {
     }
 }
 
-impl Drop for SDLWindow{
+impl Drop for SDLWindow {
     fn drop(&mut self) {
         #[cfg(not(feature = "debug_off"))]
-        println!("cleanup window");
+        println!("window cleanup");
     }
 }

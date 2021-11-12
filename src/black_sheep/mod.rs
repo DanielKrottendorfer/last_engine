@@ -19,7 +19,6 @@ mod q_i_square_root;
 mod point_cloud;
 
 mod imgui_system;
-mod loader;
 
 use std::time::Duration;
 
@@ -36,7 +35,7 @@ use window::SDLWindow;
 
 use sdl2::event::{Event, WindowEvent};
 
-use crate::black_sheep::loader::load_texture_from_path;
+use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
 use crate::black_sheep::settings::*;
 use crate::black_sheep::window::window_util::{clear_window, set_viewport};
@@ -255,7 +254,6 @@ impl BlackSheep {
                             )
                             .build(ui);
                         });
-                    a.pop();
                     Window::new("Image")
                         .size([300.0, window_size_f32[1]], Condition::Always)
                         .position([window_size_f32[0] - 300.0, 0.0], Condition::Always)
@@ -275,6 +273,8 @@ impl BlackSheep {
                             Image::new(TextureId::new(3 as usize), [300.0, 300.0]).build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
                         });
+
+                    a.pop();
                 });
 
                 //HANDLE INPUT

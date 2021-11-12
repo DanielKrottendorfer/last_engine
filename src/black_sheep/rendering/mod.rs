@@ -4,6 +4,8 @@ pub mod shader;
 
 pub mod rendertarget;
 
+pub mod loader;
+
 pub struct Texture(u32);
 
 impl Texture {
@@ -21,7 +23,7 @@ impl Texture {
 impl Drop for Texture {
     fn drop(&mut self) {
         #[cfg(not(feature = "debug_off"))]
-        println!("cleanup texture: {}",self.0);
+        println!("texture cleanup {}", self.0);
         unsafe {
             gl::DeleteTextures(1, &self.0);
         }

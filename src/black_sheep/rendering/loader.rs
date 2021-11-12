@@ -1,6 +1,6 @@
 use imgui::FontAtlasTexture;
 
-use super::rendering::Texture;
+use super::Texture;
 
 pub fn load_texture_from_path(path: &str) -> Option<Texture> {
     use image::io::Reader as ImageReader;

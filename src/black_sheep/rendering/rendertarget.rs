@@ -102,7 +102,7 @@ impl Drop for RenderTarget {
     fn drop(&mut self) {
         #[cfg(not(feature = "debug_off"))]
         println!(
-            "cleanup RenderTarget t:{}, fb:{}",
+            "RenderTarget cleanup t: {}, fb: {}",
             self.texture, self.frame_buffer
         );
         self.cleanup();
