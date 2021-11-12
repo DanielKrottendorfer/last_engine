@@ -2,17 +2,19 @@ use gl;
 
 pub struct RenderTarget {
     pub frame_buffer: u32,
-    pub texture: u32,
+    pub render_texture: u32,
+    pub depth_render_buffer: u32,
 }
 
 impl RenderTarget {
     pub fn new(width: i32, height: i32) -> Self {
         let rt = Self {
             frame_buffer: gen_framebuffer(),
-            texture: gen_texture(width, height),
+            render_texture: gen_empty_texture(width, height),
+            depth_render_buffer: gen_depthbuffer(width, height),
         };
         unsafe {
-            gl::FramebufferTexture(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, rt.texture, 0);
+            gl::FramebufferTexture(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0, rt.render_texture, 0);
 
             gl::DrawBuffer(gl::COLOR_ATTACHMENT0);
             if gl::CheckFramebufferStatus(gl::FRAMEBUFFER) != gl::FRAMEBUFFER_COMPLETE {
@@ -30,13 +32,13 @@ impl RenderTarget {
 
     pub fn bind_texture(&self) {
         unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, self.texture);
+            gl::BindTexture(gl::TEXTURE_2D, self.render_texture);
         }
     }
 
     pub fn resize(&self, width: i32, height: i32) {
         unsafe {
-            gl::BindTexture(gl::TEXTURE_2D, self.texture);
+            gl::BindTexture(gl::TEXTURE_2D, self.render_texture);
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
@@ -50,15 +52,40 @@ impl RenderTarget {
             );
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR as i32);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+            gl::BindRenderbuffer(gl::RENDERBUFFER, self.depth_render_buffer);
+            gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width, height);
+            gl::FramebufferRenderbuffer(
+                gl::FRAMEBUFFER,
+                gl::DEPTH_ATTACHMENT,
+                gl::RENDERBUFFER,
+                self.depth_render_buffer,
+            );
         }
     }
 
     pub fn cleanup(&self) {
         unsafe {
-            gl::DeleteTextures(1, &self.texture);
+            gl::DeleteTextures(1, &self.render_texture);
             gl::DeleteFramebuffers(1, &self.frame_buffer);
+            gl::DeleteRenderbuffers(1, &self.depth_render_buffer);
         }
     }
+}
+
+fn gen_depthbuffer(width: i32, height: i32) -> u32 {
+    let mut depthrenderbuffer = 0;
+    unsafe {
+        gl::GenRenderbuffers(1, &mut depthrenderbuffer);
+        gl::BindRenderbuffer(gl::RENDERBUFFER, depthrenderbuffer);
+        gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT, width, height);
+        gl::FramebufferRenderbuffer(
+            gl::FRAMEBUFFER,
+            gl::DEPTH_ATTACHMENT,
+            gl::RENDERBUFFER,
+            depthrenderbuffer,
+        );
+    }
+    depthrenderbuffer
 }
 
 pub fn unbind_framebuffer() {
@@ -76,7 +103,7 @@ pub fn gen_framebuffer() -> u32 {
     buffer_name
 }
 
-pub fn gen_texture(width: i32, height: i32) -> u32 {
+pub fn gen_empty_texture(width: i32, height: i32) -> u32 {
     let mut texture_name = 0;
     unsafe {
         gl::GenTextures(1, &mut texture_name);
@@ -102,8 +129,8 @@ impl Drop for RenderTarget {
     fn drop(&mut self) {
         #[cfg(not(feature = "debug_off"))]
         println!(
-            "RenderTarget cleanup t: {}, fb: {}",
-            self.texture, self.frame_buffer
+            "RenderTarget cleanup t: {}, fb: {}, dp: {}",
+            self.render_texture, self.frame_buffer, self.depth_render_buffer
         );
         self.cleanup();
     }

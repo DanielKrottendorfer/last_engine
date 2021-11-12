@@ -61,6 +61,7 @@ pub fn three_d_rendering_setup() {
     unsafe {
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::BLEND);
+        gl::BlendEquation(gl::FUNC_ADD);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::Disable(gl::SCISSOR_TEST);
     }
@@ -68,11 +69,10 @@ pub fn three_d_rendering_setup() {
 
 pub fn ui_rendering_setup() {
     unsafe {
+        gl::Disable(gl::DEPTH_TEST);
         gl::Enable(gl::BLEND);
         gl::BlendEquation(gl::FUNC_ADD);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        gl::Disable(gl::CULL_FACE);
-        gl::Disable(gl::DEPTH_TEST);
         gl::Enable(gl::SCISSOR_TEST);
     }
 }

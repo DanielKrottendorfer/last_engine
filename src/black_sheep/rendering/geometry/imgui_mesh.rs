@@ -48,6 +48,18 @@ impl ImguiMesh {
             );
 
             set_texture(dp.1.texture_id.id() as i32);
+
+            // if dp.1.texture_id.id() != 0 {
+            //     unsafe {
+            //         gl::Enable(gl::DEPTH_TEST);
+            //     }
+            // }else{
+
+            //     unsafe {
+            //         gl::Disable(gl::DEPTH_TEST);
+            //     }
+            // }
+
             unsafe {
                 gl::Scissor(
                     (left) as i32,

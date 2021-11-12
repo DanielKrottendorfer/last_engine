@@ -22,6 +22,7 @@ mod imgui_system;
 
 use std::time::Duration;
 
+use cgmath::Matrix4;
 use cgmath::Vector4;
 use gamestate::*;
 
@@ -87,11 +88,11 @@ impl BlackSheep {
             mesh.add_elementarraybuffer(&GITMO_ELEMENTS);
         });
 
-        // let cube = mesh_repo.add_mesh("cube", |mesh| {
-        //     mesh.add_floatbuffer(&CUBE, 0, 3);
-        //     mesh.add_floatbuffer(&CUBE_COLOR, 1, 3);
-        //     mesh.add_elementarraybuffer(&CUBE_ELEMENTS);
-        // });
+        let cube = mesh_repo.add_mesh("cube", |mesh| {
+            mesh.add_floatbuffer(&CUBE, 0, 3);
+            mesh.add_floatbuffer(&CUBE_COLOR, 1, 3);
+            mesh.add_elementarraybuffer(&CUBE_ELEMENTS);
+        });
 
         let cube_cloud = mesh_repo.add_mesh("cloud", |mesh| {
             let (v, c, e) = point_cloud::point_cube(5);
@@ -101,7 +102,7 @@ impl BlackSheep {
         });
 
         let simple_shader = &shader_repo.simple;
-        let _color_shader = &shader_repo.color_3d;
+        let color_shader = &shader_repo.color_3d;
         let cloud_shader = &shader_repo.point_cloud;
         let imgui_shader_program = &shader_repo.imgui;
         let gizmo_shader_program = &shader_repo.gizmo;
@@ -127,7 +128,7 @@ impl BlackSheep {
 
         let mut color = Vector3::new(1.0, 0.0, 1.0);
 
-        cam.move_cam(Vector3::new(4.5, 4.5, 4.0));
+        cam.move_cam(Vector3::new(1.25, 1.0, 1.5));
         cam.rotate_h(Deg(35.0));
         cam.rotate_v(Deg(-35.0));
 
@@ -252,6 +253,8 @@ impl BlackSheep {
                                 TextureId::new(2 as usize),
                                 [window_size_f32[0] - 300.0, window_size_f32[1]],
                             )
+                            .uv0([0.0, 1.0])
+                            .uv1([1.0, 0.0])
                             .build(ui);
                         });
                     Window::new("Image")
@@ -267,11 +270,15 @@ impl BlackSheep {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
                             ui.text("This...is...imgui-rs!");
-                            ui.text(format!("{:?}", cam.position));
+                            ui.text(format!("{:?}", -cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
-                            Image::new(TextureId::new(3 as usize), [300.0, 300.0]).build(ui);
-                            Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
+                            Image::new(TextureId::new(3 as usize), [300.0, 300.0])
+                                .uv0([0.0, 1.0])
+                                .uv1([1.0, 0.0])
+                                .build(ui);
+                            Image::new(TextureId::new(1 as usize), [300.0, 300.0])
+                                .build(ui);
                         });
 
                     a.pop();
@@ -312,16 +319,12 @@ impl BlackSheep {
 
             let view = cam.get_i_view(i);
             let aspect = (window_size_f32[0] - 300.0) / window_size_f32[1];
-            let projection = cgmath::perspective(Deg(90.0), aspect, 0.2, 1000.0);
+            let projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
 
-            three_d_rendering_setup();
-
-            // color_shader.use_program();
-            // color_shader.set_MVP(projection * view);
-            // cube.bind_vertex_array();
-            // cube.draw_triangle_elements();
+            let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
 
             rt_gizmo.bind_framebuffer();
+            three_d_rendering_setup();
             clear_color(0.1, 0.1, 0.1, 1.0);
             clear_window();
             set_viewport(300, 300);
@@ -340,15 +343,21 @@ impl BlackSheep {
             triangle.bind_vertex_array();
             triangle.draw_triangle_elements();
 
+            color_shader.use_program();
+            color_shader.set_MVP(projection * view * model);
+            cube.bind_vertex_array();
+            cube.draw_triangle_elements();
+
             cloud_shader.use_program();
             cloud_shader.set_mv(view);
             cloud_shader.set_projection(projection);
             cube_cloud.bind_vertex_array();
             cube_cloud.draw_point_elements();
+
             rendertarget::unbind_framebuffer();
 
-            set_viewport(window_size_i32[0], window_size_i32[1]);
             ui_rendering_setup();
+            set_viewport(window_size_i32[0], window_size_i32[1]);
 
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(ui_projection);
