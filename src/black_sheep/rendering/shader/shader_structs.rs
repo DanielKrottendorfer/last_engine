@@ -30,7 +30,14 @@ shader_program!(
 );
 
 shader_program!(
-    GizmpProgram{
+    GizmoProgram{
         uniform mat4 view;
+    }
+);
+
+shader_program!(
+    Point2D{
+        uniform float radius;
+        uniform mat4 projection;
     }
 );

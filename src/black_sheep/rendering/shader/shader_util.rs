@@ -13,6 +13,10 @@ pub static GIZMO_VS: &'static str = include_str!("./shader_res/gizmo/vs.glsl");
 pub static GIZMO_GS: &'static str = include_str!("./shader_res/gizmo/gs.glsl");
 pub static GIZMO_FS: &'static str = include_str!("./shader_res/gizmo/fs.glsl");
 
+pub static POINT_2D_VS: &'static str = include_str!("./shader_res/2D_points/vs.glsl");
+pub static POINT_2D_GS: &'static str = include_str!("./shader_res/2D_points/gs.glsl");
+pub static POINT_2D_FS: &'static str = include_str!("./shader_res/2D_points/fs.glsl");
+
 pub static IMGUI_FS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.frag");
 pub static IMGUI_VS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.vert");
 

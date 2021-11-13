@@ -1,9 +1,6 @@
-use super::{constants::*, point_cloud, rendering::geometry::MeshRepo};
+use super::{constants::*, point_cloud, point_grid, rendering::geometry::MeshRepo};
 
-
-
-pub fn init_mesh(mesh_repo: &mut MeshRepo){
-    
+pub fn init_mesh(mesh_repo: &mut MeshRepo) {
     let triangle = mesh_repo.add_mesh("triangle", |mesh| {
         mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 2);
         mesh.add_elementarraybuffer(&TRIANGLE_ELEMENTS);
@@ -26,4 +23,5 @@ pub fn init_mesh(mesh_repo: &mut MeshRepo){
         mesh.add_floatbuffer(c.as_slice(), 1, 4);
         mesh.add_elementarraybuffer(e.as_slice());
     });
+
 }
