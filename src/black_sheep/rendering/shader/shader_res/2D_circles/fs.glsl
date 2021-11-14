@@ -9,7 +9,7 @@ uniform float radius;
 
 void main() {
 
-  vec4 diff = center_pos - screen_pos;
+  vec2 diff = center_pos.xy - screen_pos.xy;
 
   float dist = pow(diff.x,2)+pow(diff.y,2);
 

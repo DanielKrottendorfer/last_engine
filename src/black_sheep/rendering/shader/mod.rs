@@ -46,7 +46,7 @@ impl ShaderRepo {
 
         let mut point_2d = Point2D::new();
         {
-            let program = build_shader_program(POINT_2D_VS, Some(POINT_2D_GS), POINT_2D_FS);
+            let program = build_shader_program(CIRLE_2D_VS, Some(CIRLE_2D_GS), CIRLE_2D_FS);
             point_2d.setup(&program);
         }
 
