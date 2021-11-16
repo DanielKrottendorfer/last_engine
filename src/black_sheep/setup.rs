@@ -23,5 +23,4 @@ pub fn init_mesh(mesh_repo: &mut MeshRepo) {
         mesh.add_floatbuffer(c.as_slice(), 1, 4);
         mesh.add_elementarraybuffer(e.as_slice());
     });
-
 }

@@ -1,7 +1,7 @@
 extern crate cgmath;
 extern crate gl;
-extern crate sdl2;
 extern crate rand;
+extern crate sdl2;
 
 pub mod rendering;
 mod window;
@@ -24,10 +24,9 @@ mod imgui_system;
 
 mod setup;
 
-
+use rand::rngs::SmallRng;
 use rand::Rng;
 use rand::SeedableRng;
-use rand::rngs::SmallRng;
 
 use std::borrow::Borrow;
 use std::time::Duration;
@@ -101,21 +100,22 @@ impl BlackSheep {
         let cube_cloud = MeshToken::from(mesh_repo.get_mesh_by_name("cloud").unwrap());
         let points = mesh_repo.add_mesh("points", |mesh| {
             let mut v = point_grid::new_point_grid(4, 4, 500.0);
-            v.0.iter_mut().for_each(|v|{
-                *v+=Vector2::new(50.0,50.0);
+            v.0.iter_mut().for_each(|v| {
+                *v += Vector2::new(50.0, 50.0);
             });
 
             let mut rads = Vec::new();
             let mut colors = Vec::new();
             let mut rng = SmallRng::seed_from_u64(123);
-            for _i in 0..16{
-                let a:f32 = rng.gen_range(10.0..50.0);
+            for _i in 0..16 {
+                let a: f32 = rng.gen_range(10.0..50.0);
                 rads.push(a);
 
-                let v:Vector3<f32> = Vector3::new(
+                let v: Vector3<f32> = Vector3::new(
                     rng.gen_range(0.0..1.0),
                     rng.gen_range(0.0..1.0),
-                    rng.gen_range(0.0..1.0));
+                    rng.gen_range(0.0..1.0),
+                );
                 colors.push(v);
             }
 
@@ -142,7 +142,6 @@ impl BlackSheep {
 
         let font_texture = imgui_system.load_font_atlas_texture();
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
-
 
         let mut simple_color = Vector3::new(1.0, 0.0, 1.0);
 
@@ -375,20 +374,18 @@ impl BlackSheep {
             cube_cloud.draw_point_elements();
 
             ui_rendering_setup();
-            
+
             set_viewport(window_size_i32[0], window_size_i32[1]);
 
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(ui_projection);
             imgui_system.draw(|t| imgui_shader_program.set_tex(t));
 
-            
             three_d_rendering_setup();
             point_2d_shader.use_program();
             point_2d_shader.set_projection(ui_projection);
             points.bind_vertex_array();
             points.draw_point_elements();
-
 
             window.swap();
         }
