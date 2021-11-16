@@ -37,7 +37,6 @@ shader_program!(
 
 shader_program!(
     Point2D{
-        uniform float radius;
         uniform mat4 projection;
     }
 );

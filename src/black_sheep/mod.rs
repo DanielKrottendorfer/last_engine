@@ -1,6 +1,7 @@
 extern crate cgmath;
 extern crate gl;
 extern crate sdl2;
+extern crate rand;
 
 pub mod rendering;
 mod window;
@@ -23,6 +24,12 @@ mod imgui_system;
 
 mod setup;
 
+
+use rand::Rng;
+use rand::SeedableRng;
+use rand::rngs::SmallRng;
+
+use std::borrow::Borrow;
 use std::time::Duration;
 
 use cgmath::Matrix4;
@@ -97,7 +104,24 @@ impl BlackSheep {
             v.0.iter_mut().for_each(|v|{
                 *v+=Vector2::new(50.0,50.0);
             });
+
+            let mut rads = Vec::new();
+            let mut colors = Vec::new();
+            let mut rng = SmallRng::seed_from_u64(123);
+            for _i in 0..16{
+                let a:f32 = rng.gen_range(10.0..50.0);
+                rads.push(a);
+
+                let v:Vector3<f32> = Vector3::new(
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0),
+                    rng.gen_range(0.0..1.0));
+                colors.push(v);
+            }
+
             mesh.add_floatbuffer(v.0.as_slice(), 0, 2);
+            mesh.add_floatbuffer(rads.as_slice(), 1, 1);
+            mesh.add_floatbuffer(colors.as_slice(), 2, 3);
             mesh.add_elementarraybuffer(v.1.as_slice());
         });
         let simple_shader = &shader_repo.simple;
@@ -362,7 +386,6 @@ impl BlackSheep {
             three_d_rendering_setup();
             point_2d_shader.use_program();
             point_2d_shader.set_projection(ui_projection);
-            point_2d_shader.set_radius(50.0);
             points.bind_vertex_array();
             points.draw_point_elements();
 
