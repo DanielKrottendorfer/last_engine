@@ -35,7 +35,50 @@ impl Mesh {
         self.buffer_ids.push(buffer_id);
     }
 
-    pub fn update_floatbuffer<T>(&self, data: &[T], i: usize) {
+    pub fn add_dynamic_floatbuffer<T>(
+        &mut self,
+        data: &[T],
+        attribute_index: u32,
+        attribute_size: i32,
+    ) {
+        if !(attribute_size > 0) {
+            panic!("Attribute size needs to be > 0")
+        }
+
+        let buffer_id = buffer_data_dynamic(data, gl::ARRAY_BUFFER);
+        set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
+
+        self.buffer_ids.push(buffer_id);
+    }
+
+    pub fn add_intbuffer<T>(&mut self, data: &[T], attribute_index: u32, attribute_size: i32) {
+        if !(attribute_size > 0) {
+            panic!("Attribute size needs to be > 0")
+        }
+
+        let buffer_id = buffer_data_static(data, gl::ARRAY_BUFFER);
+        set_attribute_pointer(attribute_index, gl::INT, attribute_size);
+
+        self.buffer_ids.push(buffer_id);
+    }
+
+    pub fn add_dynamic_intbuffer<T>(
+        &mut self,
+        data: &[T],
+        attribute_index: u32,
+        attribute_size: i32,
+    ) {
+        if !(attribute_size > 0) {
+            panic!("Attribute size needs to be > 0")
+        }
+
+        let buffer_id = buffer_data_dynamic(data, gl::ARRAY_BUFFER);
+        set_attribute_pointer(attribute_index, gl::INT, attribute_size);
+
+        self.buffer_ids.push(buffer_id);
+    }
+
+    pub fn update_buffer<T>(&self, data: &[T], i: usize) {
         update_buffer_data(data, self.buffer_ids[i], gl::ARRAY_BUFFER);
     }
 

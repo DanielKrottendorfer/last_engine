@@ -29,6 +29,7 @@ use rand::Rng;
 use rand::SeedableRng;
 
 use std::borrow::Borrow;
+use std::collections::HashSet;
 use std::time::Duration;
 
 use cgmath::Matrix4;
@@ -98,9 +99,9 @@ impl BlackSheep {
         let cube = MeshToken::from(mesh_repo.get_mesh_by_name("cube").unwrap());
         let cube_cloud = MeshToken::from(mesh_repo.get_mesh_by_name("cloud").unwrap());
 
-        let (mut positions, e) = point_grid::new_point_grid(4, 4, 500.0);
+        let (mut positions, e) = point_grid::new_point_grid(4, 4, 500);
         positions.iter_mut().for_each(|v| {
-            *v += Vector2::new(50.0, 50.0);
+            *v += Vector2::new(50, 50);
         });
 
         let mut rads = Vec::new();
@@ -119,7 +120,7 @@ impl BlackSheep {
         }
 
         let points = mesh_repo.add_mesh("points", |mesh| {
-            mesh.add_floatbuffer(positions.as_slice(), 0, 2);
+            mesh.add_intbuffer(positions.as_slice(), 0, 2);
             mesh.add_floatbuffer(rads.as_slice(), 1, 1);
             mesh.add_floatbuffer(colors.as_slice(), 2, 3);
             mesh.add_elementarraybuffer(e.as_slice());
@@ -193,7 +194,7 @@ impl BlackSheep {
                                     let new_c: Vec<Vector4<f32>> = (0..cc.vertex_count)
                                         .map(|_x| Vector4::from(t_color))
                                         .collect();
-                                    cc.update_floatbuffer(new_c.as_slice(), 1);
+                                    cc.update_buffer(new_c.as_slice(), 1);
                                     #[cfg(not(feature = "debug_off"))]
                                     println!("update triangle colors");
                                 }
@@ -278,8 +279,6 @@ impl BlackSheep {
                                 .build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
                         });
-
-                    // a.pop();
                 });
 
                 //HANDLE INPUT
