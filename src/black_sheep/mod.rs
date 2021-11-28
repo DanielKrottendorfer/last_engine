@@ -24,12 +24,12 @@ mod imgui_system;
 
 mod setup;
 
+mod algorithms;
+
 use rand::rngs::SmallRng;
 use rand::Rng;
 use rand::SeedableRng;
 
-use std::borrow::Borrow;
-use std::collections::HashSet;
 use std::time::Duration;
 
 use cgmath::Matrix4;
@@ -38,7 +38,7 @@ use cgmath::Vector4;
 use gamestate::*;
 
 use cgmath::{Deg, Vector3};
-use imgui::{ColorPicker, Condition, Image, StyleVar, TextureId, Window};
+use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 use rendering::geometry::MeshRepo;
 use rendering::shader::ShaderRepo;
 use sdl2::mouse::MouseButton;
@@ -51,11 +51,9 @@ use crate::black_sheep::rendering::geometry::MeshToken;
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
 use crate::black_sheep::settings::*;
-use crate::black_sheep::window::window_util::{clear_window, set_viewport};
+use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
 use camera::structs::FlyingEye;
-
-use self::rendering::shader;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -93,22 +91,29 @@ impl BlackSheep {
 
         let mut ui_projection =
             ui_projection_mat([INIT_WINDOW_SIZE_I32[0], INIT_WINDOW_SIZE_I32[1]]);
+        let mut orthogonal_projection =
+            ui_projection_mat([INIT_WINDOW_SIZE_I32[0] - 300, INIT_WINDOW_SIZE_I32[1]]);
+
+        init_rendersetup();
 
         setup::init_mesh(&mut mesh_repo);
         let gizmo = MeshToken::from(mesh_repo.get_mesh_by_name("gizmo").unwrap());
         let cube = MeshToken::from(mesh_repo.get_mesh_by_name("cube").unwrap());
         let cube_cloud = MeshToken::from(mesh_repo.get_mesh_by_name("cloud").unwrap());
 
-        let (mut positions, e) = point_grid::new_point_grid(4, 4, 500);
-        positions.iter_mut().for_each(|v| {
-            *v += Vector2::new(50, 50);
-        });
-
+        let (mut positions, e) = point_grid::new_point_grid(80, 80, 500);
+        let mut dirs = Vec::new();
         let mut rads = Vec::new();
         let mut colors = Vec::new();
+
+        positions.iter_mut().for_each(|v| {
+            *v += Vector2::new(50.0, 50.0);
+        });
+
         let mut rng = SmallRng::seed_from_u64(123);
+
         for _i in 0..positions.len() {
-            let a: f32 = rng.gen_range(10.0..50.0);
+            let a: f32 = rng.gen_range(1.0..3.0);
             rads.push(a);
 
             let v: Vector3<f32> = Vector3::new(
@@ -117,14 +122,19 @@ impl BlackSheep {
                 rng.gen_range(0.0..1.0),
             );
             colors.push(v);
+
+            let t = rng.gen_range(0.0..7.0);
+            let d: Vector2<f32> = Vector2::new(f32::sin(t) * 2.0, f32::cos(t) * 2.0);
+            dirs.push(d);
         }
 
         let points = mesh_repo.add_mesh("points", |mesh| {
-            mesh.add_intbuffer(positions.as_slice(), 0, 2);
+            mesh.add_dynamic_floatbuffer(positions.as_slice(), 0, 2);
             mesh.add_floatbuffer(rads.as_slice(), 1, 1);
             mesh.add_floatbuffer(colors.as_slice(), 2, 3);
             mesh.add_elementarraybuffer(e.as_slice());
         });
+        let points = mesh_repo.get_mesh_by_name("points").unwrap();
         let color_shader = &shader_repo.color_3d;
         let cloud_shader = &shader_repo.point_cloud;
         let imgui_shader_program = &shader_repo.imgui;
@@ -134,16 +144,10 @@ impl BlackSheep {
         let mut imgui_system = imgui_system::init();
 
         let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
-        // let rt_main = rendering::rendertarget::RenderTarget::new(
-        //     window_size_i32[0] - 300,
-        //     window_size_i32[1],
-        // );
         rendertarget::unbind_framebuffer();
 
         let font_texture = imgui_system.load_font_atlas_texture();
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
-
-        let mut simple_color = Vector3::new(1.0, 0.0, 1.0);
 
         cam.move_cam(Vector3::new(1.35, 1.35, 2.0));
         cam.rotate_h(Deg(35.0));
@@ -157,7 +161,8 @@ impl BlackSheep {
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
-        let mut run_ui = true;
+        let mut run_ui = false;
+        let mut prune = false;
 
         'mainloop: loop {
             let current = time.elapsed();
@@ -238,6 +243,7 @@ impl BlackSheep {
                         WindowEvent::Resized(w, h) => {
                             set_viewport(w, h);
                             ui_projection = ui_projection_mat([w, h]);
+                            orthogonal_projection = ui_projection_mat([w - 300, h]);
                             window_size_f32 = [w as f32, h as f32];
                             window_size_i32 = [w, h];
                             //rt_main.resize(window_size_i32[0] - 300, window_size_i32[1]);
@@ -266,9 +272,13 @@ impl BlackSheep {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 
-                            let label = if run_ui { "start" } else { "stop" };
+                            let label = if run_ui { "stop" } else { "start" };
                             if ui.button(label) {
                                 run_ui = !run_ui;
+                            }
+                            let label = if prune { "np prune" } else { "prune" };
+                            if ui.button(label) {
+                                prune = !prune;
                             }
                             ui.text(format!("{:?}", -cam.position));
                             ui.text(format!("{:#?}", cam.orientation));
@@ -283,12 +293,24 @@ impl BlackSheep {
 
                 //HANDLE INPUT
                 {
-                    use KeyboardInputFlags as kf;
-                    if input.contains(kf::Q) {
-                        simple_color = Vector3::new(1.0, 0.0, 1.0);
-                    } else if input.contains(kf::E) {
-                        simple_color = Vector3::new(0.4, 0.0, 0.4);
-                    }
+                    // if run_ui {
+                    //     if !prune {
+                    //         algorithms::brute_force_collison(&positions, &mut dirs, &rads);
+                    //     } else {
+                    //         algorithms::sweep_and_prune(&positions, &mut dirs, &rads);
+                    //     }
+
+                    //     algorithms::prevent_out_of_bound(
+                    //         &positions,
+                    //         &mut dirs,
+                    //         &rads,
+                    //         &window_size_f32,
+                    //     );
+                    //     positions.iter_mut().zip(dirs.iter()).for_each(|(p, d)| {
+                    //         *p += *d;
+                    //     });
+                    //     points.update_buffer(positions.as_slice(), 0);
+                    // }
 
                     if let Some(v) = get_movement(&mut input) {
                         cam.set_movement(v);
@@ -322,7 +344,7 @@ impl BlackSheep {
             three_d_rendering_setup();
 
             clear_color(0.1, 0.1, 0.1, 1.0);
-            clear_window();
+            clear_drawbuffer();
             set_viewport(300, 300);
 
             gizmo_shader_program.use_program();
@@ -330,18 +352,11 @@ impl BlackSheep {
             gizmo.bind_vertex_array();
             gizmo.draw_point_elements();
 
-            //rt_main.bind_framebuffer();
-
             rendertarget::unbind_framebuffer();
             set_viewport(window_size_i32[0] - 300, window_size_i32[1]);
 
             clear_color(0.0, 0.3, 0.3, 1.0);
-            clear_window();
-
-            // simple_shader.use_program();
-            // simple_shader.set_color(simple_color);
-            // triangle.bind_vertex_array();
-            // triangle.draw_triangle_elements();
+            clear_drawbuffer();
 
             color_shader.use_program();
             color_shader.set_MVP(projection * view * model);
@@ -354,6 +369,14 @@ impl BlackSheep {
             cube_cloud.bind_vertex_array();
             cube_cloud.draw_point_elements();
 
+            // unsafe {
+            //     gl::Disable(gl::DEPTH_TEST);
+            // }
+            // point_2d_shader.use_program();
+            // point_2d_shader.set_projection(orthogonal_projection);
+            // points.bind_vertex_array();
+            // points.draw_point_elements();
+
             ui_rendering_setup();
 
             set_viewport(window_size_i32[0], window_size_i32[1]);
@@ -361,12 +384,6 @@ impl BlackSheep {
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(ui_projection);
             imgui_system.draw(|t| imgui_shader_program.set_tex(t));
-
-            three_d_rendering_setup();
-            point_2d_shader.use_program();
-            point_2d_shader.set_projection(ui_projection);
-            points.bind_vertex_array();
-            points.draw_point_elements();
 
             window.swap();
         }

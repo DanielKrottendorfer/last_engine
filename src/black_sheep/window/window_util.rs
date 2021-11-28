@@ -45,7 +45,7 @@ pub fn set_viewport(w: i32, h: i32) {
     }
 }
 
-pub fn clear_window() {
+pub fn clear_drawbuffer() {
     unsafe {
         gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
     }
@@ -57,12 +57,17 @@ pub fn clear_color(red: f32, green: f32, blue: f32, alpha: f32) {
     }
 }
 
-pub fn three_d_rendering_setup() {
+pub fn init_rendersetup() {
     unsafe {
-        gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::BLEND);
         gl::BlendEquation(gl::FUNC_ADD);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+    }
+}
+
+pub fn three_d_rendering_setup() {
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
         gl::Disable(gl::SCISSOR_TEST);
     }
 }
@@ -70,9 +75,6 @@ pub fn three_d_rendering_setup() {
 pub fn ui_rendering_setup() {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
-        gl::Enable(gl::BLEND);
-        gl::BlendEquation(gl::FUNC_ADD);
-        gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         gl::Enable(gl::SCISSOR_TEST);
     }
 }
