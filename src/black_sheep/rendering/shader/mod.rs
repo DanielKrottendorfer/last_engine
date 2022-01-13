@@ -1,8 +1,12 @@
 pub mod shader_structs;
 mod shader_util;
+
+use std::sync::Mutex;
+
 use shader_structs::*;
 use shader_util::*;
 
+#[derive(Default,Clone)]
 pub struct ShaderRepo {
     pub imgui: ImguiShaderProgram,
     pub point_cloud: CloudGeometryShaderProgram,
@@ -12,8 +16,49 @@ pub struct ShaderRepo {
     pub point_2d: Point2D,
 }
 
+lazy_static!{
+    static ref SHADER_REPO:Mutex<Option<ShaderRepo>> = Mutex::new(None);
+}
+
+pub fn init() {
+    let sr = SHADER_REPO.lock();
+    if sr.is_err() {
+        panic!("shader_repo locked failed");
+    }
+
+    let mut sr = sr.unwrap();
+
+    if sr.is_some() {
+        panic!("shader_repo already initialized")
+    }
+
+    *sr = Some(ShaderRepo::new());
+}
+
+pub fn cleanup() {
+    if let Ok(mut sr) = SHADER_REPO.lock(){
+        if let Some(sr) = &mut *sr{
+            sr.cleanup();
+        }
+    }
+}
+
+pub fn get_shader_repo() -> ShaderRepo {
+    let sr = SHADER_REPO.lock();
+    if sr.is_err() {
+        panic!("shader_repo locked failed");
+    }
+
+    let sr = sr.unwrap();
+    if sr.is_none() {
+        panic!("shader_repo already initialized");
+    }
+
+    sr.clone().unwrap()
+}
+
 impl ShaderRepo {
-    pub fn new() -> Self {
+    fn new() -> Self {
         let mut point_cloud = CloudGeometryShaderProgram::new();
         {
             let program = build_shader_program(GVS_SRC_CLOUD, Some(GS_SRC_CLOUD), GFS_SRC_CLOUD);
@@ -69,10 +114,3 @@ impl ShaderRepo {
     }
 }
 
-impl Drop for ShaderRepo {
-    fn drop(&mut self) {
-        #[cfg(not(feature = "debug_off"))]
-        println!("shaderrepo cleanup");
-        self.cleanup();
-    }
-}

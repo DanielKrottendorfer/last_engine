@@ -6,6 +6,8 @@ use std::{
 use gl::types::{GLint, GLshort, GLushort};
 use imgui::{internal::RawWrapper, DrawCmdParams, DrawData, DrawList};
 
+use crate::black_sheep::rendering::shader;
+
 use super::mesh_util::*;
 
 #[derive(Debug)]
@@ -14,6 +16,7 @@ pub struct ImguiMesh {
     vertex_buffer_id: u32,
     element_buffer_id: u32,
     draw_params: Vec<(i32, DrawCmdParams)>,
+    imgui_shader: shader::shader_structs::ImguiShaderProgram
 }
 
 impl ImguiMesh {
@@ -21,14 +24,14 @@ impl ImguiMesh {
         vertex_array_id: u32,
         vertex_buffer_id: u32,
         element_buffer_id: u32,
-        draw_params: Vec<(i32, DrawCmdParams)>,
-        vertex_count: i32,
+        draw_params: Vec<(i32, DrawCmdParams)>
     ) -> Self {
         Self {
             vertex_array_id,
             vertex_buffer_id,
             element_buffer_id,
             draw_params,
+            imgui_shader: shader::get_shader_repo().imgui
         }
     }
     pub fn bind_vertex_array(&self) {
@@ -36,7 +39,7 @@ impl ImguiMesh {
             gl::BindVertexArray(self.vertex_array_id);
         }
     }
-    pub fn draw<T: Fn(i32)>(&self, window_size: [f32; 2], set_texture: T) {
+    pub fn draw(&self, window_size: [f32; 2]) {
         for dp in self.draw_params.iter() {
             let count = dp.0;
             let offset = dp.1.idx_offset * std::mem::size_of::<GLushort>();
@@ -47,18 +50,7 @@ impl ImguiMesh {
                 window_size[1] - dp.1.clip_rect[3],
             );
 
-            set_texture(dp.1.texture_id.id() as i32);
-
-            // if dp.1.texture_id.id() != 0 {
-            //     unsafe {
-            //         gl::Enable(gl::DEPTH_TEST);
-            //     }
-            // }else{
-
-            //     unsafe {
-            //         gl::Disable(gl::DEPTH_TEST);
-            //     }
-            // }
+            self.imgui_shader.set_tex(dp.1.texture_id.id() as i32);
 
             unsafe {
                 gl::Scissor(
@@ -131,8 +123,6 @@ pub fn imguimesh_from_drawdata(draw_data: &DrawData) -> Vec<ImguiMesh> {
 
             let vertex_array_id: u32 = gen_vertexarray();
 
-            let vertex_count = idx_buffer.len() as i32;
-
             let vertex_buffer_id = buffer_data_static(vtx_buffer, gl::ARRAY_BUFFER);
             let element_buffer_id = buffer_data_static(idx_buffer, gl::ELEMENT_ARRAY_BUFFER);
 
@@ -145,7 +135,6 @@ pub fn imguimesh_from_drawdata(draw_data: &DrawData) -> Vec<ImguiMesh> {
                 vertex_buffer_id,
                 element_buffer_id,
                 draw_params,
-                vertex_count,
             )
         })
         .collect()

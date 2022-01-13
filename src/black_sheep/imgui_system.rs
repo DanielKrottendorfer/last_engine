@@ -143,13 +143,11 @@ impl ImguiSystem {
         }
     }
 
-    pub fn draw<F>(&self, set_texture: F)
-    where
-        F: Fn(i32),
+    pub fn draw(&self)
     {
         self.mesh_vec.iter().for_each(|mesh| {
             mesh.bind_vertex_array();
-            mesh.draw(self.imgui.io().display_size, &set_texture);
+            mesh.draw(self.imgui.io().display_size);
         });
     }
 }
