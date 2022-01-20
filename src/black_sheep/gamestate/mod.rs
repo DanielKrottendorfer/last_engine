@@ -4,19 +4,19 @@ pub mod input_flags;
 pub mod camera;
 
 use cgmath::{Matrix4, Vector3, Zero, Deg};
-use sdl2::keyboard::Keycode;
+
 
 use crate::black_sheep::q_i_square_root::q_normalize;
 use self::{input_flags::InputFlags, camera::structs::FlyingEye};
 
-use super::{rendering::{shader::shader_structs::*, self, geometry::{MeshToken, self}}, settings::*, window::window_util::*, setup};
+use super::{rendering::{shader::shader_structs::*, self, geometry::{MeshToken}}, settings::*, window::window_util::*, setup};
 
 
 pub struct GameState {
     pub input_flags: InputFlags,
-    window_size_f32: [f32; 2],
-    window_size_i32: [i32; 2],
-    ui_projection: Matrix4<f32>,
+    pub window_size_f32: [f32; 2],
+    pub window_size_i32: [i32; 2],
+    pub ui_projection: Matrix4<f32>,
     pub cam: FlyingEye,
 
     color_shader: Color3D,

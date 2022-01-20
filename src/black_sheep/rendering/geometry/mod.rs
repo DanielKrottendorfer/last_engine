@@ -201,7 +201,7 @@ pub struct MeshRepo {
 }
 
 impl MeshRepo {
-    pub fn new() -> Self {
+    fn new() -> Self {
         MeshRepo {
             unique_indexer: UniqueIndexer::new(),
             mesh_i_data: Vec::new(),

@@ -1,6 +1,6 @@
 use crate::black_sheep::rendering::geometry;
 
-use super::{constants::*, rendering::geometry::{MeshRepo, MeshToken}, generators::point_cloud};
+use super::{constants::*, rendering::geometry::{MeshToken}, generators::point_cloud};
 
 pub fn init_mesh() -> Vec<MeshToken> {
 

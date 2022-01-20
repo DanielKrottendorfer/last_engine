@@ -1,10 +1,7 @@
-use std::{
-    borrow::BorrowMut,
-    ffi::{CStr, CString},
-};
 
-use gl::types::{GLint, GLshort, GLushort};
-use imgui::{internal::RawWrapper, DrawCmdParams, DrawData, DrawList};
+
+use gl::types::{GLushort};
+use imgui::{DrawCmdParams, DrawData, DrawList};
 
 use crate::black_sheep::rendering::shader;
 
