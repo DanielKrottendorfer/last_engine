@@ -2,7 +2,7 @@ pub mod imgui_mesh;
 mod mesh_util;
 mod unique_index;
 
-use std::{borrow::Borrow, collections::HashMap};
+use std::{borrow::Borrow, collections::HashMap, sync::Mutex};
 
 use mesh_util::*;
 use unique_index::*;
@@ -33,6 +33,10 @@ impl Mesh {
         set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
 
         self.buffer_ids.push(buffer_id);
+    }
+
+    pub fn downgrade(&self) -> MeshToken {
+        MeshToken::from(self)
     }
 
     pub fn add_dynamic_floatbuffer<T>(
@@ -118,19 +122,6 @@ impl From<&Mesh> for MeshToken {
         }
     }
 }
-
-impl Drop for Mesh {
-    fn drop(&mut self) {
-        self.cleanup();
-    }
-}
-
-pub struct MeshRepo {
-    unique_indexer: UniqueIndexer,
-    mesh_i_data: Vec<Mesh>,
-    mesh_map: HashMap<String, usize>,
-}
-
 #[derive(Debug, Default)]
 pub struct MeshToken {
     pub uid: usize,
@@ -150,8 +141,67 @@ impl MeshToken {
     }
 }
 
+lazy_static!{
+    static ref MESH_REPO:Mutex<Option<MeshRepo>> = Mutex::new(None);
+}
+
+
+pub fn init() {
+    let sr = MESH_REPO.lock();
+    if sr.is_err() {
+        panic!("shader_repo locked failed");
+    }
+
+    let mut sr = sr.unwrap();
+
+    if sr.is_some() {
+        panic!("shader_repo already initialized")
+    }
+
+    *sr = Some(MeshRepo::new());
+}
+
+pub fn cleanup() {
+    if let Ok(mut mr) = MESH_REPO.lock(){
+        if let Some(mr) = &mut *mr{
+            mr.cleanup();
+        }
+    }
+}
+
+
+pub fn get_mesh_repo<T: Fn(&mut MeshRepo)->S,S>(f:T) -> S {
+    
+    let sr = MESH_REPO.lock();
+    if sr.is_err() {
+        panic!("shader_repo locked failed");
+    }
+
+    let mut sr = sr.unwrap();
+    if sr.is_none() {
+        panic!("shader_repo already initialized");
+    }
+
+
+    
+    if let Some(mr) = sr.as_mut() {
+        f(mr)
+    }else{
+        panic!("something went horribly wrong");
+    }
+    
+}
+
+
+
+pub struct MeshRepo {
+    unique_indexer: UniqueIndexer,
+    mesh_i_data: Vec<Mesh>,
+    mesh_map: HashMap<String, usize>,
+}
+
 impl MeshRepo {
-    pub fn new() -> Self {
+    fn new() -> Self {
         MeshRepo {
             unique_indexer: UniqueIndexer::new(),
             mesh_i_data: Vec::new(),
@@ -192,5 +242,11 @@ impl MeshRepo {
     pub fn get_mesh_by_name(&self, name: &str) -> Option<&Mesh> {
         let uid = self.mesh_map.get(name)?;
         self.get_mesh_by_uid(uid)
+    }
+
+    pub fn cleanup(&mut self) {
+        for mesh in self.mesh_i_data.iter() {
+            mesh.cleanup();
+        }
     }
 }

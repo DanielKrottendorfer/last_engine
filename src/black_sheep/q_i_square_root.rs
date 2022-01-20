@@ -2,6 +2,7 @@ use std::mem;
 
 use cgmath::{InnerSpace, Vector3};
 
+#[inline]
 pub fn q_i_square_root(f: f32) -> f32 {
     // Magic number based on Chris Lomont work:
     // const MAGIC_U32: u32 = 0x5f375a86;
@@ -18,6 +19,7 @@ pub fn q_i_square_root(f: f32) -> f32 {
     return y;
 }
 
+#[inline]
 pub fn q_normalize(v: Vector3<f32>) -> Vector3<f32> {
     v * q_i_square_root(v.magnitude2())
 }

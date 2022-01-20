@@ -1,7 +1,7 @@
-use std::borrow::Borrow;
+
 
 use cgmath::{InnerSpace, Vector2};
-use itertools::izip;
+
 
 pub fn sweep_and_prune(
     positions: &Vec<Vector2<f32>>,
