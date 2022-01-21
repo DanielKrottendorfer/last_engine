@@ -1,6 +1,4 @@
-
-
-use gl::types::{GLushort};
+use gl::types::GLushort;
 use imgui::{DrawCmdParams, DrawData, DrawList};
 
 use crate::black_sheep::rendering::shader;
@@ -13,7 +11,7 @@ pub struct ImguiMesh {
     vertex_buffer_id: u32,
     element_buffer_id: u32,
     draw_params: Vec<(i32, DrawCmdParams)>,
-    imgui_shader: shader::shader_structs::ImguiShaderProgram
+    imgui_shader: shader::shader_structs::ImguiShaderProgram,
 }
 
 impl ImguiMesh {
@@ -21,14 +19,14 @@ impl ImguiMesh {
         vertex_array_id: u32,
         vertex_buffer_id: u32,
         element_buffer_id: u32,
-        draw_params: Vec<(i32, DrawCmdParams)>
+        draw_params: Vec<(i32, DrawCmdParams)>,
     ) -> Self {
         Self {
             vertex_array_id,
             vertex_buffer_id,
             element_buffer_id,
             draw_params,
-            imgui_shader: shader::get_shader_repo().imgui
+            imgui_shader: shader::get_shader_repo().imgui,
         }
     }
     pub fn bind_vertex_array(&self) {

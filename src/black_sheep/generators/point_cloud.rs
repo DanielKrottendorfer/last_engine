@@ -2,7 +2,6 @@ use cgmath::{Vector3, Vector4};
 
 use crate::black_sheep::q_i_square_root::q_normalize;
 
-
 pub fn point_cube(size: i32) -> (Vec<Vector3<f32>>, Vec<Vector4<f32>>, Vec<u32>) {
     let mut v = Vec::new();
     let mut c = Vec::new();

@@ -141,10 +141,9 @@ impl MeshToken {
     }
 }
 
-lazy_static!{
-    static ref MESH_REPO:Mutex<Option<MeshRepo>> = Mutex::new(None);
+lazy_static! {
+    static ref MESH_REPO: Mutex<Option<MeshRepo>> = Mutex::new(None);
 }
-
 
 pub fn init() {
     let sr = MESH_REPO.lock();
@@ -162,16 +161,14 @@ pub fn init() {
 }
 
 pub fn cleanup() {
-    if let Ok(mut mr) = MESH_REPO.lock(){
-        if let Some(mr) = &mut *mr{
+    if let Ok(mut mr) = MESH_REPO.lock() {
+        if let Some(mr) = &mut *mr {
             mr.cleanup();
         }
     }
 }
 
-
-pub fn get_mesh_repo<T: Fn(&mut MeshRepo)->S,S>(f:T) -> S {
-    
+pub fn get_mesh_repo<T: Fn(&mut MeshRepo) -> S, S>(f: T) -> S {
     let sr = MESH_REPO.lock();
     if sr.is_err() {
         panic!("shader_repo locked failed");
@@ -182,17 +179,12 @@ pub fn get_mesh_repo<T: Fn(&mut MeshRepo)->S,S>(f:T) -> S {
         panic!("shader_repo already initialized");
     }
 
-
-    
     if let Some(mr) = sr.as_mut() {
         f(mr)
-    }else{
+    } else {
         panic!("something went horribly wrong");
     }
-    
 }
-
-
 
 pub struct MeshRepo {
     unique_indexer: UniqueIndexer,

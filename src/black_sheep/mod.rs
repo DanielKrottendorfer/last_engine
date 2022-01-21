@@ -1,5 +1,3 @@
-
-
 pub mod rendering;
 mod window;
 
@@ -23,10 +21,8 @@ mod algorithms;
 
 use std::time::Duration;
 
-
-
+use cgmath::Deg;
 use gamestate::*;
-
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 use rendering::geometry::MeshRepo;
@@ -42,7 +38,6 @@ use crate::black_sheep::rendering::rendertarget;
 use crate::black_sheep::settings::*;
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
-
 use self::gamestate::input_flags::InputFlags;
 
 use self::imgui_system::ImguiSystem;
@@ -54,7 +49,7 @@ pub struct BlackSheep {
     game_state: GameState,
 }
 
-impl Drop for BlackSheep{
+impl Drop for BlackSheep {
     fn drop(&mut self) {
         shader::cleanup();
         geometry::cleanup();
@@ -68,15 +63,10 @@ impl BlackSheep {
         geometry::init();
         rendering::shader::init();
         let game_state = GameState::new();
-        Self {
-            window,
-            game_state,
-        }
+        Self { window, game_state }
     }
 
-    pub fn handle_events(&mut self,imgui_system: &mut ImguiSystem){
-        
-   
+    pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
         while let Some(event) = self.window.poll_event() {
             imgui_system.handle_event(&event);
             let game_state = &mut self.game_state;
@@ -123,9 +113,12 @@ impl BlackSheep {
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(w, h) => {
                         set_viewport(w, h);
-                        game_state.ui_projection = ui_projection_mat([w, h]);
-                        game_state.window_size_f32 = [w as f32, h as f32];
                         game_state.window_size_i32 = [w, h];
+                        let wh = [w as f32, h as f32];
+                        game_state.window_size_f32 = wh;
+                        game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, 0.0 , 1.0);
+                        let aspect = (wh[0] - 300.0) / wh[1];
+                        game_state.world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
                         //rt_main.resize(window_size_i32[0] - 300, window_size_i32[1]);
                     }
                     _ => (),
@@ -133,20 +126,18 @@ impl BlackSheep {
                 _ => (),
             }
         }
-
     }
 
     pub fn run(mut self) {
         let (imgui_shader_program, gizmo_shader) = {
             let shader_repo = rendering::shader::get_shader_repo();
-            (shader_repo.imgui,shader_repo.gizmo)
+            (shader_repo.imgui, shader_repo.gizmo)
         };
 
         //init_rendering_setup();
 
         init_rendersetup();
 
-        
         let mut imgui_system = imgui_system::init();
 
         let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
@@ -155,11 +146,8 @@ impl BlackSheep {
         let font_texture = imgui_system.load_font_atlas_texture();
         let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
 
-
-
-        let gizmo = geometry::get_mesh_repo(|mr|{
-            MeshToken::from(mr.get_mesh_by_name("gizmo").unwrap())
-        });
+        let gizmo =
+            geometry::get_mesh_repo(|mr| MeshToken::from(mr.get_mesh_by_name("gizmo").unwrap()));
 
         let time = std::time::Instant::now();
         let mut previous = time.elapsed();
@@ -203,7 +191,10 @@ impl BlackSheep {
                     use imgui::WindowFlags;
                     Window::new("Image")
                         .size([300.0, game_state.window_size_f32[1]], Condition::Always)
-                        .position([game_state.window_size_f32[0] - 300.0, 0.0], Condition::Always)
+                        .position(
+                            [game_state.window_size_f32[0] - 300.0, 0.0],
+                            Condition::Always,
+                        )
                         .flags(
                             WindowFlags::NO_MOVE
                                 | WindowFlags::NO_RESIZE
@@ -213,7 +204,7 @@ impl BlackSheep {
                         .build(&ui, || {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
-        
+
                             let label = if run_ui { "stop" } else { "start" };
                             if ui.button(label) {
                                 run_ui = !run_ui;
@@ -233,12 +224,11 @@ impl BlackSheep {
                         });
                 });
                 //HANDLE INPUT
-                
+
                 game_state.update();
 
                 lag -= MS_PER_UPDATE;
             }
-
 
             //RENDER
             unsafe {
@@ -252,9 +242,7 @@ impl BlackSheep {
 
             let i = lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32();
 
-
             let view = game_state.cam.get_i_view(i);
-
 
             rt_gizmo.bind_framebuffer();
             three_d_rendering_setup();
@@ -269,21 +257,27 @@ impl BlackSheep {
             gizmo.draw_point_elements();
 
             rendertarget::unbind_framebuffer();
-            set_viewport(game_state.window_size_i32[0] - 300, game_state.window_size_i32[1]);
-
+            set_viewport(
+                game_state.window_size_i32[0] - 300,
+                game_state.window_size_i32[1],
+            );
 
             clear_color(0.0, 0.3, 0.3, 1.0);
             clear_drawbuffer();
+
+            game_state.draw_3d(i);
             
-            game_state.draw(i);
-
-            ui_rendering_setup();
-
             set_viewport(game_state.window_size_i32[0], game_state.window_size_i32[1]);
+            game_state.draw_ui(i);
+
+            imgui_rendering_setup();
+
+
 
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(game_state.ui_projection);
             imgui_system.draw();
+
 
             self.window.swap();
         }

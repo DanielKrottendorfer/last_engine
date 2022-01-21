@@ -1,4 +1,3 @@
-
 use bitflags::bitflags;
 use sdl2::keyboard::Keycode;
 
@@ -46,11 +45,11 @@ impl From<Keycode> for InputFlags {
 }
 
 impl InputFlags {
-    pub fn key_down(&mut self,key_code: sdl2::keyboard::Keycode) {
+    pub fn key_down(&mut self, key_code: sdl2::keyboard::Keycode) {
         use InputFlags as kf;
         self.insert(kf::from(key_code));
     }
-    pub fn key_up(&mut self,key_code: sdl2::keyboard::Keycode) {
+    pub fn key_up(&mut self, key_code: sdl2::keyboard::Keycode) {
         use InputFlags as kf;
         self.remove(kf::from(key_code));
     }

@@ -72,7 +72,7 @@ pub fn three_d_rendering_setup() {
     }
 }
 
-pub fn ui_rendering_setup() {
+pub fn imgui_rendering_setup() {
     unsafe {
         gl::Disable(gl::DEPTH_TEST);
         gl::Enable(gl::SCISSOR_TEST);

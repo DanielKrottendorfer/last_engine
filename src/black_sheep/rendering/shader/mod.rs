@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use shader_structs::*;
 use shader_util::*;
 
-#[derive(Default,Clone)]
+#[derive(Default, Clone)]
 pub struct ShaderRepo {
     pub imgui: ImguiShaderProgram,
     pub point_cloud: CloudGeometryShaderProgram,
@@ -14,10 +14,11 @@ pub struct ShaderRepo {
     pub color_3d: Color3D,
     pub gizmo: GizmoProgram,
     pub point_2d: Point2D,
+    pub colored_triangles: ColoredTriangles,
 }
 
-lazy_static!{
-    static ref SHADER_REPO:Mutex<Option<ShaderRepo>> = Mutex::new(None);
+lazy_static! {
+    static ref SHADER_REPO: Mutex<Option<ShaderRepo>> = Mutex::new(None);
 }
 
 pub fn init() {
@@ -36,8 +37,8 @@ pub fn init() {
 }
 
 pub fn cleanup() {
-    if let Ok(mut sr) = SHADER_REPO.lock(){
-        if let Some(sr) = &mut *sr{
+    if let Ok(mut sr) = SHADER_REPO.lock() {
+        if let Some(sr) = &mut *sr {
             sr.cleanup();
         }
     }
@@ -95,6 +96,13 @@ impl ShaderRepo {
             point_2d.setup(&program);
         }
 
+        let mut colored_triangles = ColoredTriangles::new();
+        {
+            let program =
+                build_shader_program(COLORED_TRIANGLES_VS_SRC, None, COLORED_TRIANGLES_FS_SRC);
+            colored_triangles.setup(&program);
+        }
+
         ShaderRepo {
             imgui,
             point_cloud,
@@ -102,6 +110,7 @@ impl ShaderRepo {
             color_3d,
             gizmo,
             point_2d,
+            colored_triangles,
         }
     }
     fn cleanup(&mut self) {
@@ -113,4 +122,3 @@ impl ShaderRepo {
         self.point_2d.cleanup();
     }
 }
-

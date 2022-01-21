@@ -1,7 +1,4 @@
-
-
 use cgmath::{InnerSpace, Vector2};
-
 
 pub fn sweep_and_prune(
     positions: &Vec<Vector2<f32>>,

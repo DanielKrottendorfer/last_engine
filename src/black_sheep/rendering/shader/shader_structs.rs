@@ -40,3 +40,9 @@ shader_program!(
         uniform mat4 projection;
     }
 );
+
+shader_program!(
+    ColoredTriangles{
+        uniform mat4 projection;
+    }
+);

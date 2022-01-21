@@ -143,8 +143,7 @@ impl ImguiSystem {
         }
     }
 
-    pub fn draw(&self)
-    {
+    pub fn draw(&self) {
         self.mesh_vec.iter().for_each(|mesh| {
             mesh.bind_vertex_array();
             mesh.draw(self.imgui.io().display_size);
