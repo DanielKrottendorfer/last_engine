@@ -1,23 +1,17 @@
 pub mod rendering;
 mod window;
 
+mod algorithms;
 #[allow(dead_code)]
 mod constants;
-
-pub mod settings;
-
-mod transform;
-
 mod gamestate;
-mod q_i_square_root;
-
-mod imgui_system;
-
 mod generators;
-
+mod imgui_system;
+mod q_i_square_root;
+mod script;
+pub mod settings;
 mod setup;
-
-mod algorithms;
+mod transform;
 
 use std::time::Duration;
 
@@ -116,9 +110,10 @@ impl BlackSheep {
                         game_state.window_size_i32 = [w, h];
                         let wh = [w as f32, h as f32];
                         game_state.window_size_f32 = wh;
-                        game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, 0.0 , 1.0);
+                        game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, 0.0, 1.0);
                         let aspect = (wh[0] - 300.0) / wh[1];
-                        game_state.world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
+                        game_state.world_projection =
+                            cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
                         //rt_main.resize(window_size_i32[0] - 300, window_size_i32[1]);
                     }
                     _ => (),
@@ -266,18 +261,15 @@ impl BlackSheep {
             clear_drawbuffer();
 
             game_state.draw_3d(i);
-            
+
             set_viewport(game_state.window_size_i32[0], game_state.window_size_i32[1]);
             game_state.draw_ui(i);
 
             imgui_rendering_setup();
 
-
-
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(game_state.ui_projection);
             imgui_system.draw();
-
 
             self.window.swap();
         }

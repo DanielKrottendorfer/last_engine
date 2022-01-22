@@ -168,7 +168,7 @@ pub fn cleanup() {
     }
 }
 
-pub fn get_mesh_repo<T: Fn(&mut MeshRepo) -> S, S>(f: T) -> S {
+pub fn get_mesh_repo<T: FnMut(&mut MeshRepo) -> S, S>(mut f: T) -> S {
     let sr = MESH_REPO.lock();
     if sr.is_err() {
         panic!("shader_repo locked failed");

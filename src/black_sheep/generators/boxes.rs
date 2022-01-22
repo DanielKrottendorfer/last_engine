@@ -16,29 +16,29 @@ impl Square {
     }
 }
 
-pub struct SquareSystem {
+pub struct SquareComposition {
     squares: Vec<Square>,
 }
 
-impl SquareSystem {
+impl SquareComposition {
     pub fn new() -> Self {
-        SquareSystem {
+        SquareComposition {
             squares: Vec::new(),
         }
     }
     pub fn add_square(&mut self, square: Square) {
         self.squares.push(square);
     }
-    pub fn generate_buffer(&self) -> (Vec<Vector2<f32>>, Vec<Vector3<f32>>,Vec<u32>) {
+    pub fn generate_colored_triangles(&self) -> (Vec<Vector2<f32>>, Vec<Vector3<f32>>, Vec<u32>) {
         let mut elements = Vec::new();
         let mut positions = Vec::new();
         let mut colors = Vec::new();
 
         let mut i = 0;
         for square in self.squares.iter() {
-            // p1 --- p2
-            // |      |
-            // p3 --- p4 
+            // p1 - p2
+            // |  \  |
+            // p3 - p4
 
             let p1 = square.position_top_left;
 
@@ -59,17 +59,14 @@ impl SquareSystem {
             positions.push(p4);
             colors.push(square.color);
 
-            println!("colors {:?}",square.color);
-
+            elements.push(i);
+            elements.push(i + 1);
+            elements.push(i + 3);
 
             elements.push(i);
-            elements.push(i+1);
-            elements.push(i+3);
-
-            elements.push(i);
-            elements.push(i+3);
-            elements.push(i+2);
-            i+=4;
+            elements.push(i + 3);
+            elements.push(i + 2);
+            i += 4;
         }
 
         (positions, colors, elements)
