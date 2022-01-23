@@ -85,7 +85,6 @@ impl Structogram {
 
             debth_stack.push(self.script.instructions.len());
             for instr in self.script.instructions.iter() {
-
                 match instr {
                     Instruction::WhileLoop(wl) => {
                         cursor.y += self.block_height;
@@ -116,11 +115,8 @@ impl Structogram {
                     .collect();
 
                 if rel_mouse_pos.y - cursor.y < self.block_height {
-                    
-
                     let debth = (rel_mouse_pos.x / ph) as usize + 2;
-                    if debth > debth_stack.len() 
-                    {
+                    if debth > debth_stack.len() {
                         break;
                     }
                 }
@@ -165,10 +161,7 @@ impl Structogram {
 
                     let square = Square::new(
                         cursor,
-                        Vector2::new(
-                            self.block_height,
-                            (ph) * wl.len as f32,
-                        ),
+                        Vector2::new(self.block_height, (ph) * wl.len as f32),
                         Vector3::new(1.0, 0.0, 0.0),
                     );
                     sc.add_square(square);

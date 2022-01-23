@@ -8,11 +8,7 @@ use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
-    rendering::{
-        self,
-        geometry::{self, MeshToken},
-        shader::shader_structs::*,
-    },
+    rendering::{self, geometry::MeshToken, shader::shader_structs::*},
     script::{init_script, structogram::Structogram},
     settings::*,
     setup,
@@ -51,7 +47,7 @@ impl GameState {
 
         let mesh_ts = setup::init_mesh();
 
-        let mut structogram = Structogram::new(init_script(), Vector2::new(10.0, 10.0));
+        let structogram = Structogram::new(init_script(), Vector2::new(10.0, 10.0));
 
         GameState {
             input_flags: InputFlags::NONE,
@@ -101,7 +97,7 @@ impl GameState {
         cube_cloud.bind_vertex_array();
         cube_cloud.draw_point_elements();
     }
-    pub fn draw_ui(&mut self, i: f32) {
+    pub fn draw_ui(&mut self, _i: f32) {
         let colored_squares = &self.structogram.mesh_token;
         let model_m = Matrix4::from_translation(self.structogram.position.extend(0.0));
         self.color_squares.use_program();

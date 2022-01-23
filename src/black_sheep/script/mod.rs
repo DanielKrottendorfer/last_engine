@@ -1,4 +1,4 @@
-use cgmath::{Vector2, Zero};
+use cgmath::Vector2;
 use std::{any::Any, collections::HashMap};
 pub mod impls;
 pub mod structogram;
