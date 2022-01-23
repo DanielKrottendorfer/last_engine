@@ -1,6 +1,7 @@
-use cgmath::Vector2;
+use cgmath::{Vector2, Zero};
 use std::{any::Any, collections::HashMap};
 pub mod impls;
+pub mod structogram;
 
 pub trait Movable {
     fn move_to(&mut self, dir: Vector2<f32>);
@@ -50,6 +51,16 @@ pub enum Instruction {
     WhileLoop(WhileLoop),
     IfCFlow(IfCFlow),
     Action(Box<dyn Action>),
+    Placeholder,
+}
+
+impl Instruction {
+    pub fn is_placeholder(&self) -> bool {
+        match self {
+            Instruction::Placeholder => true,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Default)]
@@ -61,15 +72,43 @@ impl Script {
     pub fn new() -> Self {
         Script::default()
     }
+
+    pub fn remove_placeholder(&mut self) {
+        if let Some(i) = self.instructions.iter().position(|x| x.is_placeholder()) {
+            self.instructions.remove(i);
+        }
+    }
+
     pub fn push_instruction(&mut self, instr: Instruction) {
-        self.instructions.push(instr);
+        if instr.is_placeholder() {
+            self.remove_placeholder();
+            self.instructions.push(instr);
+        } else {
+            self.instructions.push(instr);
+        }
+    }
+    pub fn insert_instruction(&mut self, i: usize, instr: Instruction) {
+        if i >= self.instructions.len() {
+            self.push_instruction(instr);
+        } else {
+            if instr.is_placeholder() {
+                self.remove_placeholder();
+                self.instructions.insert(i, instr);
+            } else {
+                self.instructions.insert(i, instr);
+            }
+        }
     }
     pub fn add_game_object(&mut self, name: String, game_object: Box<dyn GameObject>) {
         self.variables.insert(name, game_object);
     }
+
+    pub fn run(&mut self) {
+        run_script(self);
+    }
 }
 
-pub fn run_script(script: &mut Script) {
+fn run_script(script: &mut Script) {
     let len = script.instructions.len();
     // sub_run(script, 0, len);
 
@@ -112,6 +151,9 @@ pub fn run_script(script: &mut Script) {
                     a.act(&mut script.variables);
                     i += 1;
                 }
+                Instruction::Placeholder => {
+                    i += 1;
+                }
             }
         }
     }
@@ -135,7 +177,10 @@ pub fn init_script() -> Script {
     script.add_game_object("mark1".to_string(), mark1.box_it());
     script.add_game_object("mark2".to_string(), mark2.box_it());
 
-    script.push_instruction(WhileLoop::new(4, Iterations::new(5).box_it()).into_instruction());
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(WhileLoop::new(5, Iterations::new(5).box_it()).into_instruction());
     script.push_instruction(
         WhileLoop::new(
             1,
@@ -157,10 +202,13 @@ pub fn init_script() -> Script {
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark2".to_string()).into_instruction(),
     );
+
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark2".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
 
     script
 }
-

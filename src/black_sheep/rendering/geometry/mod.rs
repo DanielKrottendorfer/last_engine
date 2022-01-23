@@ -86,6 +86,14 @@ impl Mesh {
         update_buffer_data(data, self.buffer_ids[i], gl::ARRAY_BUFFER);
     }
 
+    pub fn update_elementarraybuffer(&self, elements: &[u32]) {
+        update_buffer_data(
+            elements,
+            *self.buffer_ids.last().unwrap(),
+            gl::ELEMENT_ARRAY_BUFFER,
+        );
+    }
+
     pub fn add_elementarraybuffer(&mut self, elements: &[u32]) {
         let id = buffer_data_static(elements, gl::ELEMENT_ARRAY_BUFFER);
         self.vertex_count = elements.len() as i32;
@@ -199,6 +207,21 @@ impl MeshRepo {
             mesh_i_data: Vec::new(),
             mesh_map: HashMap::new(),
         }
+    }
+
+    pub fn remove_mesh(&mut self, name: &str) {
+        if let Some(uid) = self.mesh_map.get(name) {
+            if let Some(i) = self
+                .mesh_i_data
+                .binary_search_by_key(uid, |x| x.uid)
+                .ok()
+                .map(|i| i)
+            {
+                self.mesh_i_data[i].cleanup();
+                self.mesh_i_data.remove(i);
+            }
+        }
+        self.mesh_map.remove(name);
     }
 
     pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, name: &str, init_mesh: T) -> MeshToken {

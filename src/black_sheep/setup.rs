@@ -1,15 +1,8 @@
 use cgmath::{Vector2, Vector3};
 
-use crate::black_sheep::{
-    constants::*,
-    generators::*,
-    generators::{boxes::*, structogram::Structogram},
-};
+use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
-use super::{
-    rendering::geometry::{self, *},
-    script::{impls::*, *},
-};
+use super::rendering::geometry::{self, *};
 
 pub fn init_mesh() -> Vec<MeshToken> {
     let vm = geometry::get_mesh_repo(|mesh_repo| {
@@ -37,7 +30,7 @@ pub fn init_mesh() -> Vec<MeshToken> {
         });
 
         let colored_triangles = mesh_repo.add_mesh("ctriangles", |mesh| {
-            let mut ss = boxes::SquareComposition::new();
+            let mut ss = squares::SquareComposition::new();
             ss.add_square(Square::new(
                 Vector2::new(100.0, 100.0),
                 Vector2::new(500.0, 500.0),
@@ -49,14 +42,7 @@ pub fn init_mesh() -> Vec<MeshToken> {
             mesh.add_elementarraybuffer(&vc.2);
         });
 
-
-        vec![
-            triangle,
-            gizmo,
-            cube,
-            cube_cloud,
-            colored_triangles,
-        ]
+        vec![triangle, gizmo, cube, cube_cloud, colored_triangles]
     });
 
     vm

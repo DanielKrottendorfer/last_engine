@@ -19,7 +19,6 @@ use cgmath::Deg;
 use gamestate::*;
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
-use rendering::geometry::MeshRepo;
 use sdl2::mouse::MouseButton;
 use window::window_util::*;
 use window::SDLWindow;
@@ -101,8 +100,10 @@ impl BlackSheep {
                         self.window.release_mouse();
                     }
                 }
-                Event::MouseMotion { xrel, yrel, .. } => {
-                    self.game_state.on_mouse_motion(xrel, yrel);
+                Event::MouseMotion {
+                    xrel, yrel, x, y, ..
+                } => {
+                    self.game_state.on_mouse_motion(xrel, yrel, x, y);
                 }
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(w, h) => {
@@ -110,7 +111,8 @@ impl BlackSheep {
                         game_state.window_size_i32 = [w, h];
                         let wh = [w as f32, h as f32];
                         game_state.window_size_f32 = wh;
-                        game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, 0.0, 1.0);
+                        game_state.ui_projection =
+                            cgmath::ortho(0.0, wh[0], wh[1], 0.0, 0.0001, 1.0);
                         let aspect = (wh[0] - 300.0) / wh[1];
                         game_state.world_projection =
                             cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
