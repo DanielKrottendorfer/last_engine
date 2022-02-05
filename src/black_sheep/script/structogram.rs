@@ -63,68 +63,76 @@ impl Structogram {
 
     pub fn update(&mut self, mouse_pos: Vector2<f32>) {
         let rel_mouse_pos = mouse_pos - self.position;
+
         let t = self.dimension - rel_mouse_pos;
-
-        let ph = self.padding + self.block_height;
-
-        if rel_mouse_pos.x < 0.0 || rel_mouse_pos.y < 0.0 || t.x < 0.0 || t.y < 0.0 {
-            if let Some(p) = self
-                .script
-                .instructions
-                .iter()
-                .position(|x| x.is_placeholder())
-            {
-                self.script.instructions.remove(p);
+        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && t.x > 0.0 && t.y > 0.0 {
+            if self.try_insert_placeholder(rel_mouse_pos) {
                 self.update_mesh();
+                self.script.print();
+            }
+        }
+    }
+
+    pub fn try_insert_placeholder(&mut self, rel_mouse_pos: Vector2<f32>) -> bool {
+        let block_spacing = self.padding + self.block_height;
+        let mut cursor =
+            self.position + Vector2::new(self.border + self.padding, self.border + self.padding);
+
+        let mut debth_stack = vec![self.script.instructions.len()];
+
+        let init_placeholder_index = self
+            .script
+            .instructions
+            .iter()
+            .position(|x| x.is_placeholder());
+
+        for instr in self.script.instructions.iter() {
+            match instr {
+                Instruction::WhileLoop(wl) => {
+                    cursor.y += block_spacing;
+                    cursor.x += block_spacing;
+                    debth_stack.push(wl.len);
+                }
+                Instruction::IfCFlow(_) => todo!(),
+                Instruction::Action(_) => {
+                    cursor.y += block_spacing;
+                }
+                Instruction::Placeholder => {
+                    cursor.y += block_spacing;
+                }
+            }
+
+            if rel_mouse_pos.y - cursor.y < 0.0 {
+                let debth = (rel_mouse_pos.x / block_spacing) as usize + 2;
+                if debth > debth_stack.len() {
+                    break;
+                }
+            }
+
+            debth_stack = debth_stack
+                .drain(0..)
+                .filter_map(|i: usize| {
+                    if i == 0 {
+                        cursor.x -= block_spacing;
+                        None
+                    } else {
+                        Some(i - 1)
+                    }
+                })
+                .collect();
+        }
+
+        let ii = self.script.instructions.len() - debth_stack.first().unwrap();
+        if let Some(i) = init_placeholder_index {
+            if i == ii {
+                false
+            } else {
+                self.script.insert_placeholder(ii);
+                true
             }
         } else {
-            let mut cursor = self.position
-                + Vector2::new(self.border + self.padding, self.border + self.padding);
-
-            let mut debth_stack = Vec::new();
-
-            debth_stack.push(self.script.instructions.len());
-            for instr in self.script.instructions.iter() {
-                match instr {
-                    Instruction::WhileLoop(wl) => {
-                        cursor.y += self.block_height;
-                        cursor.x += ph;
-                        debth_stack.push(wl.len);
-                    }
-                    Instruction::IfCFlow(_) => todo!(),
-                    Instruction::Action(_) => {
-                        cursor.y += self.block_height;
-                    }
-                    Instruction::Placeholder => {
-                        cursor.y += self.block_height;
-                    }
-                }
-
-                cursor.y += self.padding;
-
-                debth_stack = debth_stack
-                    .drain(0..)
-                    .filter_map(|i: usize| {
-                        if i == 0 {
-                            cursor.x -= ph;
-                            None
-                        } else {
-                            Some(i - 1)
-                        }
-                    })
-                    .collect();
-
-                if rel_mouse_pos.y - cursor.y < self.block_height {
-                    let debth = (rel_mouse_pos.x / ph) as usize + 2;
-                    if debth > debth_stack.len() {
-                        break;
-                    }
-                }
-            }
-
-            let ii = self.script.instructions.len() - debth_stack.first().unwrap();
-            self.script.insert_instruction(ii, Instruction::Placeholder);
-            self.update_mesh();
+            self.script.insert_placeholder(ii);
+            true
         }
     }
 
@@ -137,18 +145,6 @@ impl Structogram {
         let ph = self.padding + self.block_height;
 
         for instr in self.script.instructions.iter() {
-            debth_stack = debth_stack
-                .drain(0..)
-                .filter_map(|i: usize| {
-                    if i == 0 {
-                        cursor.x -= ph;
-                        None
-                    } else {
-                        Some(i - 1)
-                    }
-                })
-                .collect();
-
             match instr {
                 Instruction::WhileLoop(wl) => {
                     let square = Square::new(
@@ -189,6 +185,17 @@ impl Structogram {
                     cursor.y += self.block_height;
                 }
             }
+            debth_stack = debth_stack
+                .drain(0..)
+                .filter_map(|i: usize| {
+                    if i == 0 {
+                        cursor.x -= ph;
+                        None
+                    } else {
+                        Some(i - 1)
+                    }
+                })
+                .collect();
 
             cursor.y += self.padding;
         }

@@ -47,6 +47,7 @@ impl IfCFlow {
         Instruction::IfCFlow(self)
     }
 }
+
 pub enum Instruction {
     WhileLoop(WhileLoop),
     IfCFlow(IfCFlow),
@@ -55,6 +56,14 @@ pub enum Instruction {
 }
 
 impl Instruction {
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            Instruction::WhileLoop(_) => "WhileLoop",
+            Instruction::IfCFlow(_) => "IfCFlow",
+            Instruction::Action(_) => "Action",
+            Instruction::Placeholder => "Placeholder",
+        }
+    }
     pub fn is_placeholder(&self) -> bool {
         match self {
             Instruction::Placeholder => true,
@@ -79,32 +88,40 @@ impl Script {
         }
     }
 
+    pub fn insert_placeholder(&mut self, i: usize) {
+        self.remove_placeholder();
+        self.instructions.insert(i, Instruction::Placeholder);
+    }
+
     pub fn push_instruction(&mut self, instr: Instruction) {
         if instr.is_placeholder() {
-            self.remove_placeholder();
-            self.instructions.push(instr);
+            self.insert_placeholder(self.instructions.len() - 1);
         } else {
             self.instructions.push(instr);
         }
     }
+
     pub fn insert_instruction(&mut self, i: usize, instr: Instruction) {
-        if i >= self.instructions.len() {
-            self.push_instruction(instr);
+        if instr.is_placeholder() {
+            self.insert_placeholder(i);
         } else {
-            if instr.is_placeholder() {
-                self.remove_placeholder();
-                self.instructions.insert(i, instr);
-            } else {
-                self.instructions.insert(i, instr);
-            }
+            self.instructions.insert(i, instr);
         }
     }
+
     pub fn add_game_object(&mut self, name: String, game_object: Box<dyn GameObject>) {
         self.variables.insert(name, game_object);
     }
 
     pub fn run(&mut self) {
         run_script(self);
+    }
+
+    pub fn print(&self) {
+        for s in self.instructions.iter() {
+            print!("{}, ", s.to_str());
+        }
+        println!();
     }
 }
 
@@ -180,7 +197,7 @@ pub fn init_script() -> Script {
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
-    script.push_instruction(WhileLoop::new(5, Iterations::new(5).box_it()).into_instruction());
+    script.push_instruction(WhileLoop::new(6, Iterations::new(5).box_it()).into_instruction());
     script.push_instruction(
         WhileLoop::new(
             1,
@@ -188,6 +205,10 @@ pub fn init_script() -> Script {
         )
         .into_instruction(),
     );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
@@ -205,6 +226,42 @@ pub fn init_script() -> Script {
 
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark2".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+
+    script
+}
+
+pub fn another_script() -> Script {
+    let mut warrior = Warrior::new();
+    warrior.position = Vector2::new(0.0, -1.0);
+    warrior.speed = 1.0;
+
+    let mut mark1 = Mark::new();
+    mark1.position = Vector2::new(1.0, 1.0);
+
+    let mut mark2 = Mark::new();
+    mark2.position = Vector2::new(-1.0, 1.0);
+
+    let mut script = Script::new();
+    script.add_game_object("warrior".to_string(), warrior.box_it());
+    script.add_game_object("mark1".to_string(), mark1.box_it());
+    script.add_game_object("mark2".to_string(), mark2.box_it());
+
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        WhileLoop::new(
+            1,
+            not(IsCloseEnough::new("warrior".to_string(), "mark1".to_string(), 0.1).box_it()),
+        )
+        .into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
