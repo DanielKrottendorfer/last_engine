@@ -9,7 +9,7 @@ use crate::black_sheep::{
 pub struct Structogram {
     //square_composition: SquareComposition,
     script: Script,
-    pub position: Vector2<f32>,
+    pub panel_position: Vector2<f32>,
     pub dimension: Vector2<f32>,
     border: f32,
     padding: f32,
@@ -24,7 +24,7 @@ impl Structogram {
     pub fn new(script: Script, position: Vector2<f32>) -> Self {
         let mut structogram = Structogram {
             script,
-            position,
+            panel_position: position,
             dimension: Vector2::new(0.0, 0.0),
             border: 5.0,
             padding: 5.0,
@@ -62,10 +62,10 @@ impl Structogram {
     }
 
     pub fn update(&mut self, mouse_pos: Vector2<f32>) {
-        let rel_mouse_pos = mouse_pos - self.position;
+        let rel_mouse_pos = mouse_pos - self.panel_position;
+        let temp = self.dimension - rel_mouse_pos;
 
-        let t = self.dimension - rel_mouse_pos;
-        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && t.x > 0.0 && t.y > 0.0 {
+        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
             if self.try_insert_placeholder(rel_mouse_pos) {
                 self.update_mesh();
                 self.script.print();
@@ -75,8 +75,8 @@ impl Structogram {
 
     pub fn try_insert_placeholder(&mut self, rel_mouse_pos: Vector2<f32>) -> bool {
         let block_spacing = self.padding + self.block_height;
-        let mut cursor =
-            self.position + Vector2::new(self.border + self.padding, self.border + self.padding);
+        let mut cursor = self.panel_position
+            + Vector2::new(self.border + self.padding, self.border + self.padding);
 
         let mut debth_stack = vec![self.script.instructions.len()];
 
@@ -138,8 +138,8 @@ impl Structogram {
 
     pub fn compose_squares(&mut self) -> SquareComposition {
         let mut sc = SquareComposition::new();
-        let mut cursor =
-            self.position + Vector2::new(self.border + self.padding, self.border + self.padding);
+        let mut cursor = self.panel_position
+            + Vector2::new(self.border + self.padding, self.border + self.padding);
 
         let mut debth_stack = Vec::new();
         let ph = self.padding + self.block_height;

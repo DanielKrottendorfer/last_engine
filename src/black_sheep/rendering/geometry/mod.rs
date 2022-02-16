@@ -210,10 +210,10 @@ impl MeshRepo {
     }
 
     pub fn remove_mesh(&mut self, name: &str) {
-        if let Some(uid) = self.mesh_map.get(name) {
+        if let Some(uid) = self.mesh_map.remove(name) {
             if let Some(i) = self
                 .mesh_i_data
-                .binary_search_by_key(uid, |x| x.uid)
+                .binary_search_by_key(&uid, |x| x.uid)
                 .ok()
                 .map(|i| i)
             {
@@ -221,7 +221,6 @@ impl MeshRepo {
                 self.mesh_i_data.remove(i);
             }
         }
-        self.mesh_map.remove(name);
     }
 
     pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, name: &str, init_mesh: T) -> MeshToken {

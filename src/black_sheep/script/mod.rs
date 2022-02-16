@@ -1,8 +1,8 @@
 use cgmath::Vector2;
 use std::{any::Any, collections::HashMap};
+pub mod imgui_structogram;
 pub mod impls;
 pub mod structogram;
-
 pub trait Movable {
     fn move_to(&mut self, dir: Vector2<f32>);
 }

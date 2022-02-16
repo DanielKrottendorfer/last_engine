@@ -34,9 +34,17 @@ pub fn new_sdl_window_with_opengl_context() -> (
     #[cfg(feature = "vsync_off")]
     video_context.gl_set_swap_interval(0).unwrap();
 
+    //toggle_wiregrid();
+
     let event_pump = sdl_context.event_pump().unwrap();
 
     (event_pump, sdl_window, sdl_gl, mouse)
+}
+
+pub fn toggle_wiregrid() {
+    unsafe {
+        gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+    }
 }
 
 pub fn set_viewport(w: i32, h: i32) {

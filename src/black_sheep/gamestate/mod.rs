@@ -107,7 +107,7 @@ impl GameState {
 
     pub fn draw_ui(&mut self, _i: f32) {
         let colored_squares = &self.structogram.mesh_token;
-        let model_m = Matrix4::from_translation(self.structogram.position.extend(0.0));
+        let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
         self.color_squares.use_program();
         self.color_squares
             .set_projection(self.ui_projection * model_m);
