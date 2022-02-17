@@ -13,10 +13,13 @@ impl Structogram {
         }
     }
     pub fn build(&self, ui: &Ui) {
-        let mut cursor = Vector2::from(ui.window_content_region_min());
-        cursor += Vector2::from( ui.window_pos());
 
-        let right_border = ui.window_content_region_max()[0];
+        let window_pos = Vector2::from(ui.window_pos());
+        let top_left = window_pos + Vector2::from(ui.window_content_region_min());
+        let bottom_right = window_pos + Vector2::from(ui.window_content_region_max());
+        let mut cursor = top_left;
+
+        let content_region_max = ui.window_content_region_max();
 
         let block_thickness_with_spacing = ui.text_line_height_with_spacing();
         let block_thickness = ui.text_line_height();
@@ -39,14 +42,24 @@ impl Structogram {
                     draw_list
                         .add_rect(
                             cursor.into(),
-                            [right_border, cursor.y + block_thickness],
+                            [bottom_right.x, cursor.y + block_thickness],
                             ImColor32::from_rgba(255, 0, 255, 255),
                         )
                         .build();
+                    
+                    ui.set_cursor_pos((cursor - window_pos).into());
 
-                    println!("add rect \n {:?}",cursor);
+                    ui.text("while");
+
                     cursor.y += block_thickness;
 
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [cursor.x + block_thickness, cursor.y + (block_thickness_with_spacing * wl.len as f32)],
+                            ImColor32::from_rgba(255, 0, 255, 255),
+                        )
+                        .build();
                     // let square = Square::new(
                     //     cursor,
                     //     Vector2::new(block_thickness, (ph) * wl.len as f32),

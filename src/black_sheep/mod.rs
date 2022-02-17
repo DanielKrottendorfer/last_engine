@@ -160,7 +160,7 @@ impl BlackSheep {
         let mut run_ui = false;
         let mut prune = false;
 
-        let structogram = imgui_structogram::Structogram::new(script::another_script());
+        let structogram = imgui_structogram::Structogram::new(script::init_script());
 
         'mainloop: loop {
             let current = time.elapsed();
