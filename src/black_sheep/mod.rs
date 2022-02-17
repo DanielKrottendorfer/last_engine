@@ -15,7 +15,7 @@ mod transform;
 
 use std::time::Duration;
 
-use cgmath::Deg;
+use cgmath::{Deg, Vector2};
 use gamestate::*;
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
@@ -42,6 +42,7 @@ use self::script::{imgui_structogram, structogram};
 pub struct BlackSheep {
     window: SDLWindow,
     game_state: GameState,
+    rel_mouse_pos: Vector2<f32>
 }
 
 impl Drop for BlackSheep {
@@ -58,7 +59,7 @@ impl BlackSheep {
         geometry::init();
         rendering::shader::init();
         let game_state = GameState::new();
-        Self { window, game_state }
+        Self { window, game_state ,rel_mouse_pos: Vector2::new(0.0,0.0)}
     }
 
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
@@ -105,6 +106,7 @@ impl BlackSheep {
                 Event::MouseMotion {
                     xrel, yrel, x, y, ..
                 } => {
+                    self.rel_mouse_pos = Vector2::new(x as f32, y as f32);
                     self.game_state.on_mouse_motion(xrel, yrel, x, y);
                 }
                 Event::Window { win_event, .. } => match win_event {
@@ -160,7 +162,7 @@ impl BlackSheep {
         let mut run_ui = false;
         let mut prune = false;
 
-        let structogram = imgui_structogram::Structogram::new(script::init_script());
+        let mut structogram = imgui_structogram::Structogram::new(script::init_script());
 
         'mainloop: loop {
             let current = time.elapsed();
@@ -187,6 +189,8 @@ impl BlackSheep {
 
             while lag >= MS_PER_UPDATE {
                 //UPDATE
+
+                structogram.try_insert_placeholder(self.rel_mouse_pos);
 
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;

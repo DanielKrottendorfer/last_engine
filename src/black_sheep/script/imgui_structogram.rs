@@ -4,90 +4,173 @@ use super::*;
 
 pub struct Structogram {
     script: Script,
+    block_size: f32,
+    spacing: f32,
+    panel_position: Vector2<f32>,
+    dimension: Vector2<f32>
 }
 
 impl Structogram {
     pub fn new(script: Script) -> Self {
         Structogram{
-            script
+            script,
+            block_size: -1.0,
+            spacing: -1.0,
+            panel_position: Vector2::new(-1.0,-1.0),
+            dimension:  Vector2::new(-1.0,-1.0),
         }
     }
-    pub fn build(&self, ui: &Ui) {
+    
+    pub fn update(&mut self, mouse_pos: Vector2<f32>) {
+        let rel_mouse_pos = mouse_pos - self.panel_position;
+        let temp = self.dimension - rel_mouse_pos;
+
+        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
+            if self.try_insert_placeholder(rel_mouse_pos) {
+                self.script.print();
+            }
+        }
+    }
+
+    pub fn try_insert_placeholder(&mut self, rel_mouse_pos: Vector2<f32>) -> bool {
+        
+        let block_size = self.block_size;
+        let spacing = self.spacing;
+
+        let mut cursor = self.panel_position
+            + Vector2::new(spacing,spacing);
+
+        let mut debth_stack = vec![self.script.instructions.len()];
+
+        let init_placeholder_index = self
+            .script
+            .instructions
+            .iter()
+            .position(|x| x.is_placeholder());
+
+        for instr in self.script.instructions.iter() {
+            match instr {
+                Instruction::WhileLoop(wl) => {
+                    cursor.y += block_size;
+                    cursor.x += block_size;
+                    debth_stack.push(wl.len);
+                }
+                Instruction::IfCFlow(_) => todo!(),
+                Instruction::Action(_) => {
+                    cursor.y += block_size;
+                }
+                Instruction::Placeholder => {
+                    cursor.y += block_size;
+                }
+            }
+
+            if rel_mouse_pos.y - cursor.y < 0.0 {
+                let debth = (rel_mouse_pos.x / block_size) as usize + 2;
+                if debth > debth_stack.len() {
+                    break;
+                }
+            }
+
+            debth_stack = debth_stack
+                .drain(0..)
+                .filter_map(|i: usize| {
+                    if i == 0 {
+                        cursor.x -= block_size;
+                        None
+                    } else {
+                        Some(i - 1)
+                    }
+                })
+                .collect();
+        }
+
+        let ii = self.script.instructions.len() - debth_stack.first().unwrap();
+        if let Some(i) = init_placeholder_index {
+            if i == ii {
+                false
+            } else {
+                self.script.insert_placeholder(ii);
+                true
+            }
+        } else {
+            self.script.insert_placeholder(ii);
+            true
+        }
+    }
+
+    pub fn build(&mut self, ui: &Ui) {
+
+        let draw_list = ui.get_window_draw_list();
 
         let window_pos = Vector2::from(ui.window_pos());
         let top_left = window_pos + Vector2::from(ui.window_content_region_min());
         let bottom_right = window_pos + Vector2::from(ui.window_content_region_max());
         let mut cursor = top_left;
+        self.panel_position = top_left;
+        self.dimension = bottom_right - top_left;
 
-        let content_region_max = ui.window_content_region_max();
+        let block_size_with_spacing = ui.text_line_height_with_spacing();
+        let block_size = ui.text_line_height();
+        self.block_size = block_size;
 
-        let block_thickness_with_spacing = ui.text_line_height_with_spacing();
-        let block_thickness = ui.text_line_height();
-        let spacing = block_thickness_with_spacing - block_thickness;
+        let spacing = block_size_with_spacing - block_size;
+        self.spacing = spacing;
 
         let mut debth_stack = Vec::new();
 
-        let draw_list = ui.get_window_draw_list();
 
         for instr in self.script.instructions.iter() {
             match instr {
                 Instruction::WhileLoop(wl) => {
-                    // let square = Square::new(
-                    //     cursor,
-                    //     Vector2::new(self.block_width - cursor.x, block_thickness),
-                    //     Vector3::new(1.0, 0.0, 0.0),
-                    // );
-                    // sc.add_square(square);
 
                     draw_list
                         .add_rect(
                             cursor.into(),
-                            [bottom_right.x, cursor.y + block_thickness],
+                            [bottom_right.x, cursor.y + block_size],
                             ImColor32::from_rgba(255, 0, 255, 255),
-                        )
+                        ).filled(true)
                         .build();
                     
                     ui.set_cursor_pos((cursor - window_pos).into());
-
                     ui.text("while");
 
-                    cursor.y += block_thickness;
-
+                    cursor.y += block_size;
+                    
+                    let loop_heith = (block_size_with_spacing * wl.len as f32);
                     draw_list
                         .add_rect(
                             cursor.into(),
-                            [cursor.x + block_thickness, cursor.y + (block_thickness_with_spacing * wl.len as f32)],
+                            [cursor.x + block_size, cursor.y + loop_heith],
                             ImColor32::from_rgba(255, 0, 255, 255),
-                        )
+                        ).filled(true)
                         .build();
-                    // let square = Square::new(
-                    //     cursor,
-                    //     Vector2::new(block_thickness, (ph) * wl.len as f32),
-                    //     Vector3::new(1.0, 0.0, 0.0),
-                    // );
-                    // sc.add_square(square);
-                    cursor.x += block_thickness_with_spacing;
+
+                    cursor.x += block_size_with_spacing;
 
                     debth_stack.push(wl.len);
                 }
                 Instruction::IfCFlow(_) => todo!(),
                 Instruction::Action(_) => {
-                    // let square = Square::new(
-                    //     cursor,
-                    //     Vector2::new(self.block_width - cursor.x, block_thickness),
-                    //     Vector3::new(0.0, 1.0, 0.0),
-                    // );
-                    // sc.add_square(square);
-                    cursor.y += block_thickness;
+                    
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(255, 255,0, 255),
+                        ).filled(true)
+                        .build();
+                    cursor.y += block_size;
                 }
                 Instruction::Placeholder => {
-                    // let square = Square::new(
-                    //     cursor,
-                    //     Vector2::new(self.block_width - cursor.x, block_thickness),
-                    //     Vector3::new(0.0, 0.0, 0.0),
-                    // );
-                    // sc.add_square(square);
-                    cursor.y += block_thickness;
+                    
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(1, 2, 1, 255),
+                        ).filled(true)
+                        .build();
+                    cursor.y += block_size;
                 }
             }
             cursor.y += spacing;
@@ -96,7 +179,7 @@ impl Structogram {
                 .drain(0..)
                 .filter_map(|i: usize| {
                     if i == 0 {
-                        cursor.x -= block_thickness_with_spacing;
+                        cursor.x -= block_size_with_spacing;
                         None
                     } else {
                         Some(i - 1)
