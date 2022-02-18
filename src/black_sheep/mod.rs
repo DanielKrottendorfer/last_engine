@@ -42,7 +42,7 @@ use self::script::{imgui_structogram, structogram};
 pub struct BlackSheep {
     window: SDLWindow,
     game_state: GameState,
-    rel_mouse_pos: Vector2<f32>
+    rel_mouse_pos: Vector2<f32>,
 }
 
 impl Drop for BlackSheep {
@@ -59,7 +59,11 @@ impl BlackSheep {
         geometry::init();
         rendering::shader::init();
         let game_state = GameState::new();
-        Self { window, game_state ,rel_mouse_pos: Vector2::new(0.0,0.0)}
+        Self {
+            window,
+            game_state,
+            rel_mouse_pos: Vector2::new(0.0, 0.0),
+        }
     }
 
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
@@ -198,7 +202,6 @@ impl BlackSheep {
                     let a = ui.push_style_var(StyleVar::FramePadding([0.0, 0.0]));
                     let w = Window::new("Test");
                     w.build(ui, || {
-
                         structogram.build(ui);
 
                         // let mut vmin = ui.window_content_region_min();
