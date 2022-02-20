@@ -84,16 +84,18 @@ impl Script {
 
     pub fn remove_placeholder(&mut self) {
         if let Some(i) = self.instructions.iter().position(|x| x.is_placeholder()) {
+            self.pull_loops(i);
             self.instructions.remove(i);
         }
     }
 
     pub fn insert_placeholder(&mut self, i: usize) {
         self.remove_placeholder();
+        self.push_loops(i);
         self.instructions.insert(i, Instruction::Placeholder);
     }
 
-    pub fn push_instruction(&mut self, instr: Instruction) {
+    fn push_instruction(&mut self, instr: Instruction) {
         if instr.is_placeholder() {
             self.insert_placeholder(self.instructions.len() - 1);
         } else {
@@ -106,6 +108,70 @@ impl Script {
             self.insert_placeholder(i);
         } else {
             self.instructions.insert(i, instr);
+        }
+    }
+    pub fn push_loops(&mut self, index: usize) {
+        let mut debth_stack = Vec::new();
+
+        for i in 0..index {
+            let instr = &self.instructions[i];
+
+            match instr {
+                Instruction::WhileLoop(wl) => {
+                    debth_stack.push((wl.len, wl.len));
+                }
+                _ => (),
+            }
+            debth_stack = debth_stack
+                .drain(0..)
+                .filter_map(|ds| {
+                    if ds.0 == 0 {
+                        None
+                    } else {
+                        Some((ds.0 - 1, ds.1))
+                    }
+                })
+                .collect();
+        }
+
+        for i in debth_stack.drain(0..) {
+            let temp = index - (i.1 - i.0);
+            match &mut self.instructions[temp] {
+                Instruction::WhileLoop(w) => w.len += 1,
+                _ => panic!("something went wrong"),
+            }
+        }
+    }
+    pub fn pull_loops(&mut self, index: usize) {
+        let mut debth_stack = Vec::new();
+
+        for i in 0..index {
+            let instr = &self.instructions[i];
+
+            match instr {
+                Instruction::WhileLoop(wl) => {
+                    debth_stack.push((wl.len, wl.len));
+                }
+                _ => (),
+            }
+            debth_stack = debth_stack
+                .drain(0..)
+                .filter_map(|ds| {
+                    if ds.0 == 0 {
+                        None
+                    } else {
+                        Some((ds.0 - 1, ds.1))
+                    }
+                })
+                .collect();
+        }
+
+        for i in debth_stack.drain(0..) {
+            let temp = index - (i.1 - i.0);
+            match &mut self.instructions[temp] {
+                Instruction::WhileLoop(w) => w.len -= 1,
+                _ => panic!("something went wrong"),
+            }
         }
     }
 
@@ -197,10 +263,19 @@ pub fn init_script() -> Script {
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
-    script.push_instruction(WhileLoop::new(6, Iterations::new(5).box_it()).into_instruction());
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(WhileLoop::new(7, Iterations::new(5).box_it()).into_instruction());
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
     script.push_instruction(
         WhileLoop::new(
-            1,
+            2,
             not(IsCloseEnough::new("warrior".to_string(), "mark1".to_string(), 0.1).box_it()),
         )
         .into_instruction(),
@@ -208,24 +283,14 @@ pub fn init_script() -> Script {
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
-
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
-
-    script.push_instruction(
-        WhileLoop::new(
-            1,
-            not(IsCloseEnough::new("warrior".to_string(), "mark2".to_string(), 0.1).box_it()),
-        )
-        .into_instruction(),
-    );
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark2".to_string()).into_instruction(),
     );
-
     script.push_instruction(
-        MoveAtoB::new("warrior".to_string(), "mark2".to_string()).into_instruction(),
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
     script.push_instruction(
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),

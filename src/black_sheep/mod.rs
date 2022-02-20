@@ -18,8 +18,8 @@ use std::time::Duration;
 use cgmath::{Deg, Vector2};
 use gamestate::*;
 
+use imgui::StyleVar;
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
-use imgui::{ImColor32, StyleVar};
 use sdl2::mouse::MouseButton;
 use window::window_util::*;
 use window::SDLWindow;
@@ -37,7 +37,7 @@ use self::gamestate::input_flags::InputFlags;
 use self::imgui_system::ImguiSystem;
 use self::rendering::geometry;
 use self::rendering::shader;
-use self::script::{imgui_structogram, structogram};
+use self::script::imgui_structogram;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -194,42 +194,14 @@ impl BlackSheep {
             while lag >= MS_PER_UPDATE {
                 //UPDATE
 
-                structogram.try_insert_placeholder(self.rel_mouse_pos);
-
+                structogram.update(self.rel_mouse_pos);
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
 
-                    let a = ui.push_style_var(StyleVar::FramePadding([0.0, 0.0]));
                     let w = Window::new("Test");
                     w.build(ui, || {
                         structogram.build(ui);
-
-                        // let mut vmin = ui.window_content_region_min();
-                        // vmin[0] += ui.window_pos()[0];
-                        // vmin[1] += ui.window_pos()[1];
-                        // let mut vmax = ui.window_content_region_max();
-                        // vmax[0] += ui.window_pos()[0];
-                        // vmax[1] += ui.window_pos()[1];
-                        // let dl = ui.get_window_draw_list();
-                        // dl.add_rect(
-                        //     vmin, // [p[0]+10.0, p[1]+20.0],
-                        //     vmax, //[p[0]+20.0, p[1]+30.0],
-                        //     ImColor32::from_rgba(255, 0, 255, 255),
-                        // )
-                        // .filled(true)
-                        // .build();
-
-                        // // let mut c = [0.0,0.0];
-                        // // c[0] += 20.0;
-                        // // c[1] += 20.0;
-                        // // ui.set_cursor_pos(c);
-                        // println!("{:?}", ui.cursor_pos());
-                        // println!("{:?}", ui.text_line_height_with_spacing());
-                        // ui.text("text");
-
-                        // println!("{:?}\n", ui.cursor_pos());
                     });
-                    a.end();
 
                     Window::new("Image")
                         .size([300.0, game_state.window_size_f32[1]], Condition::Always)

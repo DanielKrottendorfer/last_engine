@@ -9,7 +9,7 @@ use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
     rendering::{self, geometry::MeshToken, shader::shader_structs::*},
-    script::{another_script, init_script, structogram::Structogram},
+    script::{another_script, structogram::Structogram},
     settings::*,
     setup,
     window::window_util::*,
@@ -28,7 +28,7 @@ pub struct GameState {
     color_squares: ColoredTriangles,
 
     mesh_ts: Vec<MeshToken>,
-    structogram: Structogram,
+    //structogram: Structogram,
 }
 
 impl GameState {
@@ -54,7 +54,7 @@ impl GameState {
 
         let mesh_ts = setup::init_mesh();
 
-        let structogram = Structogram::new(another_script(), Vector2::new(10.0, 10.0));
+        //let structogram = Structogram::new(another_script(), Vector2::new(10.0, 10.0));
 
         GameState {
             input_flags: InputFlags::NONE,
@@ -68,7 +68,7 @@ impl GameState {
             color_squares,
 
             mesh_ts,
-            structogram,
+            //structogram,
         }
     }
 
@@ -106,13 +106,13 @@ impl GameState {
     }
 
     pub fn draw_ui(&mut self, _i: f32) {
-        let colored_squares = &self.structogram.mesh_token;
-        let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
-        self.color_squares.use_program();
-        self.color_squares
-            .set_projection(self.ui_projection * model_m);
-        colored_squares.bind_vertex_array();
-        colored_squares.draw_triangle_elements();
+        // let colored_squares = &self.structogram.mesh_token;
+        // let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
+        // self.color_squares.use_program();
+        // self.color_squares
+        //     .set_projection(self.ui_projection * model_m);
+        // colored_squares.bind_vertex_array();
+        // colored_squares.draw_triangle_elements();
 
         // let colored_squares = &self.mesh_ts[4];
         // self.color_squares.use_program();
@@ -123,7 +123,7 @@ impl GameState {
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
         let v = Vector2::new(x as f32, y as f32);
-        self.structogram.update(v);
+        //self.structogram.update(v);
 
         if self.input_flags.contains(InputFlags::CAPTURED_MOUSE) {
             if xrel != 0 {

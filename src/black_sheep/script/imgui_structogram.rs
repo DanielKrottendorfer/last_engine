@@ -3,7 +3,7 @@ use imgui::{ImColor32, Ui};
 use super::*;
 
 pub struct Structogram {
-    script: Script,
+    pub script: Script,
     block_size: f32,
     spacing: f32,
     panel_position: Vector2<f32>,
@@ -26,15 +26,20 @@ impl Structogram {
         let temp = self.dimension - rel_mouse_pos;
 
         if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
-            if self.try_insert_placeholder(rel_mouse_pos) {
-                self.script.print();
+            //println!("insert placeholder");
+            if self.try_insert_placeholder(mouse_pos) {
+                //self.script.push_loops(self.script.instructions.iter().position(|x|x.is_placeholder()).unwrap());
+                //self.script.print();
             }
+        } else {
+            self.script.remove_placeholder();
         }
     }
 
     pub fn try_insert_placeholder(&mut self, mouse_pos: Vector2<f32>) -> bool {
         let block_size = self.block_size;
         let spacing = self.spacing;
+        let block_size_and_spacing = block_size + spacing;
 
         let mut cursor = self.panel_position + Vector2::new(spacing, spacing);
 
@@ -49,16 +54,16 @@ impl Structogram {
         for instr in self.script.instructions.iter() {
             match instr {
                 Instruction::WhileLoop(wl) => {
-                    cursor.y += block_size + spacing;
-                    cursor.x += block_size + spacing;
+                    cursor.y += block_size_and_spacing;
+                    cursor.x += block_size_and_spacing;
                     debth_stack.push(wl.len);
                 }
                 Instruction::IfCFlow(_) => todo!(),
                 Instruction::Action(_) => {
-                    cursor.y += block_size + spacing;
+                    cursor.y += block_size_and_spacing;
                 }
                 Instruction::Placeholder => {
-                    cursor.y += block_size + spacing;
+                    cursor.y += block_size_and_spacing;
                 }
             }
 
@@ -113,11 +118,11 @@ impl Structogram {
         self.panel_position = top_left;
         self.dimension = bottom_right - top_left;
 
-        let block_size_with_spacing = ui.text_line_height_with_spacing();
+        let block_size_and_spacing = ui.text_line_height_with_spacing();
         let block_size = ui.text_line_height();
         self.block_size = block_size;
 
-        let spacing = block_size_with_spacing - block_size;
+        let spacing = block_size_and_spacing - block_size;
         self.spacing = spacing;
 
         let mut debth_stack = Vec::new();
@@ -139,7 +144,7 @@ impl Structogram {
 
                     cursor.y += block_size;
 
-                    let loop_heith = (block_size_with_spacing * wl.len as f32);
+                    let loop_heith = block_size_and_spacing * wl.len as f32;
                     draw_list
                         .add_rect(
                             cursor.into(),
@@ -149,7 +154,8 @@ impl Structogram {
                         .filled(true)
                         .build();
 
-                    cursor.x += block_size_with_spacing;
+                    cursor.x += block_size_and_spacing;
+                    cursor.y += spacing;
 
                     debth_stack.push(wl.len);
                 }
@@ -163,7 +169,7 @@ impl Structogram {
                         )
                         .filled(true)
                         .build();
-                    cursor.y += block_size;
+                    cursor.y += block_size_and_spacing;
                 }
                 Instruction::Placeholder => {
                     draw_list
@@ -174,16 +180,15 @@ impl Structogram {
                         )
                         .filled(true)
                         .build();
-                    cursor.y += block_size;
+                    cursor.y += block_size_and_spacing;
                 }
             }
-            cursor.y += spacing;
 
             debth_stack = debth_stack
                 .drain(0..)
                 .filter_map(|i: usize| {
                     if i == 0 {
-                        cursor.x -= block_size_with_spacing;
+                        cursor.x -= block_size_and_spacing;
                         None
                     } else {
                         Some(i - 1)

@@ -1,5 +1,4 @@
 use crate::black_sheep::settings::INIT_WINDOW_SIZE;
-use cgmath::Matrix4;
 
 pub fn new_sdl_window_with_opengl_context() -> (
     sdl2::EventPump,
