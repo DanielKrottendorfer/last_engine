@@ -25,18 +25,23 @@ impl Structogram {
         let rel_mouse_pos = mouse_pos - self.panel_position;
         let temp = self.dimension - rel_mouse_pos;
 
+        self.script.remove_placeholder();
         if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
             //println!("insert placeholder");
             if self.try_insert_placeholder(mouse_pos) {
                 //self.script.push_loops(self.script.instructions.iter().position(|x|x.is_placeholder()).unwrap());
                 //self.script.print();
             }
-        } else {
-            self.script.remove_placeholder();
         }
     }
 
     pub fn try_insert_placeholder(&mut self, mouse_pos: Vector2<f32>) -> bool {
+        // let init_placeholder_index = self
+        //     .script
+        //     .instructions
+        //     .iter()
+        //     .position(|x| x.is_placeholder());
+
         let block_size = self.block_size;
         let spacing = self.spacing;
         let block_size_and_spacing = block_size + spacing;
@@ -45,24 +50,24 @@ impl Structogram {
 
         let mut debth_stack = vec![self.script.instructions.len()];
 
-        let init_placeholder_index = self
-            .script
-            .instructions
-            .iter()
-            .position(|x| x.is_placeholder());
-
         for instr in self.script.instructions.iter() {
             match instr {
                 Instruction::WhileLoop(wl) => {
                     cursor.y += block_size_and_spacing;
                     cursor.x += block_size_and_spacing;
-                    debth_stack.push(wl.len);
+                    debth_stack.push(wl.length);
                 }
                 Instruction::IfCFlow(_) => todo!(),
                 Instruction::Action(_) => {
                     cursor.y += block_size_and_spacing;
                 }
                 Instruction::Placeholder => {
+                    cursor.y += block_size_and_spacing;
+                }
+                Instruction::Start => {
+                    cursor.y += block_size_and_spacing;
+                }
+                Instruction::End => {
                     cursor.y += block_size_and_spacing;
                 }
             }
@@ -90,19 +95,9 @@ impl Structogram {
         }
 
         let ii = self.script.instructions.len() - debth_stack.first().unwrap();
-
         if ii < self.script.instructions.len() {
-            if let Some(i) = init_placeholder_index {
-                if i == ii {
-                    false
-                } else {
-                    self.script.insert_placeholder(ii);
-                    true
-                }
-            } else {
-                self.script.insert_placeholder(ii);
-                true
-            }
+            self.script.insert_placeholder(ii);
+            true
         } else {
             false
         }
@@ -144,7 +139,7 @@ impl Structogram {
 
                     cursor.y += block_size;
 
-                    let loop_heith = block_size_and_spacing * wl.len as f32;
+                    let loop_heith = block_size_and_spacing * wl.length as f32;
                     draw_list
                         .add_rect(
                             cursor.into(),
@@ -157,7 +152,7 @@ impl Structogram {
                     cursor.x += block_size_and_spacing;
                     cursor.y += spacing;
 
-                    debth_stack.push(wl.len);
+                    debth_stack.push(wl.length);
                 }
                 Instruction::IfCFlow(_) => todo!(),
                 Instruction::Action(_) => {
@@ -182,6 +177,27 @@ impl Structogram {
                         .build();
                     cursor.y += block_size_and_spacing;
                 }
+                Instruction::Start => {
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(255, 255, 255, 255),
+                        )
+                        .filled(true)
+                        .build();
+                    cursor.y += block_size_and_spacing;
+                },
+                Instruction::End => {
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(255, 255, 255, 255),
+                        )
+                        .filled(true)
+                        .build();
+                    cursor.y += block_size_and_spacing;},
             }
 
             debth_stack = debth_stack
