@@ -64,6 +64,12 @@ impl Structogram {
                 Instruction::Placeholder => {
                     cursor.y += block_size_and_spacing;
                 }
+                Instruction::Start => {
+                    cursor.y += block_size_and_spacing;
+                }
+                Instruction::End => {
+                    cursor.y += block_size_and_spacing;
+                }
             }
 
             // Check if the cursor has cought up to the mouse_positon
@@ -171,6 +177,27 @@ impl Structogram {
                         .build();
                     cursor.y += block_size_and_spacing;
                 }
+                Instruction::Start => {
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(255, 255, 255, 255),
+                        )
+                        .filled(true)
+                        .build();
+                    cursor.y += block_size_and_spacing;
+                },
+                Instruction::End => {
+                    draw_list
+                        .add_rect(
+                            cursor.into(),
+                            [bottom_right.x, cursor.y + block_size],
+                            ImColor32::from_rgba(255, 255, 255, 255),
+                        )
+                        .filled(true)
+                        .build();
+                    cursor.y += block_size_and_spacing;},
             }
 
             debth_stack = debth_stack

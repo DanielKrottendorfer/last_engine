@@ -56,6 +56,8 @@ pub enum Instruction {
     IfCFlow(IfCFlow),
     Action(Box<dyn Action>),
     Placeholder,
+    Start,
+    End
 }
 
 impl Instruction {
@@ -65,6 +67,8 @@ impl Instruction {
             Instruction::IfCFlow(_) => "IfCFlow",
             Instruction::Action(_) => "Action",
             Instruction::Placeholder => "Placeholder",
+            Instruction::Start => "Start",
+            &Instruction::End => "End"
         }
     }
     pub fn is_placeholder(&self) -> bool {
@@ -255,6 +259,7 @@ fn run_script(script: &mut Script) {
                 Instruction::Placeholder => {
                     i += 1;
                 }
+                _ => ()
             }
         }
     }
@@ -277,6 +282,8 @@ pub fn init_script() -> Script {
     script.add_game_object("warrior".to_string(), warrior.box_it());
     script.add_game_object("mark1".to_string(), mark1.box_it());
     script.add_game_object("mark2".to_string(), mark2.box_it());
+
+    script.push_instruction(Instruction::Start);
 
     script.push_instruction(WhileLoop::new(0, Iterations::new(5).box_it()).into_instruction());
     script.push_instruction(
@@ -317,6 +324,7 @@ pub fn init_script() -> Script {
     );
     script.push_instruction(WhileLoop::new(0, Iterations::new(5).box_it()).into_instruction());
 
+    script.push_instruction(Instruction::End);
     script
 }
 
