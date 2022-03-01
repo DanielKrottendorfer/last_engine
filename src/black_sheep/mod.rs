@@ -18,7 +18,6 @@ use std::time::Duration;
 use cgmath::{Deg, Vector2};
 use gamestate::*;
 
-use imgui::StyleVar;
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 use sdl2::mouse::MouseButton;
 use window::window_util::*;
@@ -226,6 +225,10 @@ impl BlackSheep {
                             let label = if prune { "np prune" } else { "prune" };
                             if ui.button(label) {
                                 prune = !prune;
+                            }
+
+                            if ui.button("reset"){
+                                structogram = imgui_structogram::Structogram::new(script::init_script());
                             }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));

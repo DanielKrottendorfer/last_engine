@@ -9,7 +9,6 @@ use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
     rendering::{self, geometry::MeshToken, shader::shader_structs::*},
-    script::{another_script, structogram::Structogram},
     settings::*,
     setup,
     window::window_util::*,
@@ -122,7 +121,7 @@ impl GameState {
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
-        let v = Vector2::new(x as f32, y as f32);
+        let _v = Vector2::new(x as f32, y as f32);
         //self.structogram.update(v);
 
         if self.input_flags.contains(InputFlags::CAPTURED_MOUSE) {
