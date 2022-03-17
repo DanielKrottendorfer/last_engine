@@ -12,6 +12,7 @@ mod script;
 pub mod settings;
 mod setup;
 mod transform;
+mod loop_timing;
 
 use std::time::Duration;
 
@@ -153,11 +154,8 @@ impl BlackSheep {
         let gizmo =
             geometry::get_mesh_repo(|mr| MeshToken::from(mr.get_mesh_by_name("gizmo").unwrap()));
 
-        let time = std::time::Instant::now();
-        let mut previous = time.elapsed();
-        let mut lag = Duration::from_secs(0);
-        let mut last = Duration::from_secs(0);
-
+        let mut loop_timer = loop_timing::CatchupTimer::new();
+        
         let mut fps = 0;
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
@@ -168,19 +166,16 @@ impl BlackSheep {
         let mut structogram = imgui_structogram::Structogram::new(script::init_script());
 
         'mainloop: loop {
-            let current = time.elapsed();
-            let elapsed = current - previous;
-            previous = current;
-            lag += elapsed;
-            #[cfg(not(feature = "fps_off"))]
-            {
-                fps += 1;
-                if current - last > Duration::from_secs(1) {
-                    println!("fps: {}", fps);
-                    last = current;
-                    fps = 0;
-                }
-            }
+
+            // #[cfg(not(feature = "fps_off"))]
+            // {
+            //     fps += 1;
+            //     if current - last > Duration::from_secs(1) {
+            //         println!("fps: {}", fps);
+            //         last = current;
+            //         fps = 0;
+            //     }
+            // }
 
             //PROCESS INPUT
             self.handle_events(&mut imgui_system);
@@ -190,7 +185,7 @@ impl BlackSheep {
 
             let game_state = &mut self.game_state;
 
-            while lag >= MS_PER_UPDATE {
+            while loop_timer.update_lag() >= MS_PER_UPDATE {
                 //UPDATE
 
                 structogram.update(self.rel_mouse_pos);
@@ -244,7 +239,7 @@ impl BlackSheep {
 
                 game_state.update();
 
-                lag -= MS_PER_UPDATE;
+                loop_timer.update();
             }
 
             //RENDER
@@ -258,7 +253,7 @@ impl BlackSheep {
                 rt_gizmo.bind_texture();
             }
 
-            let i = lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32();
+            let i = loop_timer.get_iv();
 
             let view = game_state.cam.get_i_view(i);
 
