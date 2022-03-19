@@ -7,14 +7,12 @@ mod constants;
 mod gamestate;
 mod generators;
 mod imgui_system;
+mod loop_timing;
 mod q_i_square_root;
 mod script;
 pub mod settings;
 mod setup;
 mod transform;
-mod loop_timing;
-
-use std::time::Duration;
 
 use cgmath::{Deg, Vector2};
 use gamestate::*;
@@ -155,8 +153,8 @@ impl BlackSheep {
             geometry::get_mesh_repo(|mr| MeshToken::from(mr.get_mesh_by_name("gizmo").unwrap()));
 
         let mut loop_timer = loop_timing::CatchupTimer::new();
-        
-        let mut fps = 0;
+
+        let _fps = 0;
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
@@ -166,17 +164,6 @@ impl BlackSheep {
         let mut structogram = imgui_structogram::Structogram::new(script::init_script());
 
         'mainloop: loop {
-
-            // #[cfg(not(feature = "fps_off"))]
-            // {
-            //     fps += 1;
-            //     if current - last > Duration::from_secs(1) {
-            //         println!("fps: {}", fps);
-            //         last = current;
-            //         fps = 0;
-            //     }
-            // }
-
             //PROCESS INPUT
             self.handle_events(&mut imgui_system);
             if self.game_state.input_flags.contains(InputFlags::CLOSE) {
@@ -185,7 +172,7 @@ impl BlackSheep {
 
             let game_state = &mut self.game_state;
 
-            while loop_timer.update_lag() >= MS_PER_UPDATE {
+            while loop_timer.should_update() {
                 //UPDATE
 
                 structogram.update(self.rel_mouse_pos);
@@ -222,8 +209,9 @@ impl BlackSheep {
                                 prune = !prune;
                             }
 
-                            if ui.button("reset"){
-                                structogram = imgui_structogram::Structogram::new(script::init_script());
+                            if ui.button("reset") {
+                                structogram =
+                                    imgui_structogram::Structogram::new(script::init_script());
                             }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));
@@ -238,8 +226,6 @@ impl BlackSheep {
                 //HANDLE INPUT
 
                 game_state.update();
-
-                loop_timer.update();
             }
 
             //RENDER
