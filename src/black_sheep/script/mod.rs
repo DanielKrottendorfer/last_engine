@@ -1,6 +1,7 @@
 use cgmath::Vector2;
-use rand::distributions::uniform::SampleBorrow;
+
 use std::{any::Any, collections::HashMap};
+pub mod debth_stack;
 pub mod imgui_structogram;
 pub mod impls;
 pub trait Movable {
@@ -55,9 +56,6 @@ pub enum Instruction {
     WhileLoop(WhileLoop),
     IfCFlow(IfCFlow),
     Action(Box<dyn Action>),
-    Placeholder,
-    Start,
-    End
 }
 
 impl Instruction {
@@ -66,15 +64,6 @@ impl Instruction {
             Instruction::WhileLoop(_) => "WhileLoop",
             Instruction::IfCFlow(_) => "IfCFlow",
             Instruction::Action(_) => "Action",
-            Instruction::Placeholder => "Placeholder",
-            Instruction::Start => "Start",
-            &Instruction::End => "End"
-        }
-    }
-    pub fn is_placeholder(&self) -> bool {
-        match self {
-            Instruction::Placeholder => true,
-            _ => false,
         }
     }
 }
@@ -89,33 +78,10 @@ impl Script {
         Script::default()
     }
 
-    pub fn remove_placeholder(&mut self) {
-        if let Some(i) = self.instructions.iter().position(|x| x.is_placeholder()) {
-            self.pull_loops(i);
-            self.instructions.remove(i);
-        }
-    }
-
-    pub fn insert_placeholder(&mut self, i: usize) {
-        self.push_loops(i);
-        self.instructions.insert(i, Instruction::Placeholder);
-    }
-
     fn push_instruction(&mut self, instr: Instruction) {
-        if instr.is_placeholder() {
-            self.insert_placeholder(self.instructions.len() - 1);
-        } else {
-            self.instructions.push(instr);
-        }
+        self.instructions.push(instr);
     }
 
-    pub fn insert_instruction(&mut self, i: usize, instr: Instruction) {
-        if instr.is_placeholder() {
-            self.insert_placeholder(i);
-        } else {
-            self.instructions.insert(i, instr);
-        }
-    }
     pub fn push_loops(&mut self, index: usize) {
         let mut debth_stack = Vec::new();
 
@@ -154,7 +120,7 @@ impl Script {
             }
         }
 
-        for i in debth_stack.drain(0..) {
+        for i in debth_stack.iter() {
             let temp = index - (i.1 - i.0);
             match &mut self.instructions[temp] {
                 Instruction::WhileLoop(w) => w.length += 1,
@@ -162,6 +128,21 @@ impl Script {
             }
         }
     }
+
+    fn push_by_debth_stack(&mut self, debth_stack: &debth_stack::DebthStack) {
+        let mut iter = debth_stack.iter();
+        if let Some(first) = iter.next() {
+            let i = first.1 - first.0;
+            for s in iter {
+
+                let s = s.1 - s.0;
+                let i = i - s;
+
+                //println!("{:?} {}", i, self.instructions[i].to_str());
+            }
+        }
+    }
+
     pub fn pull_loops(&mut self, index: usize) {
         let mut debth_stack = Vec::new();
 
@@ -186,9 +167,9 @@ impl Script {
                 .collect();
         }
 
-        println!("{:?}",debth_stack);
+        println!("{:?}", debth_stack);
 
-        for i in debth_stack.drain(0..) {
+        for i in debth_stack.iter() {
             let temp = index - (i.1 - i.0);
             match &mut self.instructions[temp] {
                 Instruction::WhileLoop(w) => w.length -= 1,
@@ -256,16 +237,59 @@ fn run_script(script: &mut Script) {
                     a.act(&mut script.variables);
                     i += 1;
                 }
-                Instruction::Placeholder => {
-                    i += 1;
-                }
-                _ => ()
+                _ => (),
             }
         }
     }
 }
 
 use impls::*;
+
+pub fn init_script2() -> Script {
+    let mut warrior = Warrior::new();
+    warrior.position = Vector2::new(0.0, -1.0);
+    warrior.speed = 1.0;
+
+    let mut mark1 = Mark::new();
+    mark1.position = Vector2::new(1.0, 1.0);
+
+    let mut mark2 = Mark::new();
+    mark2.position = Vector2::new(-1.0, 1.0);
+
+    let mut script = Script::new();
+    script.add_game_object("warrior".to_string(), warrior.box_it());
+    script.add_game_object("mark1".to_string(), mark1.box_it());
+    script.add_game_object("mark2".to_string(), mark2.box_it());
+
+
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(WhileLoop::new(0, Iterations::new(5).box_it()).into_instruction());
+  
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(WhileLoop::new(3, Iterations::new(5).box_it()).into_instruction());
+  
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
+    script
+}
 
 pub fn init_script() -> Script {
     let mut warrior = Warrior::new();
@@ -282,8 +306,6 @@ pub fn init_script() -> Script {
     script.add_game_object("warrior".to_string(), warrior.box_it());
     script.add_game_object("mark1".to_string(), mark1.box_it());
     script.add_game_object("mark2".to_string(), mark2.box_it());
-
-    script.push_instruction(Instruction::Start);
 
     script.push_instruction(WhileLoop::new(0, Iterations::new(5).box_it()).into_instruction());
     script.push_instruction(
@@ -324,7 +346,9 @@ pub fn init_script() -> Script {
     );
     script.push_instruction(WhileLoop::new(0, Iterations::new(5).box_it()).into_instruction());
 
-    script.push_instruction(Instruction::End);
+    script.push_instruction(
+        MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
+    );
     script
 }
 

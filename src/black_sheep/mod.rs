@@ -161,7 +161,7 @@ impl BlackSheep {
         let mut run_ui = false;
         let mut prune = false;
 
-        let mut structogram = imgui_structogram::Structogram::new(script::init_script());
+        let mut structogram = imgui_structogram::Structogram::new(script::init_script2());
 
         'mainloop: loop {
             //PROCESS INPUT
@@ -211,7 +211,7 @@ impl BlackSheep {
 
                             if ui.button("reset") {
                                 structogram =
-                                    imgui_structogram::Structogram::new(script::init_script());
+                                    imgui_structogram::Structogram::new(script::init_script2());
                             }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));
