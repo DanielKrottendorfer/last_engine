@@ -49,7 +49,11 @@ impl Structogram {
         let mut ds = debth_stack::DebthStack::new();
         ds.push(len);
 
-        let target_line = (mouse_pos.y / block_size_and_spacing) as usize;
+        for i in 0..self.script.instructions.len() {
+            let inst = &self.script.instructions[i];
+
+        }
+
         for (instr, i) in self.script.instructions.iter().zip(0..) {
             match instr {
                 Instruction::WhileLoop(wl) => {
@@ -67,7 +71,7 @@ impl Structogram {
                     //     ds.push(len + 1);
                     // }else
                     {
-                        ds.push(len );
+                        ds.push(len);
                     }
 
                 }
@@ -121,6 +125,22 @@ impl Structogram {
         };
 
         for (instr, i) in self.script.instructions.iter().zip(0..) {
+
+            if let Some(ph_i) = ph_i {
+                if let Some(first) = debth_stack.iter().next() {
+                    if first.0 == ph_i.0 {
+                        draw_list
+                            .add_rect(
+                                cursor.into(),
+                                [bottom_right.x, cursor.y + block_size],
+                                ImColor32::from_rgba(25, 255, 25, 255),
+                            )
+                            .filled(true)
+                            .build();
+                        cursor.y += block_size_and_spacing;
+                    }
+                }
+            }
             match instr {
                 Instruction::WhileLoop(wl) => {
                     draw_list
@@ -181,21 +201,6 @@ impl Structogram {
 
             cursor.x -= block_size_and_spacing * debth_stack.advance() as f32;
 
-            if let Some(ph_i) = ph_i {
-                if let Some(first) = debth_stack.iter().next() {
-                    if first.0 == ph_i.0 {
-                        draw_list
-                            .add_rect(
-                                cursor.into(),
-                                [bottom_right.x, cursor.y + block_size],
-                                ImColor32::from_rgba(25, 255, 25, 255),
-                            )
-                            .filled(true)
-                            .build();
-                        cursor.y += block_size_and_spacing;
-                    }
-                }
-            }
         }
     }
 }
