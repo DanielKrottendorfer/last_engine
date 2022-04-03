@@ -25,7 +25,7 @@ pub struct GameState {
     color_shader: Color3D,
     cloud_shader: CloudGeometryShaderProgram,
     color_squares: ColoredTriangles,
-
+    voxel: VoexelProgram,
     mesh_ts: Vec<MeshToken>,
     //structogram: Structogram,
 }
@@ -50,10 +50,9 @@ impl GameState {
         let color_shader = shader_repo.color_3d;
         let cloud_shader = shader_repo.point_cloud;
         let color_squares = shader_repo.colored_triangles;
+        let voxel = shader_repo.voxel;
 
         let mesh_ts = setup::init_mesh();
-
-        //let structogram = Structogram::new(another_script(), Vector2::new(10.0, 10.0));
 
         GameState {
             input_flags: InputFlags::NONE,
@@ -65,7 +64,7 @@ impl GameState {
             color_shader,
             cloud_shader,
             color_squares,
-
+            voxel,
             mesh_ts,
             //structogram,
         }
@@ -89,19 +88,19 @@ impl GameState {
         clear_color(0.0, 0.3, 0.3, 1.0);
         clear_drawbuffer();
 
-        let cube = &self.mesh_ts[2];
+        let cube = &self.mesh_ts[1];
         self.color_shader.use_program();
         self.color_shader
             .set_MVP(self.world_projection * view * model);
         cube.bind_vertex_array();
         cube.draw_triangle_elements();
-
-        let cube_cloud = &self.mesh_ts[3];
-        self.cloud_shader.use_program();
-        self.cloud_shader.set_mv(view);
-        self.cloud_shader.set_projection(self.world_projection);
-        cube_cloud.bind_vertex_array();
-        cube_cloud.draw_point_elements();
+        
+        let voxel = &self.mesh_ts[2];
+        self.voxel.use_program();
+        self.voxel.set_mv(view);
+        self.voxel.set_projection(self.world_projection);
+        voxel.bind_vertex_array();
+        voxel.draw_point_elements();
     }
 
     pub fn draw_ui(&mut self, _i: f32) {

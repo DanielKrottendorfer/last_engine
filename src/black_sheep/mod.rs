@@ -27,7 +27,7 @@ use sdl2::event::{Event, WindowEvent};
 use crate::black_sheep::rendering::geometry::MeshToken;
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
-use crate::black_sheep::settings::*;
+
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
 use self::gamestate::input_flags::InputFlags;
@@ -178,11 +178,6 @@ impl BlackSheep {
                 structogram.update(self.rel_mouse_pos);
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
-
-                    let w = Window::new("Test");
-                    w.build(ui, || {
-                        structogram.build(ui);
-                    });
 
                     Window::new("Image")
                         .size([300.0, game_state.window_size_f32[1]], Condition::Always)

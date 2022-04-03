@@ -15,6 +15,7 @@ pub struct ShaderRepo {
     pub gizmo: GizmoProgram,
     pub point_2d: Point2D,
     pub colored_triangles: ColoredTriangles,
+    pub voxel: VoexelProgram
 }
 
 lazy_static! {
@@ -101,6 +102,12 @@ impl ShaderRepo {
             let program =
                 build_shader_program(COLORED_TRIANGLES_VS_SRC, None, COLORED_TRIANGLES_FS_SRC);
             colored_triangles.setup(&program);
+        }  
+
+        let mut voxel = VoexelProgram::new();
+        {
+            let program = build_shader_program(GVS_SRC_VOXEL, Some(GSS_SRC_VOXEL), GFS_SRC_VOXEL);
+            voxel.setup(&program);
         }
 
         ShaderRepo {
@@ -111,6 +118,7 @@ impl ShaderRepo {
             gizmo,
             point_2d,
             colored_triangles,
+            voxel
         }
     }
     fn cleanup(&mut self) {
@@ -120,5 +128,6 @@ impl ShaderRepo {
         self.color_3d.cleanup();
         self.gizmo.cleanup();
         self.point_2d.cleanup();
+        self.voxel.cleanup();
     }
 }

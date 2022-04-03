@@ -46,3 +46,11 @@ shader_program!(
         uniform mat4 projection;
     }
 );
+
+shader_program!(
+    VoexelProgram{
+        uniform mat4 mv;
+        uniform mat4 projection;
+    }
+);
+

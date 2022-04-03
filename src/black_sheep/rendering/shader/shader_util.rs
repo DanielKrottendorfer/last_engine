@@ -9,6 +9,10 @@ pub static GVS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gvs_cl
 pub static GS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gs_cloud.glsl");
 pub static GFS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gfs_cloud.glsl");
 
+pub static GVS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gvs_cloud.glsl");
+pub static GSS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gs_cloud.glsl");
+pub static GFS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gfs_cloud.glsl");
+
 pub static GIZMO_VS: &'static str = include_str!("./shader_res/gizmo/vs.glsl");
 pub static GIZMO_GS: &'static str = include_str!("./shader_res/gizmo/gs.glsl");
 pub static GIZMO_FS: &'static str = include_str!("./shader_res/gizmo/fs.glsl");
