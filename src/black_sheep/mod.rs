@@ -224,15 +224,6 @@ impl BlackSheep {
             }
 
             //RENDER
-            unsafe {
-                gl::ActiveTexture(gl::TEXTURE0 + 0);
-                font_texture.bind();
-                gl::ActiveTexture(gl::TEXTURE0 + 1);
-                //font_texture.bind();
-                nice_image.bind();
-                gl::ActiveTexture(gl::TEXTURE0 + 2);
-                rt_gizmo.bind_texture();
-            }
 
             let i = loop_timer.get_iv();
 
@@ -266,6 +257,16 @@ impl BlackSheep {
 
             imgui_rendering_setup();
 
+            unsafe {
+                gl::ActiveTexture(gl::TEXTURE0 + 0);
+                font_texture.bind();
+                gl::ActiveTexture(gl::TEXTURE0 + 1);
+                //font_texture.bind();
+                nice_image.bind();
+                gl::ActiveTexture(gl::TEXTURE0 + 2);
+                rt_gizmo.bind_texture();
+            }
+            
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(game_state.ui_projection);
             imgui_system.draw();

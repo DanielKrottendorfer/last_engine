@@ -50,7 +50,7 @@ shader_program!(
 shader_program!(
     VoexelProgram{
         uniform mat4 mv;
+        uniform int triTableTex;
         uniform mat4 projection;
     }
 );
-

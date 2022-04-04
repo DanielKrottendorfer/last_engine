@@ -8,10 +8,10 @@ use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
-    rendering::{self, geometry::MeshToken, shader::shader_structs::*},
+    rendering::{self, geometry::MeshToken, shader::shader_structs::*, Texture, rendertarget::{ gen_isampler_texture}},
     settings::*,
     setup,
-    window::window_util::*,
+    window::window_util::*, generators::voxels,
 };
 
 pub struct GameState {
@@ -27,6 +27,7 @@ pub struct GameState {
     color_squares: ColoredTriangles,
     voxel: VoexelProgram,
     mesh_ts: Vec<MeshToken>,
+    textures: Vec<Texture>
     //structogram: Structogram,
 }
 
@@ -53,6 +54,8 @@ impl GameState {
         let voxel = shader_repo.voxel;
 
         let mesh_ts = setup::init_mesh();
+        let t = Texture::new(gen_isampler_texture(16, 256,voxels::TRI_TABLE.as_slice()));
+        let textures = vec![t];
 
         GameState {
             input_flags: InputFlags::NONE,
@@ -66,6 +69,7 @@ impl GameState {
             color_squares,
             voxel,
             mesh_ts,
+            textures,
             //structogram,
         }
     }
@@ -94,10 +98,16 @@ impl GameState {
             .set_MVP(self.world_projection * view * model);
         cube.bind_vertex_array();
         cube.draw_triangle_elements();
-        
+
+
+        unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + 0);
+            self.textures[0].bind();
+        }
         let voxel = &self.mesh_ts[2];
         self.voxel.use_program();
         self.voxel.set_mv(view);
+        self.voxel.set_triTableTex(0);
         self.voxel.set_projection(self.world_projection);
         voxel.bind_vertex_array();
         voxel.draw_point_elements();
