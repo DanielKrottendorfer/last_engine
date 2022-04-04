@@ -8,10 +8,10 @@ use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
-    rendering::{self, geometry::MeshToken, shader::shader_structs::*, Texture, rendertarget::{ gen_isampler_texture}},
+    rendering::{self, geometry::MeshToken, shader::shader_structs::*, Texture, loader::gen_isampler_texture},
     settings::*,
     setup,
-    window::window_util::{*, self}, generators::voxels,
+    window::window_util::{*, self}, generators::voxels, constants::TRI_TABLE,
 };
 
 pub struct GameState {
@@ -44,8 +44,9 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(1.35, 1.35, 2.0));
+        cam.move_cam(Vector3::new(0.8, 0.9, 1.0));
         cam.rotate_h(Deg(35.0));
+        cam.rotate_v(Deg(-30.0));
 
         let shader_repo = rendering::shader::get_shader_repo();
         let color_shader = shader_repo.color_3d;
@@ -54,7 +55,7 @@ impl GameState {
         let voxel = shader_repo.voxel;
 
         let mesh_ts = setup::init_mesh();
-        let t = Texture::new(gen_isampler_texture(16, 256,voxels::TRI_TABLE.as_slice()));
+        let t = Texture::new(gen_isampler_texture(16, 256, TRI_TABLE.as_slice()));
         let textures = vec![t];
 
         GameState {
@@ -87,20 +88,9 @@ impl GameState {
     pub fn draw_3d(&mut self, i: f32) {
         let view = self.cam.get_i_view(i);
 
-        let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
-
         clear_color(0.0, 0.3, 0.3, 1.0);
         clear_drawbuffer();
 
-        // let cube = &self.mesh_ts[1];
-        // self.color_shader.use_program();
-        // self.color_shader
-        //     .set_MVP(self.world_projection * view * model);
-        // cube.bind_vertex_array();
-        // cube.draw_triangle_elements();
-
-
-        window_util::toggle_wiregrid(true);
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             self.textures[0].bind();
@@ -108,8 +98,9 @@ impl GameState {
         let voxel = &self.mesh_ts[2];
         self.voxel.use_program();
         self.voxel.set_mv(view);
-        self.voxel.set_triTableTex(0);
         self.voxel.set_projection(self.world_projection);
+        self.voxel.set_triTableTex(0);
+        self.voxel.set_voxel_size(0.005);
         voxel.bind_vertex_array();
         voxel.draw_point_elements();
         window_util::toggle_wiregrid(false);

@@ -158,9 +158,6 @@ impl BlackSheep {
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
-        let mut run_ui = false;
-        let mut prune = false;
-
         let mut structogram = imgui_structogram::Structogram::new(script::init_script());
 
         'mainloop: loop {
@@ -195,19 +192,6 @@ impl BlackSheep {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 
-                            let label = if run_ui { "stop" } else { "start" };
-                            if ui.button(label) {
-                                run_ui = !run_ui;
-                            }
-                            let label = if prune { "np prune" } else { "prune" };
-                            if ui.button(label) {
-                                prune = !prune;
-                            }
-
-                            if ui.button("reset") {
-                                structogram =
-                                    imgui_structogram::Structogram::new(script::init_script());
-                            }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
