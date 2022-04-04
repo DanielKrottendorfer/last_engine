@@ -56,7 +56,7 @@ vec3 vertexInterp(float isolevel, vec3 v0, float l0, vec3 v1, float l1){
 
 vec3 cubePos(int i,vec3 position){
 
-    float size = 0.1;
+    float size = 0.01;
 
     int t = i;
     vec3 cp = vec3(0.0,0.0,0.0);
@@ -79,14 +79,33 @@ vec3 cubePos(int i,vec3 position){
 }
 
 float cubeVal(int i){
-    if(i==0){
-        return 1.0;
-    }else
-    if(i==1){
+
+
+
+    vec3 center = vec3(0.45,0.45,0.45);
+
+
+    float R = 0.3;
+    vec3 pos = cubePos(i,gl_in[0].gl_Position.xyz) - center;
+
+    float r = sqrt(pow(R-sqrt(pow(pos.x,2.0)+pow(pos.z,2.0)),2.0) + pow(pos.y,2.0));
+
+
+    if (r > 0.15 ){
         return 1.0;
     }else{
         return 0.0;
     }
+
+    // float l = length(center-pos);
+    // if(i==0){
+    //     return 1.0;
+    // }else
+    // if(i==1){
+    //     return 1.0;
+    // }else{
+    //     return 0.0;
+    // }
 }
 
 int marching_cubes(vec4 position)

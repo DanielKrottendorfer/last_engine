@@ -11,7 +11,7 @@ use super::{
     rendering::{self, geometry::MeshToken, shader::shader_structs::*, Texture, rendertarget::{ gen_isampler_texture}},
     settings::*,
     setup,
-    window::window_util::*, generators::voxels,
+    window::window_util::{*, self}, generators::voxels,
 };
 
 pub struct GameState {
@@ -92,14 +92,15 @@ impl GameState {
         clear_color(0.0, 0.3, 0.3, 1.0);
         clear_drawbuffer();
 
-        let cube = &self.mesh_ts[1];
-        self.color_shader.use_program();
-        self.color_shader
-            .set_MVP(self.world_projection * view * model);
-        cube.bind_vertex_array();
-        cube.draw_triangle_elements();
+        // let cube = &self.mesh_ts[1];
+        // self.color_shader.use_program();
+        // self.color_shader
+        //     .set_MVP(self.world_projection * view * model);
+        // cube.bind_vertex_array();
+        // cube.draw_triangle_elements();
 
 
+        window_util::toggle_wiregrid(true);
         unsafe {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             self.textures[0].bind();
@@ -111,6 +112,7 @@ impl GameState {
         self.voxel.set_projection(self.world_projection);
         voxel.bind_vertex_array();
         voxel.draw_point_elements();
+        window_util::toggle_wiregrid(false);
     }
 
     pub fn draw_ui(&mut self, _i: f32) {
