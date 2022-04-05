@@ -2,16 +2,19 @@ pub mod input_flags;
 
 pub mod camera;
 
-use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero, Rad};
+use cgmath::{Deg, Matrix4, Rad, Vector2, Vector3, Zero};
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
-    rendering::{self, geometry::MeshToken, shader::shader_structs::*, Texture, loader::gen_isampler_texture},
+    constants::TRI_TABLE,
+    rendering::{
+        self, geometry::MeshToken, loader::gen_isampler_texture, shader::shader_structs::*, Texture,
+    },
     settings::*,
     setup,
-    window::window_util::{*, self}, generators::voxels, constants::TRI_TABLE,
+    window::window_util::*,
 };
 
 pub struct GameState {
@@ -29,8 +32,7 @@ pub struct GameState {
     voxel_norm: VoexelNormProgram,
     mesh_ts: Vec<MeshToken>,
     textures: Vec<Texture>,
-    rot: f32
-    //structogram: Structogram,
+    rot: f32, //structogram: Structogram,
 }
 
 impl GameState {
@@ -46,7 +48,7 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(-0.6,0.5,0.25));
+        cam.move_cam(Vector3::new(-0.6, 0.5, 0.25));
         cam.rotate_h(Deg(45.0));
         cam.rotate_v(Deg(65.0));
 
@@ -75,13 +77,12 @@ impl GameState {
             voxel_norm,
             mesh_ts,
             textures,
-            rot: 0.0
-            //structogram,
+            rot: 0.0, //structogram,
         }
     }
 
     pub fn update(&mut self) {
-        self.rot+=0.01;
+        self.rot += 0.01;
         self.cam.update();
 
         if let Some(v) = get_movement(&mut self.input_flags) {
@@ -101,11 +102,11 @@ impl GameState {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             self.textures[0].bind();
         }
-        
+
         let voxel_grid = &self.mesh_ts[2];
         voxel_grid.bind_vertex_array();
 
-        let m =  Matrix4::from_angle_y(Rad(self.rot));
+        let m = Matrix4::from_angle_y(Rad(self.rot));
         // self.voxel_norm.use_program();
         // self.voxel_norm.set_v(view);
         // self.voxel_norm.set_m(m);
@@ -122,9 +123,8 @@ impl GameState {
         self.voxel.set_triTableTex(0);
         self.voxel.set_voxel_size(0.01);
         self.voxel.set_gEyeWorldPos(self.cam.position);
-        
-        voxel_grid.draw_point_elements();
 
+        voxel_grid.draw_point_elements();
     }
 
     pub fn draw_ui(&mut self, _i: f32) {

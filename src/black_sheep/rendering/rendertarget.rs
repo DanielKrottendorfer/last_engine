@@ -125,7 +125,6 @@ pub fn gen_empty_texture(width: i32, height: i32) -> u32 {
     texture_name
 }
 
-
 impl Drop for RenderTarget {
     fn drop(&mut self) {
         #[cfg(not(feature = "debug_off"))]

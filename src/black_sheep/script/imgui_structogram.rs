@@ -187,7 +187,7 @@ impl Structogram {
                         .filled(true)
                         .build();
                     cursor.y += block_size_and_spacing;
-                },
+                }
                 Instruction::End => {
                     draw_list
                         .add_rect(
@@ -197,7 +197,8 @@ impl Structogram {
                         )
                         .filled(true)
                         .build();
-                    cursor.y += block_size_and_spacing;},
+                    cursor.y += block_size_and_spacing;
+                }
             }
 
             debth_stack = debth_stack

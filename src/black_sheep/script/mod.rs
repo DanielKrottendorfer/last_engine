@@ -57,7 +57,7 @@ pub enum Instruction {
     Action(Box<dyn Action>),
     Placeholder,
     Start,
-    End
+    End,
 }
 
 impl Instruction {
@@ -68,7 +68,7 @@ impl Instruction {
             Instruction::Action(_) => "Action",
             Instruction::Placeholder => "Placeholder",
             Instruction::Start => "Start",
-            &Instruction::End => "End"
+            &Instruction::End => "End",
         }
     }
     pub fn is_placeholder(&self) -> bool {
@@ -186,7 +186,7 @@ impl Script {
                 .collect();
         }
 
-        println!("{:?}",debth_stack);
+        println!("{:?}", debth_stack);
 
         for i in debth_stack.drain(0..) {
             let temp = index - (i.1 - i.0);
@@ -259,7 +259,7 @@ fn run_script(script: &mut Script) {
                 Instruction::Placeholder => {
                     i += 1;
                 }
-                _ => ()
+                _ => (),
             }
         }
     }

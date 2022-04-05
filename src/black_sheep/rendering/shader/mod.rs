@@ -16,7 +16,7 @@ pub struct ShaderRepo {
     pub point_2d: Point2D,
     pub colored_triangles: ColoredTriangles,
     pub voxel: VoexelProgram,
-    pub voxel_norm: VoexelNormProgram
+    pub voxel_norm: VoexelNormProgram,
 }
 
 lazy_static! {
@@ -103,7 +103,7 @@ impl ShaderRepo {
             let program =
                 build_shader_program(COLORED_TRIANGLES_VS_SRC, None, COLORED_TRIANGLES_FS_SRC);
             colored_triangles.setup(&program);
-        }  
+        }
 
         let mut voxel = VoexelProgram::new();
         {
@@ -113,7 +113,11 @@ impl ShaderRepo {
 
         let mut voxel_norm = VoexelNormProgram::new();
         {
-            let program = build_shader_program(GVS_SRC_VOXEL_NORM, Some(GSS_SRC_VOXEL_NORM), GFS_SRC_VOXEL_NORM);
+            let program = build_shader_program(
+                GVS_SRC_VOXEL_NORM,
+                Some(GSS_SRC_VOXEL_NORM),
+                GFS_SRC_VOXEL_NORM,
+            );
             voxel_norm.setup(&program);
         }
 
@@ -126,7 +130,7 @@ impl ShaderRepo {
             point_2d,
             colored_triangles,
             voxel,
-            voxel_norm
+            voxel_norm,
         }
     }
     fn cleanup(&mut self) {

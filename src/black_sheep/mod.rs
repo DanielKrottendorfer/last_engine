@@ -250,7 +250,7 @@ impl BlackSheep {
                 gl::ActiveTexture(gl::TEXTURE0 + 2);
                 rt_gizmo.bind_texture();
             }
-            
+
             imgui_shader_program.use_program();
             imgui_shader_program.set_matrix(game_state.ui_projection);
             imgui_system.draw();

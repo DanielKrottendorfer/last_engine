@@ -7,7 +7,7 @@ pub mod rendertarget;
 pub mod loader;
 
 pub struct Texture(u32);
-  
+
 impl Texture {
     pub fn new(t: u32) -> Self {
         Texture(t)

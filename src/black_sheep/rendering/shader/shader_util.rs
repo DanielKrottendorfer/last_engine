@@ -13,9 +13,11 @@ pub static GVS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gvs_cl
 pub static GSS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gs_cloud.glsl");
 pub static GFS_SRC_VOXEL: &'static str = include_str!("./shader_res/voxel/gfs_cloud.glsl");
 
-pub static GVS_SRC_VOXEL_NORM: &'static str = include_str!("./shader_res/voxel_norm/gvs_cloud.glsl");
+pub static GVS_SRC_VOXEL_NORM: &'static str =
+    include_str!("./shader_res/voxel_norm/gvs_cloud.glsl");
 pub static GSS_SRC_VOXEL_NORM: &'static str = include_str!("./shader_res/voxel_norm/gs_cloud.glsl");
-pub static GFS_SRC_VOXEL_NORM: &'static str = include_str!("./shader_res/voxel_norm/gfs_cloud.glsl");
+pub static GFS_SRC_VOXEL_NORM: &'static str =
+    include_str!("./shader_res/voxel_norm/gfs_cloud.glsl");
 
 pub static GIZMO_VS: &'static str = include_str!("./shader_res/gizmo/vs.glsl");
 pub static GIZMO_GS: &'static str = include_str!("./shader_res/gizmo/gs.glsl");
