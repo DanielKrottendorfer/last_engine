@@ -49,7 +49,18 @@ shader_program!(
 
 shader_program!(
     VoexelProgram{
-        uniform mat4 mv;
+        uniform mat4 m;
+        uniform mat4 v;
+        uniform mat4 projection;
+        uniform int triTableTex;
+        uniform float voxel_size;
+    }
+);
+
+shader_program!(
+    VoexelNormProgram{
+        uniform mat4 m;
+        uniform mat4 v;
         uniform mat4 projection;
         uniform int triTableTex;
         uniform float voxel_size;

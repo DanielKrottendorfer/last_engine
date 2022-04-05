@@ -2,7 +2,7 @@ pub mod input_flags;
 
 pub mod camera;
 
-use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
+use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero, Rad};
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
@@ -26,8 +26,10 @@ pub struct GameState {
     cloud_shader: CloudGeometryShaderProgram,
     color_squares: ColoredTriangles,
     voxel: VoexelProgram,
+    voxel_norm: VoexelNormProgram,
     mesh_ts: Vec<MeshToken>,
-    textures: Vec<Texture>
+    textures: Vec<Texture>,
+    rot: f32
     //structogram: Structogram,
 }
 
@@ -53,6 +55,7 @@ impl GameState {
         let cloud_shader = shader_repo.point_cloud;
         let color_squares = shader_repo.colored_triangles;
         let voxel = shader_repo.voxel;
+        let voxel_norm = shader_repo.voxel_norm;
 
         let mesh_ts = setup::init_mesh();
         let t = Texture::new(gen_isampler_texture(16, 256, TRI_TABLE.as_slice()));
@@ -69,13 +72,16 @@ impl GameState {
             cloud_shader,
             color_squares,
             voxel,
+            voxel_norm,
             mesh_ts,
             textures,
+            rot: 0.0
             //structogram,
         }
     }
 
     pub fn update(&mut self) {
+        self.rot+=0.01;
         self.cam.update();
 
         if let Some(v) = get_movement(&mut self.input_flags) {
@@ -95,15 +101,29 @@ impl GameState {
             gl::ActiveTexture(gl::TEXTURE0 + 0);
             self.textures[0].bind();
         }
-        let voxel = &self.mesh_ts[2];
+        
+        let voxel_grid = &self.mesh_ts[2];
+        voxel_grid.bind_vertex_array();
+
+        let m =  Matrix4::from_angle_y(Rad(self.rot));
+        // self.voxel_norm.use_program();
+        // self.voxel_norm.set_v(view);
+        // self.voxel_norm.set_m(m);
+        // self.voxel_norm.set_projection(self.world_projection);
+        // self.voxel_norm.set_triTableTex(0);
+        // self.voxel_norm.set_voxel_size(0.02);
+
+        // voxel_grid.draw_point_elements();
+
         self.voxel.use_program();
-        self.voxel.set_mv(view);
+        self.voxel.set_v(view);
+        self.voxel.set_m(m);
         self.voxel.set_projection(self.world_projection);
         self.voxel.set_triTableTex(0);
-        self.voxel.set_voxel_size(0.005);
-        voxel.bind_vertex_array();
-        voxel.draw_point_elements();
-        window_util::toggle_wiregrid(false);
+        self.voxel.set_voxel_size(0.02);
+        
+        voxel_grid.draw_point_elements();
+
     }
 
     pub fn draw_ui(&mut self, _i: f32) {

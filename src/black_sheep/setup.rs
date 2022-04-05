@@ -20,7 +20,7 @@ pub fn init_mesh() -> Vec<MeshToken> {
         });
 
         let voxel_cloud = mesh_repo.add_mesh("voxel", |mesh| {
-            let (voxels,e) = voxels::voxel_grid(201, 201, 201, 0.005);
+            let (voxels,e) = voxels::voxel_grid(51, 51, 51, 0.02);
             let mut array = vec![0.0 as f32;voxels.len()];
             array[0] = 1.0;
             mesh.add_floatbuffer(voxels.as_slice(), 0, 3);

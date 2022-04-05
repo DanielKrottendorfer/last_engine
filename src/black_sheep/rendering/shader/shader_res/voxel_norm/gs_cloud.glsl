@@ -1,11 +1,10 @@
 #version 450
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 12) out;
+layout (line_strip, max_vertices = 8) out;
 
 out GS_OUT {
     vec4 color;
-    vec3 norm;
 } gs_out;
 uniform mat4 v;
 uniform mat4 m;
@@ -110,53 +109,31 @@ void main()
 
     vec4 o = vec4(0.2,0.2,0.2,0.0);
 
+    mat3 norm_m = mat3(projection * v * m);
+    norm_m = inverse(norm_m);
+    norm_m = transpose(norm_m);
+
     while(true){
         if(triTableValue(cubeindex, i)!=-1){
             //Generate first vertex of triangle//
             //Fill position varying attribute for fragment shader
-            vec4 p = vec4(vertlist[triTableValue(cubeindex, i)], 1);
+            vec4 p0 = vec4(vertlist[triTableValue(cubeindex, i)], 1);
+            vec4 p1 = vec4(vertlist[triTableValue(cubeindex, i+1)], 1);
+            vec4 p2 = vec4(vertlist[triTableValue(cubeindex, i+2)], 1);
+
+            vec4 p = (p0 + p1 + p2)/3.0;
 
             vec2 pxz = p.xz;
             pxz = (pxz / length(pxz))*R;
-            vec3 n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
+            vec4 n = vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0) * 0.1;
 
-            gs_out.norm = -n;
             gs_out.color = p + o;
 
             //Fill gl_Position attribute for vertex raster space position
-            gl_Position = projection * v * m  * p;
+            gl_Position = (projection * v * m  * p);
             EmitVertex();
-
-            //Generate second vertex of triangle//
-            //Fill position varying attribute for fragment shader
-            p = vec4(vertlist[triTableValue(cubeindex, i+1)], 1);
-
-            pxz = p.xz;
-            pxz = (pxz / length(pxz))*R;
             
-            n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
-
-            gs_out.norm = -n;
-            gs_out.color = p + o;
-
-            //Fill gl_Position attribute for vertex raster space position
-            gl_Position = projection * v * m * p;
-            EmitVertex();
-
-            //Generate last vertex of triangle//
-            //Fill position varying attribute for fragment shader
-            p = vec4(vertlist[triTableValue(cubeindex, i+2)], 1);
-
-            pxz = p.xz;
-            pxz = (pxz / length(pxz))*R;
-            
-            n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
-
-            gs_out.norm = -n;
-            gs_out.color = p + o;
-
-            //Fill gl_Position attribute for vertex raster space position
-            gl_Position = projection * v * m * p;
+            gl_Position = (projection * v * m  * (p+n));
             EmitVertex();
 
             //End triangle strip at firts triangle
