@@ -46,9 +46,9 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(0.6,0.6,0.6));
-        cam.rotate_h(Deg(35.0));
-        cam.rotate_v(Deg(-30.0));
+        cam.move_cam(Vector3::new(-0.6,0.5,0.25));
+        cam.rotate_h(Deg(45.0));
+        cam.rotate_v(Deg(65.0));
 
         let shader_repo = rendering::shader::get_shader_repo();
         let color_shader = shader_repo.color_3d;
