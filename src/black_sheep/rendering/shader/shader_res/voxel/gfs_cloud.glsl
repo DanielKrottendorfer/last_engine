@@ -25,7 +25,7 @@ void main()
 
     out_color =  fs_in.color * 0.5 +
     (white_light * DiffuseFactor * 0.3) + 
-    (white_light * pow(SpecularFactor* 0.8,5.0)) ;
+    (white_light * pow(SpecularFactor*0.9 ,7.0)) ;
 
     out_color.w = 1.0;
 } 

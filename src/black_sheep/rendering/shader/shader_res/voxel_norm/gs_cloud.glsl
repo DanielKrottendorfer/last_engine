@@ -121,23 +121,52 @@ void main()
             vec4 p1 = vec4(vertlist[triTableValue(cubeindex, i+1)], 1);
             vec4 p2 = vec4(vertlist[triTableValue(cubeindex, i+2)], 1);
 
-            vec4 p = (p0 + p1 + p2)/3.0;
+            vec4 p = (p0);
 
             vec2 pxz = p.xz;
             pxz = (pxz / length(pxz))*R;
-            vec4 n = vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0) * 0.1;
+            vec4 n = vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0) * 0.01;
 
             gs_out.color = p + o;
 
-            //Fill gl_Position attribute for vertex raster space position
             gl_Position = (projection * v * m  * p);
             EmitVertex();
             
             gl_Position = (projection * v * m  * (p+n));
             EmitVertex();
 
-            //End triangle strip at firts triangle
             EndPrimitive();
+            
+            p = (p1);
+
+            pxz = p.xz;
+            pxz = (pxz / length(pxz))*R;
+            n = vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0) * 0.01;
+
+            gs_out.color = p + o;
+
+            gl_Position = (projection * v * m  * p);
+            EmitVertex();
+            
+            gl_Position = (projection * v * m  * (p+n));
+            EmitVertex();
+            EndPrimitive();
+
+            p = (p2);
+
+            pxz = p.xz;
+            pxz = (pxz / length(pxz))*R;
+            n = vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0) * 0.01;
+
+            gs_out.color = p + o;
+
+            gl_Position = (projection * v * m  * p);
+            EmitVertex();
+            
+            gl_Position = (projection * v * m  * (p+n));
+            EmitVertex();
+            EndPrimitive();
+
         }else{
             break;
         }

@@ -112,7 +112,7 @@ impl GameState {
         // self.voxel_norm.set_m(m);
         // self.voxel_norm.set_projection(self.world_projection);
         // self.voxel_norm.set_triTableTex(0);
-        // self.voxel_norm.set_voxel_size(0.02);
+        // self.voxel_norm.set_voxel_size(0.01);
 
         // voxel_grid.draw_point_elements();
 
@@ -121,7 +121,7 @@ impl GameState {
         self.voxel.set_m(m);
         self.voxel.set_projection(self.world_projection);
         self.voxel.set_triTableTex(0);
-        self.voxel.set_voxel_size(0.01);
+        self.voxel.set_voxel_size(0.005);
         self.voxel.set_gEyeWorldPos(self.cam.position);
 
         voxel_grid.draw_point_elements();

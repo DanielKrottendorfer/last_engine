@@ -46,8 +46,8 @@ vec3 cubePos(int i,vec3 position){
     return position + cp;
 }
 
-float R = 0.3;
-float G = 0.2;
+float R = 0.25;
+float G = 0.24;
 float cubeVal(int i){
 
     vec3 pos = cubePos(i,gl_in[0].gl_Position.xyz);

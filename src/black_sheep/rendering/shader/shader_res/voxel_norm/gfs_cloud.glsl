@@ -15,7 +15,7 @@ void main()
 
     // out_color = fs_in.color * cosTheta * 1.4;
     // out_color.w = 1.0;
-    out_color = fs_in.color;
+    out_color = vec4(1.0,1.0,0.0,1.0);
     // out_color = fs_in.norm;
     // out_color.w = 1.0;
 }   
