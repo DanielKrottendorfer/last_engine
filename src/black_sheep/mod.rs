@@ -199,7 +199,7 @@ impl BlackSheep {
                                 .uv0([0.0, 1.0])
                                 .uv1([1.0, 0.0])
                                 .build(ui);
-                            Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
+                            //Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
                         });
                 });
                 //HANDLE INPUT

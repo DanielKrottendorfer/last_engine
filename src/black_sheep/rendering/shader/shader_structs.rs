@@ -54,6 +54,7 @@ shader_program!(
         uniform mat4 projection;
         uniform int triTableTex;
         uniform float voxel_size;
+        uniform vec3 gEyeWorldPos;
     }
 );
 

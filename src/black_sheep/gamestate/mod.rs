@@ -46,7 +46,7 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(0.8, 0.9, 1.0));
+        cam.move_cam(Vector3::new(0.6,0.6,0.6));
         cam.rotate_h(Deg(35.0));
         cam.rotate_v(Deg(-30.0));
 
@@ -120,7 +120,8 @@ impl GameState {
         self.voxel.set_m(m);
         self.voxel.set_projection(self.world_projection);
         self.voxel.set_triTableTex(0);
-        self.voxel.set_voxel_size(0.02);
+        self.voxel.set_voxel_size(0.01);
+        self.voxel.set_gEyeWorldPos(self.cam.position);
         
         voxel_grid.draw_point_elements();
 

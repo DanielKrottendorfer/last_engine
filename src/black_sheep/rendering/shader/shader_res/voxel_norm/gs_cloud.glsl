@@ -107,7 +107,7 @@ void main()
     //for (i=0; triTableValue(cubeindex, i)!=-1; i+=3) {
     //int x = 0;
 
-    vec4 o = vec4(0.2,0.2,0.2,0.0);
+    vec4 o = vec4(1.0,1.0,1.0,0.0) * 0.5;
 
     mat3 norm_m = mat3(projection * v * m);
     norm_m = inverse(norm_m);

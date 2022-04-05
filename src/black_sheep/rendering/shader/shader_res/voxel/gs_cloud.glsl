@@ -6,6 +6,7 @@ layout (triangle_strip, max_vertices = 12) out;
 out GS_OUT {
     vec4 color;
     vec3 norm;
+    vec3 w_pos;
 } gs_out;
 uniform mat4 v;
 uniform mat4 m;
@@ -108,7 +109,7 @@ void main()
     //for (i=0; triTableValue(cubeindex, i)!=-1; i+=3) {
     //int x = 0;
 
-    vec4 o = vec4(0.2,0.2,0.2,0.0);
+    vec4 o = vec4(1.0,1.0,1.0,0.0) * 0.4;
 
     while(true){
         if(triTableValue(cubeindex, i)!=-1){
@@ -122,6 +123,7 @@ void main()
 
             gs_out.norm = -n;
             gs_out.color = p + o;
+            gs_out.w_pos = vec3(m * p);
 
             //Fill gl_Position attribute for vertex raster space position
             gl_Position = projection * v * m  * p;
@@ -138,6 +140,7 @@ void main()
 
             gs_out.norm = -n;
             gs_out.color = p + o;
+            gs_out.w_pos = vec3(m * p);
 
             //Fill gl_Position attribute for vertex raster space position
             gl_Position = projection * v * m * p;
@@ -154,7 +157,7 @@ void main()
 
             gs_out.norm = -n;
             gs_out.color = p + o;
-
+            gs_out.w_pos = vec3(m * p);
             //Fill gl_Position attribute for vertex raster space position
             gl_Position = projection * v * m * p;
             EmitVertex();
