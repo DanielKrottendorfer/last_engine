@@ -189,6 +189,7 @@ impl BlackSheep {
                                 | WindowFlags::NO_TITLE_BAR,
                         )
                         .build(&ui, || {
+                            game_state.draw_ui(&ui);
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 
@@ -237,7 +238,6 @@ impl BlackSheep {
             game_state.draw_3d(i);
 
             set_viewport(game_state.window_size_i32[0], game_state.window_size_i32[1]);
-            game_state.draw_ui(i);
 
             imgui_rendering_setup();
 

@@ -3,6 +3,7 @@ pub mod input_flags;
 pub mod camera;
 
 use cgmath::{Deg, Matrix4, Rad, Vector2, Vector3, Zero};
+use imgui::Ui;
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
@@ -33,6 +34,8 @@ pub struct GameState {
     mesh_ts: Vec<MeshToken>,
     textures: Vec<Texture>,
     rot: f32, //structogram: Structogram,
+    g: f32,
+    r: f32,
 }
 
 impl GameState {
@@ -78,6 +81,8 @@ impl GameState {
             mesh_ts,
             textures,
             rot: 0.0, //structogram,
+            g: 0.0,
+            r: 0.0,
         }
     }
 
@@ -121,13 +126,22 @@ impl GameState {
         self.voxel.set_m(m);
         self.voxel.set_projection(self.world_projection);
         self.voxel.set_triTableTex(0);
-        self.voxel.set_voxel_size(0.005);
+        self.voxel.set_voxel_size(0.01);
         self.voxel.set_gEyeWorldPos(self.cam.position);
+        self.voxel.set_G(self.g);
+        self.voxel.set_R(self.r);
 
         voxel_grid.draw_point_elements();
     }
 
-    pub fn draw_ui(&mut self, _i: f32) {
+    pub fn draw_ui(&mut self, ui: &Ui) {
+        use imgui::Slider;
+
+        let sr = Slider::new("R", 0.0, 1.0);
+        sr.build(ui, &mut self.r);
+        let sg = Slider::new("G", 0.0, 1.0);
+        sg.build(ui, &mut self.g);
+
         // let colored_squares = &self.structogram.mesh_token;
         // let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
         // self.color_squares.use_program();

@@ -55,6 +55,8 @@ shader_program!(
         uniform int triTableTex;
         uniform float voxel_size;
         uniform vec3 gEyeWorldPos;
+        uniform float R;
+        uniform float G;
     }
 );
 
