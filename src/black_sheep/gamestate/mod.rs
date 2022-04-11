@@ -3,7 +3,7 @@ pub mod input_flags;
 pub mod camera;
 
 use cgmath::{Deg, Matrix4, Rad, Vector2, Vector3, Zero};
-use imgui::Ui;
+use imgui::{Ui, Selectable};
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
@@ -36,6 +36,8 @@ pub struct GameState {
     rot: f32, //structogram: Structogram,
     g: f32,
     r: f32,
+    normals: bool,
+    rotate: bool,
 }
 
 impl GameState {
@@ -81,13 +83,17 @@ impl GameState {
             mesh_ts,
             textures,
             rot: 0.0, //structogram,
-            g: 0.0,
-            r: 0.0,
+            g: 0.15,
+            r: 0.3,
+            normals: false,
+            rotate: false,
         }
     }
 
     pub fn update(&mut self) {
-        self.rot += 0.01;
+        if self.rotate{
+            self.rot += 0.01;
+        }
         self.cam.update();
 
         if let Some(v) = get_movement(&mut self.input_flags) {
@@ -112,15 +118,21 @@ impl GameState {
         voxel_grid.bind_vertex_array();
 
         let m = Matrix4::from_angle_y(Rad(self.rot));
-        // self.voxel_norm.use_program();
-        // self.voxel_norm.set_v(view);
-        // self.voxel_norm.set_m(m);
-        // self.voxel_norm.set_projection(self.world_projection);
-        // self.voxel_norm.set_triTableTex(0);
-        // self.voxel_norm.set_voxel_size(0.01);
 
-        // voxel_grid.draw_point_elements();
+        if self.normals{
 
+            self.voxel_norm.use_program();
+            self.voxel_norm.set_v(view);
+            self.voxel_norm.set_m(m);
+            self.voxel_norm.set_projection(self.world_projection);
+            self.voxel_norm.set_triTableTex(0);
+            self.voxel_norm.set_voxel_size(0.01);
+            self.voxel.set_G(self.g);
+            self.voxel.set_R(self.r);
+    
+            voxel_grid.draw_point_elements();
+    
+        }
         self.voxel.use_program();
         self.voxel.set_v(view);
         self.voxel.set_m(m);
@@ -142,19 +154,14 @@ impl GameState {
         let sg = Slider::new("G", 0.0, 1.0);
         sg.build(ui, &mut self.g);
 
-        // let colored_squares = &self.structogram.mesh_token;
-        // let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
-        // self.color_squares.use_program();
-        // self.color_squares
-        //     .set_projection(self.ui_projection * model_m);
-        // colored_squares.bind_vertex_array();
-        // colored_squares.draw_triangle_elements();
+        if Selectable::new("draw normals").build(ui){
+            self.normals = !self.normals;
+        }
 
-        // let colored_squares = &self.mesh_ts[4];
-        // self.color_squares.use_program();
-        // self.color_squares.set_projection(self.ui_projection);
-        // colored_squares.bind_vertex_array();
-        // colored_squares.draw_triangle_elements();
+        if Selectable::new("toggle rotation").build(ui){
+            self.rotate = !self.rotate;
+        }
+
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {

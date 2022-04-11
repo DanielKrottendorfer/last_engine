@@ -190,6 +190,7 @@ impl BlackSheep {
                         )
                         .build(&ui, || {
                             game_state.draw_ui(&ui);
+                            ui.separator();
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 

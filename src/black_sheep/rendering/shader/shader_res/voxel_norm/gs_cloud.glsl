@@ -11,6 +11,8 @@ uniform mat4 m;
 uniform mat4 projection;
 uniform isampler2D triTableTex;
 uniform float voxel_size;
+uniform float R;
+uniform float G;
 
 int triTableValue(int i, int j){
     float fi = float(j) / 15.0;
@@ -44,8 +46,6 @@ vec3 cubePos(int i,vec3 position){
     return position + cp;
 }
 
-float R = 0.3;
-float G = 0.2;
 float cubeVal(int i){
 
     vec3 pos = cubePos(i,gl_in[0].gl_Position.xyz);
