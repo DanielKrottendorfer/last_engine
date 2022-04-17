@@ -3,7 +3,7 @@ pub mod input_flags;
 pub mod camera;
 
 use cgmath::{Deg, Matrix4, Rad, Vector2, Vector3, Zero};
-use imgui::{Ui, Selectable};
+use imgui::{Selectable, Ui};
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
@@ -26,9 +26,6 @@ pub struct GameState {
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
 
-    color_shader: Color3D,
-    cloud_shader: CloudGeometryShaderProgram,
-    color_squares: ColoredTriangles,
     voxel: VoexelProgram,
     voxel_norm: VoexelNormProgram,
     mesh_ts: Vec<MeshToken>,
@@ -58,9 +55,6 @@ impl GameState {
         cam.rotate_v(Deg(65.0));
 
         let shader_repo = rendering::shader::get_shader_repo();
-        let color_shader = shader_repo.color_3d;
-        let cloud_shader = shader_repo.point_cloud;
-        let color_squares = shader_repo.colored_triangles;
         let voxel = shader_repo.voxel;
         let voxel_norm = shader_repo.voxel_norm;
 
@@ -75,9 +69,6 @@ impl GameState {
             ui_projection,
             world_projection,
             cam,
-            color_shader,
-            cloud_shader,
-            color_squares,
             voxel,
             voxel_norm,
             mesh_ts,
@@ -91,7 +82,7 @@ impl GameState {
     }
 
     pub fn update(&mut self) {
-        if self.rotate{
+        if self.rotate {
             self.rot += 0.01;
         }
         self.cam.update();
@@ -119,8 +110,7 @@ impl GameState {
 
         let m = Matrix4::from_angle_y(Rad(self.rot));
 
-        if self.normals{
-
+        if self.normals {
             self.voxel_norm.use_program();
             self.voxel_norm.set_v(view);
             self.voxel_norm.set_m(m);
@@ -129,9 +119,8 @@ impl GameState {
             self.voxel_norm.set_voxel_size(0.01);
             self.voxel.set_G(self.g);
             self.voxel.set_R(self.r);
-    
+
             voxel_grid.draw_point_elements();
-    
         }
         self.voxel.use_program();
         self.voxel.set_v(view);
@@ -154,14 +143,13 @@ impl GameState {
         let sg = Slider::new("G", 0.0, 1.0);
         sg.build(ui, &mut self.g);
 
-        if Selectable::new("draw normals").build(ui){
+        if Selectable::new("draw normals").build(ui) {
             self.normals = !self.normals;
         }
 
-        if Selectable::new("toggle rotation").build(ui){
+        if Selectable::new("toggle rotation").build(ui) {
             self.rotate = !self.rotate;
         }
-
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {

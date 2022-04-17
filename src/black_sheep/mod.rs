@@ -1,7 +1,6 @@
 pub mod rendering;
 mod window;
 
-mod algorithms;
 #[allow(dead_code)]
 mod constants;
 mod gamestate;
@@ -9,7 +8,6 @@ mod generators;
 mod imgui_system;
 mod loop_timing;
 mod q_i_square_root;
-mod script;
 pub mod settings;
 mod setup;
 mod transform;
@@ -35,7 +33,6 @@ use self::gamestate::input_flags::InputFlags;
 use self::imgui_system::ImguiSystem;
 use self::rendering::geometry;
 use self::rendering::shader;
-use self::script::imgui_structogram;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -158,8 +155,6 @@ impl BlackSheep {
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
-        let mut structogram = imgui_structogram::Structogram::new(script::init_script());
-
         'mainloop: loop {
             //PROCESS INPUT
             self.handle_events(&mut imgui_system);
@@ -172,7 +167,6 @@ impl BlackSheep {
             while loop_timer.should_update() {
                 //UPDATE
 
-                structogram.update(self.rel_mouse_pos);
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
 
