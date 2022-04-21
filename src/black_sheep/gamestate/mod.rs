@@ -35,6 +35,7 @@ pub struct GameState {
     r: f32,
     normals: bool,
     rotate: bool,
+    wiregird: bool,
 }
 
 impl GameState {
@@ -78,6 +79,7 @@ impl GameState {
             r: 0.3,
             normals: false,
             rotate: false,
+            wiregird: false,
         }
     }
 
@@ -143,12 +145,35 @@ impl GameState {
         let sg = Slider::new("G", 0.0, 1.0);
         sg.build(ui, &mut self.g);
 
-        if Selectable::new("draw normals").build(ui) {
+        if Selectable::new(if self.normals {
+            "hide normals"
+        } else {
+            "show normals"
+        })
+        .build(ui)
+        {
             self.normals = !self.normals;
         }
 
-        if Selectable::new("toggle rotation").build(ui) {
+        if Selectable::new(if self.rotate {
+            "stop rotationg"
+        } else {
+            "rotate"
+        })
+        .build(ui)
+        {
             self.rotate = !self.rotate;
+        }
+
+        if Selectable::new(if self.wiregird {
+            "turn off wiregrid"
+        } else {
+            "turn on wiregrid"
+        })
+        .build(ui)
+        {
+            self.wiregird = !self.wiregird;
+            toggle_wiregrid(self.wiregird);
         }
     }
 

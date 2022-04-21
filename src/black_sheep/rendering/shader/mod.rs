@@ -133,7 +133,7 @@ impl ShaderRepo {
             voxel_norm,
         }
     }
-    
+
     fn cleanup(&mut self) {
         self.imgui.cleanup();
         self.point_cloud.cleanup();
@@ -142,5 +142,6 @@ impl ShaderRepo {
         self.gizmo.cleanup();
         self.point_2d.cleanup();
         self.voxel.cleanup();
+        self.voxel_norm.cleanup();
     }
 }
