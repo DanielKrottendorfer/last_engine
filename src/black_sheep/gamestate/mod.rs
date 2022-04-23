@@ -118,7 +118,7 @@ impl GameState {
             self.voxel_norm.set_m(m);
             self.voxel_norm.set_projection(self.world_projection);
             self.voxel_norm.set_triTableTex(0);
-            self.voxel_norm.set_voxel_size(0.01);
+            self.voxel_norm.set_voxel_size(0.005);
             self.voxel.set_G(self.g);
             self.voxel.set_R(self.r);
 

@@ -122,7 +122,7 @@ void main()
             vec3 n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
 
             gs_out.norm = -n;
-            gs_out.color = p + o;
+            gs_out.color = p*1.4;
             gs_out.w_pos = vec3(m * p);
 
             //Fill gl_Position attribute for vertex raster space position
@@ -139,7 +139,7 @@ void main()
             n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
 
             gs_out.norm = -n;
-            gs_out.color = p + o;
+            gs_out.color = p*1.4;
             gs_out.w_pos = vec3(m * p);
 
             //Fill gl_Position attribute for vertex raster space position
@@ -156,7 +156,7 @@ void main()
             n = (m*vec4(normalize(p.xyz - vec3(pxz.x,0.0,pxz.y)),0.0)).xyz;
 
             gs_out.norm = -n;
-            gs_out.color = p + o;
+            gs_out.color = p*1.4;
             gs_out.w_pos = vec3(m * p);
             //Fill gl_Position attribute for vertex raster space position
             gl_Position = projection * v * m * p;
