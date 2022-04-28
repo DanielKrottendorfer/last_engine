@@ -1,8 +1,17 @@
-use cgmath::{Vector2, Vector3};
+use cgmath::{Vector2, Vector3, InnerSpace};
 
 use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
 use super::rendering::geometry::{self, *};
+
+pub fn get_cube_normals() -> Vec<Vector3<f32>> {
+
+    let center = Vector3::new(0.5,0.5,0.5);
+
+    CUBE.iter().map(|c| {
+        (c - center).normalize()
+    }).collect()
+}
 
 pub fn init_mesh() -> Vec<MeshToken> {
     let vm = geometry::get_mesh_repo(|mesh_repo| {
@@ -19,6 +28,7 @@ pub fn init_mesh() -> Vec<MeshToken> {
         let cube = mesh_repo.add_mesh("cube", |mesh| {
             mesh.add_floatbuffer(&CUBE, 0, 3);
             mesh.add_floatbuffer(&CUBE_COLOR, 1, 3);
+            mesh.add_floatbuffer(&get_cube_normals(), 2, 3);
             mesh.add_elementarraybuffer(&CUBE_ELEMENTS);
         });
 
