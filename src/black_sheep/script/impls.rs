@@ -108,7 +108,9 @@ impl Action for MoveAtoB {
     }
 
     fn into_instruction(self) -> Instruction {
-        Instruction::Action(Box::new(self))
+        Instruction::Action {
+            action: Box::new(self),
+        }
     }
 }
 

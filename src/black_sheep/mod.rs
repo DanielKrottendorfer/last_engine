@@ -203,6 +203,7 @@ impl BlackSheep {
                             let label = if run_ui { "stop" } else { "start" };
                             if ui.button(label) {
                                 run_ui = !run_ui;
+                                toggle_wiregrid(run_ui);
                             }
                             let label = if prune { "np prune" } else { "prune" };
                             if ui.button(label) {
