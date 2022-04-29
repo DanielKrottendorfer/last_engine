@@ -27,7 +27,7 @@ use sdl2::event::{Event, WindowEvent};
 use crate::black_sheep::rendering::geometry::MeshToken;
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
-use crate::black_sheep::settings::*;
+
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
 use self::gamestate::input_flags::InputFlags;
@@ -161,7 +161,7 @@ impl BlackSheep {
         let mut run_ui = false;
         let mut prune = false;
 
-        let mut structogram = imgui_structogram::Structogram::new(script::init_script());
+        let mut structogram = imgui_structogram::Structogram::new(script::init_script2());
 
         'mainloop: loop {
             //PROCESS INPUT
@@ -203,6 +203,7 @@ impl BlackSheep {
                             let label = if run_ui { "stop" } else { "start" };
                             if ui.button(label) {
                                 run_ui = !run_ui;
+                                toggle_wiregrid(run_ui);
                             }
                             let label = if prune { "np prune" } else { "prune" };
                             if ui.button(label) {
@@ -211,7 +212,7 @@ impl BlackSheep {
 
                             if ui.button("reset") {
                                 structogram =
-                                    imgui_structogram::Structogram::new(script::init_script());
+                                    imgui_structogram::Structogram::new(script::init_script2());
                             }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));

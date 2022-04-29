@@ -40,9 +40,15 @@ pub fn new_sdl_window_with_opengl_context() -> (
     (event_pump, sdl_window, sdl_gl, mouse)
 }
 
-pub fn toggle_wiregrid() {
-    unsafe {
-        gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+pub fn toggle_wiregrid(b: bool) {
+    if b {
+        unsafe {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+        }
+    } else {
+        unsafe {
+            gl::PolygonMode(gl::FRONT_AND_BACK, gl::FILL);
+        }
     }
 }
 
