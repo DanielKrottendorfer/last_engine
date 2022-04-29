@@ -57,17 +57,6 @@ impl Script {
         self.instructions.push(instr);
     }
 
-    // fn push_by_debth_stack(&mut self, debth_stack: &debth_stack::DebthStack) {
-    //     let mut iter = debth_stack.iter();
-    //     if let Some(first) = iter.next() {
-    //         let i = first.1 - first.0;
-    //         for s in iter {
-    //             let s = s.1 - s.0;
-    //             let i = i - s;
-    //         }
-    //     }
-    // }
-
     pub fn add_game_object(&mut self, name: String, game_object: Box<dyn GameObject>) {
         self.variables.insert(name, game_object);
     }
@@ -122,6 +111,11 @@ pub fn init_script2() -> Script {
         MoveAtoB::new("warrior".to_string(), "mark1".to_string()).into_instruction(),
     );
     script.push_instruction(Instruction::EndWhileLoop);
+    script.push_instruction(Instruction::EndWhileLoop);
+
+    script.push_instruction(Instruction::WhileLoop {
+        condition: Iterations::new(5).box_it(),
+    });
     script.push_instruction(Instruction::EndWhileLoop);
 
     script.push_instruction(

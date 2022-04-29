@@ -4,7 +4,7 @@ use super::*;
 
 pub struct Structogram {
     pub script: Script,
-    placeholder: Option<usize>,
+    insert_index: Option<usize>,
     block_size: f32,
     spacing: f32,
     panel_position: Vector2<f32>,
@@ -15,7 +15,7 @@ impl Structogram {
     pub fn new(script: Script) -> Self {
         Structogram {
             script,
-            placeholder: None,
+            insert_index: None,
             block_size: -1.0,
             spacing: -1.0,
             panel_position: Vector2::new(-1.0, -1.0),
@@ -30,7 +30,7 @@ impl Structogram {
         if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
             self.insert_placeholder(rel_mouse_pos);
         } else {
-            self.placeholder = None;
+            self.insert_index = None;
         }
     }
 
@@ -50,8 +50,7 @@ impl Structogram {
 
             let temp = mouse_pos - cursor;
             if temp.y < 0.0 && temp.x > 0.0 {
-                println!("i: {} {} ", i, instr.to_str());
-                self.placeholder = Some(i);
+                self.insert_index = Some(i);
                 return;
             }
 
@@ -75,7 +74,7 @@ impl Structogram {
                 }
             }
         }
-        self.placeholder = Some(self.script.instructions.len())
+        self.insert_index = Some(self.script.instructions.len())
     }
 
     pub fn build(&mut self, ui: &Ui) {
@@ -95,11 +94,11 @@ impl Structogram {
         let spacing = block_size_and_spacing - block_size;
         self.spacing = spacing;
 
-        let mut debth_stack = debth_stack::DebthStack2::new();
+        let mut debth_stack = debth_stack::DebthStack::new();
 
         for (instr, i) in self.script.instructions.iter().zip(0..) {
-            if let Some(ph) = self.placeholder {
-                if i == ph {
+            if let Some(ii) = self.insert_index {
+                if i == ii {
                     draw_list
                         .add_rect(
                             cursor.into(),
@@ -159,7 +158,7 @@ impl Structogram {
                             .add_rect(
                                 top_left.into(),
                                 [cursor.x + block_size, cursor.y - spacing],
-                                ImColor32::from_rgba(255, 255, 255, 255),
+                                ImColor32::from_rgba(255, 0, 255, 255),
                             )
                             .filled(true)
                             .build();
@@ -170,5 +169,20 @@ impl Structogram {
                 }
             }
         }
+
+        if let Some(ii) = self.insert_index {
+            if self.script.instructions.len() == ii {
+                draw_list
+                    .add_rect(
+                        cursor.into(),
+                        [bottom_right_border.x, cursor.y + block_size],
+                        ImColor32::from_rgba(25, 255, 25, 255),
+                    )
+                    .filled(true)
+                    .build();
+                debth_stack.advance();
+            }
+        }
+
     }
 }

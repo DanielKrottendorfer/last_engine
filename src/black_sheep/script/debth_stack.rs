@@ -1,9 +1,9 @@
 #[derive(Debug)]
-pub struct DebthStack2(Vec<usize>);
+pub struct DebthStack(Vec<usize>);
 
-impl DebthStack2 {
+impl DebthStack {
     pub fn new() -> Self {
-        DebthStack2(Vec::new())
+        DebthStack(Vec::new())
     }
     pub fn push(&mut self) {
         self.0.push(0);
