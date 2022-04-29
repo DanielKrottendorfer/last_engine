@@ -193,11 +193,10 @@ impl BlackSheep {
                                 | WindowFlags::NO_TITLE_BAR,
                         )
                         .build(&ui, || {
-                            ui.text("Hello world!");
                             ui.text("こんにちは世界！");
+                            ui.text("Hello world!");
 
-                            let label = if wiregrid { "wiregrid" } else { "no wiregrid" };
-                            if ui.button(label) {
+                            if ui.button("wiregrid") {
                                 wiregrid = !wiregrid;
                                 gl_wiregrid(wiregrid);
                             }
@@ -235,7 +234,7 @@ impl BlackSheep {
             rt_gizmo.bind_framebuffer();
             three_d_rendering_setup();
 
-            clear_color(0.1, 0.1, 0.1, 1.0);
+            clear_color(0.3, 0.3, 0.3, 1.0);
             clear_drawbuffer();
             set_viewport(300, 300);
 

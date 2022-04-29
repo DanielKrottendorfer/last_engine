@@ -1,6 +1,93 @@
-use imgui::{ImColor32, Ui};
+use imgui::{DrawListMut, ImColor32, Ui};
 
-use super::*;
+use super::{debth_stack::DebthStack, *};
+
+pub struct StructogramDrawer<'a> {
+    cursor: Vector2<f32>,
+    right_border: f32,
+    block_size: f32,
+    spacing: f32,
+    block_size_and_spacing: f32,
+    window_pos: Vector2<f32>,
+    ui: &'a Ui<'a>,
+    draw_list: DrawListMut<'a>,
+    debth_stack: DebthStack,
+}
+
+impl<'a> StructogramDrawer<'a> {
+    pub fn draw_placeholder(&mut self) {
+        self.draw_list
+            .add_rect(
+                self.cursor.into(),
+                [self.right_border, self.cursor.y + self.block_size],
+                ImColor32::from_rgba(25, 255, 25, 255),
+            )
+            .filled(true)
+            .build();
+        self.cursor.y += self.block_size_and_spacing;
+        self.debth_stack.advance();
+    }
+    pub fn draw_instuction(&mut self, inst: &Instruction) {
+        match inst {
+            Instruction::WhileLoop { condition: _ } => {
+                self.draw_list
+                    .add_rect(
+                        self.cursor.into(),
+                        [self.right_border, self.cursor.y + self.block_size],
+                        ImColor32::from_rgba(255, 0, 255, 255),
+                    )
+                    .filled(true)
+                    .build();
+
+                self.ui.set_cursor_pos(
+                    (self.cursor - self.window_pos + Vector2::new(5.0, 0.0)).into(),
+                );
+                self.ui.text("while");
+
+                self.cursor.x += self.block_size_and_spacing;
+                self.cursor.y += self.block_size_and_spacing;
+                self.debth_stack.push();
+                self.debth_stack.advance();
+            }
+            Instruction::EndWhileLoop => {
+                self.cursor.x -= self.block_size_and_spacing;
+
+                if let Some(h) = self.debth_stack.pop() {
+                    let h = (h - 1) as f32;
+
+                    let mut top_left = self.cursor;
+                    top_left.y -= (h * self.block_size_and_spacing) + self.spacing;
+
+                    self.draw_list
+                        .add_rect(
+                            top_left.into(),
+                            [
+                                self.cursor.x + self.block_size,
+                                self.cursor.y - self.spacing,
+                            ],
+                            ImColor32::from_rgba(255, 0, 255, 255),
+                        )
+                        .filled(true)
+                        .build();
+                }
+            }
+            Instruction::IfCFlow { condition: _ } => todo!(),
+            Instruction::EndIfCFlow => todo!(),
+            Instruction::Action { action: _ } => {
+                self.draw_list
+                    .add_rect(
+                        self.cursor.into(),
+                        [self.right_border, self.cursor.y + self.block_size],
+                        ImColor32::from_rgba(255, 255, 0, 255),
+                    )
+                    .filled(true)
+                    .build();
+                self.cursor.y += self.block_size_and_spacing;
+                self.debth_stack.advance();
+            }
+        }
+    }
+}
 
 pub struct Structogram {
     pub script: Script,
@@ -8,7 +95,6 @@ pub struct Structogram {
     block_size: f32,
     spacing: f32,
     panel_position: Vector2<f32>,
-    dimension: Vector2<f32>,
 }
 
 impl Structogram {
@@ -19,63 +105,16 @@ impl Structogram {
             block_size: -1.0,
             spacing: -1.0,
             panel_position: Vector2::new(-1.0, -1.0),
-            dimension: Vector2::new(-1.0, -1.0),
         }
-    }
-
-    pub fn insert_placeholder(&mut self, mouse_pos: Vector2<f32>) {
-        let block_size = self.block_size;
-        let spacing = self.spacing;
-        let block_size_and_spacing = block_size + spacing;
-
-        let mut cursor = Vector2::new(spacing, spacing);
-
-        let mouse_pos = mouse_pos - Vector2::new(0.0, block_size_and_spacing / 2.0);
-
-        for (instr, i) in self.script.instructions.iter().zip(0..) {
-            // Check if the cursor has cought up to the mouse_positon
-            // Breaks if the mouse position is inside the box of the curser
-            // We dont break if the mouse is on the vertical bar of a loop
-
-            let temp = mouse_pos - cursor;
-            if temp.y < 0.0 && temp.x > 0.0 {
-                self.insert_index = Some(i);
-                return;
-            }
-
-            match instr {
-                Instruction::WhileLoop { .. } => {
-                    cursor.x += block_size_and_spacing;
-                    cursor.y += block_size_and_spacing;
-                }
-                Instruction::IfCFlow { .. } => {
-                    cursor.x += block_size_and_spacing;
-                    cursor.y += block_size_and_spacing;
-                }
-                Instruction::Action { .. } => {
-                    cursor.y += block_size_and_spacing;
-                }
-                Instruction::EndWhileLoop => {
-                    cursor.x -= block_size_and_spacing;
-                }
-                Instruction::EndIfCFlow => {
-                    cursor.x -= block_size_and_spacing;
-                }
-            }
-        }
-        self.insert_index = Some(self.script.instructions.len())
     }
 
     pub fn build(&mut self, ui: &Ui) {
-        
         let draw_list = ui.get_window_draw_list();
-
         let window_pos = Vector2::from(ui.window_pos());
-        let top_left = window_pos + Vector2::from(ui.window_content_region_min());
-        let bottom_right_border = window_pos + Vector2::from(ui.window_content_region_max());
-        let mut cursor = top_left;
+        let top_left = ui.cursor_screen_pos().into();
         self.panel_position = top_left;
-        self.dimension = bottom_right_border - top_left;
+
+        let right_border = ui.content_region_max()[0] + window_pos.x;
 
         let block_size_and_spacing = ui.text_line_height_with_spacing();
         let block_size = ui.text_line_height();
@@ -84,104 +123,40 @@ impl Structogram {
         let spacing = block_size_and_spacing - block_size;
         self.spacing = spacing;
 
-        let mouse_pos:Vector2<f32> = ui.mouse_pos_on_opening_current_popup().into();
+        let mouse_pos: Vector2<f32> = ui.mouse_pos_on_opening_current_popup().into();
+        let mouse_pos = mouse_pos - Vector2::new(0.0, block_size);
 
-        let rel_mouse_pos = mouse_pos - self.panel_position;
-        let temp = self.dimension - rel_mouse_pos;
+        let top_left = ui.cursor_screen_pos().into();
 
-        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
-            self.insert_placeholder(rel_mouse_pos);
-        } else {
-            self.insert_index = None;
-        }
+        let mut drawer = StructogramDrawer {
+            cursor: top_left,
+            right_border,
+            block_size,
+            spacing,
+            block_size_and_spacing,
+            window_pos,
+            ui,
+            draw_list,
+            debth_stack: DebthStack::new(),
+        };
 
-        let mut debth_stack = debth_stack::DebthStack::new();
+        self.insert_index = None;
 
         for (instr, i) in self.script.instructions.iter().zip(0..) {
-            if let Some(ii) = self.insert_index {
-                if i == ii {
-                    draw_list
-                        .add_rect(
-                            cursor.into(),
-                            [bottom_right_border.x, cursor.y + block_size],
-                            ImColor32::from_rgba(25, 255, 25, 255),
-                        )
-                        .filled(true)
-                        .build();
-                    cursor.y += block_size_and_spacing;
-                    debth_stack.advance();
-                }
+            let temp = mouse_pos - drawer.cursor;
+            if temp.y < 0.0 && temp.x > 0.0 && self.insert_index.is_none() {
+                self.insert_index = Some(i);
+                drawer.draw_placeholder();
             }
-
-            match instr {
-                Instruction::WhileLoop { .. } => {
-                    draw_list
-                        .add_rect(
-                            cursor.into(),
-                            [bottom_right_border.x, cursor.y + block_size],
-                            ImColor32::from_rgba(255, 0, 255, 255),
-                        )
-                        .filled(true)
-                        .build();
-
-                    ui.set_cursor_pos((cursor - window_pos).into());
-                    ui.text("while");
-
-                    cursor.x += block_size_and_spacing;
-                    cursor.y += block_size_and_spacing;
-
-                    debth_stack.push();
-                    debth_stack.advance();
-                }
-                Instruction::IfCFlow { .. } => todo!(),
-                Instruction::Action { .. } => {
-                    draw_list
-                        .add_rect(
-                            cursor.into(),
-                            [bottom_right_border.x, cursor.y + block_size],
-                            ImColor32::from_rgba(255, 255, 0, 255),
-                        )
-                        .filled(true)
-                        .build();
-                    cursor.y += block_size_and_spacing;
-                    debth_stack.advance();
-                }
-                Instruction::EndWhileLoop => {
-                    cursor.x -= block_size_and_spacing;
-
-                    if let Some(h) = debth_stack.pop() {
-                        let h = (h - 1) as f32;
-
-                        let mut top_left = cursor;
-                        top_left.y -= (h * block_size_and_spacing) + spacing;
-
-                        draw_list
-                            .add_rect(
-                                top_left.into(),
-                                [cursor.x + block_size, cursor.y - spacing],
-                                ImColor32::from_rgba(255, 0, 255, 255),
-                            )
-                            .filled(true)
-                            .build();
-                    }
-                }
-                Instruction::EndIfCFlow => {
-                    cursor.x -= block_size_and_spacing;
-                }
-            }
+            drawer.draw_instuction(instr);
         }
 
-        if let Some(ii) = self.insert_index {
-            if self.script.instructions.len() == ii {
-                draw_list
-                    .add_rect(
-                        cursor.into(),
-                        [bottom_right_border.x, cursor.y + block_size],
-                        ImColor32::from_rgba(25, 255, 25, 255),
-                    )
-                    .filled(true)
-                    .build();
-            }
+        let temp = mouse_pos - drawer.cursor;
+        if temp.y < 0.0 && temp.x > 0.0 && self.insert_index.is_none() {
+            self.insert_index = Some(self.script.instructions.len());
+            drawer.draw_placeholder();
         }
+
+        ui.set_cursor_pos((drawer.cursor - window_pos).into());
     }
 }

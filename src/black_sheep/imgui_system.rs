@@ -157,7 +157,7 @@ pub fn init() -> ImguiSystem {
     imgui.io_mut()[Key::Backspace] = sdl2::keyboard::Keycode::Backspace as u32;
 
     let hidpi_factor = 1.0;
-    let font_size = 13.0 * hidpi_factor;
+    let font_size = 22.0 * hidpi_factor;
     imgui.fonts().add_font(&[
         FontSource::DefaultFontData {
             config: Some(FontConfig {
