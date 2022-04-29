@@ -137,8 +137,6 @@ impl BlackSheep {
             (shader_repo.imgui, shader_repo.gizmo)
         };
 
-        //init_rendering_setup();
-
         init_rendersetup();
 
         let mut imgui_system = imgui_system::init();
@@ -158,8 +156,7 @@ impl BlackSheep {
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
-        let mut run_ui = false;
-        let mut prune = false;
+        let mut wiregrid = false;
 
         let mut structogram = imgui_structogram::Structogram::new(script::init_script2());
 
@@ -175,7 +172,6 @@ impl BlackSheep {
             while loop_timer.should_update() {
                 //UPDATE
 
-                structogram.update(self.rel_mouse_pos);
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
 
@@ -200,20 +196,12 @@ impl BlackSheep {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 
-                            let label = if run_ui { "stop" } else { "start" };
+                            let label = if wiregrid { "wiregrid" } else { "no wiregrid" };
                             if ui.button(label) {
-                                run_ui = !run_ui;
-                                toggle_wiregrid(run_ui);
-                            }
-                            let label = if prune { "np prune" } else { "prune" };
-                            if ui.button(label) {
-                                prune = !prune;
+                                wiregrid = !wiregrid;
+                                gl_wiregrid(wiregrid);
                             }
 
-                            if ui.button("reset") {
-                                structogram =
-                                    imgui_structogram::Structogram::new(script::init_script2());
-                            }
                             ui.text(format!("{:?}", -game_state.cam.position));
                             ui.text(format!("{:#?}", game_state.cam.orientation));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);

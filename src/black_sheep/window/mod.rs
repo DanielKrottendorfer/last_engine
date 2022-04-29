@@ -43,6 +43,7 @@ impl SDLWindow {
         self._mouse_util.show_cursor(true);
         self._mouse_util.set_relative_mouse_mode(false);
     }
+
 }
 
 impl Drop for SDLWindow {

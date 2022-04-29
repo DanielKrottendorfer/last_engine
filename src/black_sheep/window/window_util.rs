@@ -12,6 +12,9 @@ pub fn new_sdl_window_with_opengl_context() -> (
     video_context.gl_attr().set_context_minor_version(4);
     video_context.gl_attr().set_context_minor_version(5);
 
+    video_context.gl_attr().set_multisample_buffers(1);
+    video_context.gl_attr().set_multisample_samples(16);
+
     video_context.gl_attr().set_double_buffer(true);
     video_context.gl_attr().set_depth_size(24);
 
@@ -40,7 +43,19 @@ pub fn new_sdl_window_with_opengl_context() -> (
     (event_pump, sdl_window, sdl_gl, mouse)
 }
 
-pub fn toggle_wiregrid(b: bool) {
+pub fn gl_msaa(b: bool) {
+    if b {
+        unsafe {
+            gl::Enable(gl::MULTISAMPLE);
+        }
+    } else {
+        unsafe {
+            gl::Disable(gl::MULTISAMPLE);
+        }
+    }
+}
+
+pub fn gl_wiregrid(b: bool) {
     if b {
         unsafe {
             gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
@@ -72,6 +87,7 @@ pub fn clear_color(red: f32, green: f32, blue: f32, alpha: f32) {
 
 pub fn init_rendersetup() {
     unsafe {
+        gl::Enable(gl::MULTISAMPLE);
         gl::Enable(gl::BLEND);
         gl::BlendEquation(gl::FUNC_ADD);
         gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);

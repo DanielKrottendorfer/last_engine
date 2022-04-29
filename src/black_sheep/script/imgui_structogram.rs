@@ -23,17 +23,6 @@ impl Structogram {
         }
     }
 
-    pub fn update(&mut self, mouse_pos: Vector2<f32>) {
-        let rel_mouse_pos = mouse_pos - self.panel_position;
-        let temp = self.dimension - rel_mouse_pos;
-
-        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
-            self.insert_placeholder(rel_mouse_pos);
-        } else {
-            self.insert_index = None;
-        }
-    }
-
     pub fn insert_placeholder(&mut self, mouse_pos: Vector2<f32>) {
         let block_size = self.block_size;
         let spacing = self.spacing;
@@ -78,6 +67,7 @@ impl Structogram {
     }
 
     pub fn build(&mut self, ui: &Ui) {
+        
         let draw_list = ui.get_window_draw_list();
 
         let window_pos = Vector2::from(ui.window_pos());
@@ -93,6 +83,17 @@ impl Structogram {
 
         let spacing = block_size_and_spacing - block_size;
         self.spacing = spacing;
+
+        let mouse_pos:Vector2<f32> = ui.mouse_pos_on_opening_current_popup().into();
+
+        let rel_mouse_pos = mouse_pos - self.panel_position;
+        let temp = self.dimension - rel_mouse_pos;
+
+        if rel_mouse_pos.x > 0.0 && rel_mouse_pos.y > 0.0 && temp.x > 0.0 && temp.y > 0.0 {
+            self.insert_placeholder(rel_mouse_pos);
+        } else {
+            self.insert_index = None;
+        }
 
         let mut debth_stack = debth_stack::DebthStack::new();
 
@@ -180,9 +181,7 @@ impl Structogram {
                     )
                     .filled(true)
                     .build();
-                debth_stack.advance();
             }
         }
-
     }
 }
