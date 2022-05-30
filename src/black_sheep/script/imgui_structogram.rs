@@ -67,7 +67,6 @@ impl Structogram {
     }
 
     pub fn build(&mut self, ui: &Ui) {
-        
         let draw_list = ui.get_window_draw_list();
 
         let window_pos = Vector2::from(ui.window_pos());
@@ -84,7 +83,7 @@ impl Structogram {
         let spacing = block_size_and_spacing - block_size;
         self.spacing = spacing;
 
-        let mouse_pos:Vector2<f32> = ui.mouse_pos_on_opening_current_popup().into();
+        let mouse_pos: Vector2<f32> = ui.mouse_pos_on_opening_current_popup().into();
 
         let rel_mouse_pos = mouse_pos - self.panel_position;
         let temp = self.dimension - rel_mouse_pos;

@@ -18,6 +18,13 @@ shader_program!(
 );
 
 shader_program!(
+    CircleCloudGeometryShaderProgram {
+        uniform mat4 mv;
+        uniform mat4 projection;
+    }
+);
+
+shader_program!(
     SimpleShaderProgram{
         uniform vec3 color;
     }

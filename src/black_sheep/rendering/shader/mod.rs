@@ -10,6 +10,7 @@ use shader_util::*;
 pub struct ShaderRepo {
     pub imgui: ImguiShaderProgram,
     pub point_cloud: CloudGeometryShaderProgram,
+    pub circle_point_cloud: CircleCloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
     pub color_3d: Color3D,
     pub gizmo: GizmoProgram,
@@ -66,6 +67,12 @@ impl ShaderRepo {
             point_cloud.setup(&program);
         }
 
+        let mut circle_point_cloud = CircleCloudGeometryShaderProgram::new();
+        {
+            let program = build_shader_program(GVS_SRC_CIRCLE_CLOUD, Some(GS_SRC_CIRCLE_CLOUD), GFS_SRC_CIRCLE_CLOUD);
+            circle_point_cloud.setup(&program);
+        }
+
         let mut imgui = ImguiShaderProgram::new();
         {
             let program = build_shader_program(IMGUI_VS_SRC, None, IMGUI_FS_SRC);
@@ -106,6 +113,7 @@ impl ShaderRepo {
         ShaderRepo {
             imgui,
             point_cloud,
+            circle_point_cloud,
             simple,
             color_3d,
             gizmo,

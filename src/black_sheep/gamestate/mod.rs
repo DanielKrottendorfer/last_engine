@@ -24,6 +24,7 @@ pub struct GameState {
 
     color_shader: Color3D,
     cloud_shader: CloudGeometryShaderProgram,
+    circle_cloud_shader: CircleCloudGeometryShaderProgram,
     color_squares: ColoredTriangles,
 
     mesh_ts: Vec<MeshToken>,
@@ -50,6 +51,7 @@ impl GameState {
         let color_shader = shader_repo.color_3d;
         let cloud_shader = shader_repo.point_cloud;
         let color_squares = shader_repo.colored_triangles;
+        let circle_cloud_shader = shader_repo.circle_point_cloud;
 
         let mesh_ts = setup::init_mesh();
 
@@ -67,6 +69,7 @@ impl GameState {
             color_squares,
 
             mesh_ts,
+            circle_cloud_shader,
             //structogram,
         }
     }
@@ -97,9 +100,9 @@ impl GameState {
         cube.draw_triangle_elements();
 
         let cube_cloud = &self.mesh_ts[3];
-        self.cloud_shader.use_program();
-        self.cloud_shader.set_mv(view);
-        self.cloud_shader.set_projection(self.world_projection);
+        self.circle_cloud_shader.use_program();
+        self.circle_cloud_shader.set_mv(view);
+        self.circle_cloud_shader.set_projection(self.world_projection);
         cube_cloud.bind_vertex_array();
         cube_cloud.draw_point_elements();
     }

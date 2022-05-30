@@ -35,7 +35,6 @@ use self::gamestate::input_flags::InputFlags;
 use self::imgui_system::ImguiSystem;
 use self::rendering::geometry;
 use self::rendering::shader;
-use self::script::imgui_structogram;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -158,8 +157,6 @@ impl BlackSheep {
 
         let mut wiregrid = false;
 
-        let mut structogram = imgui_structogram::Structogram::new(script::init_script2());
-
         'mainloop: loop {
             //PROCESS INPUT
             self.handle_events(&mut imgui_system);
@@ -174,11 +171,6 @@ impl BlackSheep {
 
                 imgui_system.update(&mut |ui| {
                     use imgui::WindowFlags;
-
-                    let w = Window::new("Test");
-                    w.build(ui, || {
-                        structogram.build(ui);
-                    });
 
                     Window::new("Image")
                         .size([300.0, game_state.window_size_f32[1]], Condition::Always)
@@ -196,7 +188,7 @@ impl BlackSheep {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
 
-                            let label = if wiregrid { "wiregrid" } else { "no wiregrid" };
+                            let label = if wiregrid { "no wwiregrid" } else { "iregrid" };
                             if ui.button(label) {
                                 wiregrid = !wiregrid;
                                 gl_wiregrid(wiregrid);
