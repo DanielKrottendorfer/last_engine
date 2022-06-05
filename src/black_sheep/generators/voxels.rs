@@ -11,6 +11,7 @@ pub fn voxel_grid(
         height as f32 * voxel_size / 2.0,
         debth as f32 * voxel_size / 2.0,
     );
+
     let mut voxels = Vec::new();
     let mut elements = Vec::new();
     let mut i = 0;
