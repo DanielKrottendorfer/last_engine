@@ -1,3 +1,5 @@
+//QUELLE: http://www.icare3d.org/codes-and-projects/codes/opengl_geometry_shader_marching_cubes.html
+
 #version 450
 
 layout (points) in;

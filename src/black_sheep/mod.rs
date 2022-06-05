@@ -144,7 +144,6 @@ impl BlackSheep {
         rendertarget::unbind_framebuffer();
 
         let font_texture = imgui_system.load_font_atlas_texture();
-        let nice_image = load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap();
 
         let gizmo =
             geometry::get_mesh_repo(|mr| MeshToken::from(mr.get_mesh_by_name("gizmo").unwrap()));
@@ -239,9 +238,6 @@ impl BlackSheep {
             unsafe {
                 gl::ActiveTexture(gl::TEXTURE0 + 0);
                 font_texture.bind();
-                gl::ActiveTexture(gl::TEXTURE0 + 1);
-                //font_texture.bind();
-                nice_image.bind();
                 gl::ActiveTexture(gl::TEXTURE0 + 2);
                 rt_gizmo.bind_texture();
             }
