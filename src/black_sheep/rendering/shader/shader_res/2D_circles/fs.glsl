@@ -16,9 +16,8 @@ void main() {
 
   float dist = pow(diff.x,2)+pow(diff.y,2);
 
-  if (dist > pow(fs_in.radius,2)) {
-    //out_color = vec4(1.0,0.0,1.0,0.0);
+  if (dist < pow(fs_in.radius,2)) {
+    out_color = out_color + vec4(fs_in.color,1.0);
   }else{
-    out_color = vec4(fs_in.color,1.0);
   }
 };

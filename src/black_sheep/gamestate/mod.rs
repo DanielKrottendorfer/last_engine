@@ -2,10 +2,16 @@ pub mod input_flags;
 
 pub mod camera;
 
+mod ecs;
+mod job;
+
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
+use chained_component_system::chained_component_system;
+
+use std::sync::*;
 
 use super::{
     rendering::{self, geometry::MeshToken, shader::shader_structs::*},
@@ -13,6 +19,7 @@ use super::{
     setup,
     window::window_util::*,
 };
+
 
 pub struct GameState {
     pub input_flags: InputFlags,
@@ -92,19 +99,20 @@ impl GameState {
         clear_color(0.0, 0.3, 0.3, 1.0);
         clear_drawbuffer();
 
+        let cube_cloud = &self.mesh_ts[3];
+        self.circle_cloud_shader.use_program();
+        self.circle_cloud_shader.set_mv(view);
+        self.circle_cloud_shader
+            .set_projection(self.world_projection);
+        cube_cloud.bind_vertex_array();
+        cube_cloud.draw_point_elements();
+
         let cube = &self.mesh_ts[2];
         self.color_shader.use_program();
         self.color_shader
             .set_MVP(self.world_projection * view * model);
         cube.bind_vertex_array();
         cube.draw_triangle_elements();
-
-        let cube_cloud = &self.mesh_ts[3];
-        self.circle_cloud_shader.use_program();
-        self.circle_cloud_shader.set_mv(view);
-        self.circle_cloud_shader.set_projection(self.world_projection);
-        cube_cloud.bind_vertex_array();
-        cube_cloud.draw_point_elements();
     }
 
     pub fn draw_ui(&mut self, _i: f32) {

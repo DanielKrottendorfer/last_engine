@@ -8,9 +8,12 @@ use std::str;
 pub static GVS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gvs_cloud.glsl");
 pub static GS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gs_cloud.glsl");
 pub static GFS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gfs_cloud.glsl");
-pub static GVS_SRC_CIRCLE_CLOUD: &'static str = include_str!("./shader_res/cloud_circle/gvs_cloud.glsl");
-pub static  GS_SRC_CIRCLE_CLOUD: &'static str = include_str!("./shader_res/cloud_circle/gs_cloud.glsl");
-pub static GFS_SRC_CIRCLE_CLOUD: &'static str = include_str!("./shader_res/cloud_circle/gfs_cloud.glsl");
+pub static GVS_SRC_CIRCLE_CLOUD: &'static str =
+    include_str!("./shader_res/cloud_circle/gvs_cloud.glsl");
+pub static GS_SRC_CIRCLE_CLOUD: &'static str =
+    include_str!("./shader_res/cloud_circle/gs_cloud.glsl");
+pub static GFS_SRC_CIRCLE_CLOUD: &'static str =
+    include_str!("./shader_res/cloud_circle/gfs_cloud.glsl");
 
 pub static GIZMO_VS: &'static str = include_str!("./shader_res/gizmo/vs.glsl");
 pub static GIZMO_GS: &'static str = include_str!("./shader_res/gizmo/gs.glsl");

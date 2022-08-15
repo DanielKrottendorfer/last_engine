@@ -69,7 +69,11 @@ impl ShaderRepo {
 
         let mut circle_point_cloud = CircleCloudGeometryShaderProgram::new();
         {
-            let program = build_shader_program(GVS_SRC_CIRCLE_CLOUD, Some(GS_SRC_CIRCLE_CLOUD), GFS_SRC_CIRCLE_CLOUD);
+            let program = build_shader_program(
+                GVS_SRC_CIRCLE_CLOUD,
+                Some(GS_SRC_CIRCLE_CLOUD),
+                GFS_SRC_CIRCLE_CLOUD,
+            );
             circle_point_cloud.setup(&program);
         }
 
