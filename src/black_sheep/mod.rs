@@ -24,17 +24,16 @@ use window::SDLWindow;
 
 use sdl2::event::{Event, WindowEvent};
 
-use crate::black_sheep::rendering::geometry::MeshToken;
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::rendering::rendertarget;
 
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
-use self::gamestate::input_flags::InputFlags;
-
-use self::imgui_system::ImguiSystem;
-use self::rendering::geometry;
-use self::rendering::shader;
+use gamestate::input_flags::InputFlags;
+use imgui_system::ImguiSystem;
+use rendering::geometry;
+use rendering::geometry::mesh::MeshToken;
+use rendering::shader;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -53,8 +52,8 @@ impl BlackSheep {
     pub fn new() -> Self {
         // KEEP THIS ORDER
         let window = SDLWindow::new();
+        shader::init();
         geometry::init();
-        rendering::shader::init();
         let game_state = GameState::new();
         Self {
             window,

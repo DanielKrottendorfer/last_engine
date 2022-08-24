@@ -1,8 +1,9 @@
 use cgmath::{Vector2, Vector3};
+use itertools::Itertools;
 
 use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
-use super::rendering::geometry::{self, *};
+use super::rendering::geometry::{self, *, mesh::MeshToken};
 
 pub fn init_mesh() -> Vec<MeshToken> {
     let vm = geometry::get_mesh_repo(|mesh_repo| {
@@ -42,7 +43,25 @@ pub fn init_mesh() -> Vec<MeshToken> {
             mesh.add_elementarraybuffer(&vc.2);
         });
 
-        vec![triangle, gizmo, cube, cube_cloud, colored_triangles]
+        let ape = mesh_repo.add_mesh("ape", |m| {
+            let (gltf, buffers, _) = gltf::import("res/ape.glb").unwrap();
+            let mesh = gltf.meshes().next().unwrap();
+            
+            for primitive in mesh.primitives() {
+                let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
+                if let Some(iter) = reader.read_positions() {
+                    let p = iter.collect_vec();
+                    m.add_floatbuffer(&p , 0,3);
+                    m.add_floatbuffer(&p , 1,3);
+                }
+                if let Some(iter) = reader.read_indices() {
+                    let e = iter.into_u32().collect_vec();
+                    m.add_elementarraybuffer(&e);
+                }
+            }
+        });
+
+        vec![triangle, gizmo, cube, cube_cloud, colored_triangles, ape]
     });
 
     vm

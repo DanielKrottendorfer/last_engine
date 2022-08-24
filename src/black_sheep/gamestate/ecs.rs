@@ -1,20 +1,25 @@
-use cgmath::Vector3;
+use cgmath::{Vector3, Quaternion, Matrix4};
 use chained_component_system::chained_component_system;
 
-use std::{sync::{*, atomic::AtomicBool}, thread::{JoinHandle, self}};
-use core::sync::atomic::Ordering::SeqCst;
+use std::sync::*;
+
 
 
 chained_component_system!(
     components{
-        ve: Vector3<f32>,
+        pos: Vector3<f32>,
+        ori: Quaternion<f32>,
+
+        mat: Matrix4<f32>,
+        col: Vector3<f32>,
     };
 
     entities{
-        Ve(ve),
+        Bird(pos,ori,mat,col),
     };
 
     global_systems{
-        VeSys(ve),
+        calculate_mat(pos,ori,mut mat),
+        draw(mat,col),
     };
 );
