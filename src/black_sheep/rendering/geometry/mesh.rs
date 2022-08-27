@@ -1,6 +1,5 @@
 use super::mesh_util::*;
 
-
 pub struct Mesh {
     pub uid: usize,
     buffer_ids: Vec<u32>,

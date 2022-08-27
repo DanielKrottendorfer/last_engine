@@ -1,8 +1,10 @@
-use std::path::Path;
+
 
 use imgui::FontAtlasTexture;
 
-use super::{Texture, geometry::{mesh::MeshToken, self}};
+use super::{
+    Texture,
+};
 
 pub fn load_texture_from_path(path: &str) -> Option<Texture> {
     use image::io::Reader as ImageReader;

@@ -1,4 +1,4 @@
-use crate::black_sheep::BlackSheep;
+
 
 mod black_sheep;
 
@@ -14,7 +14,18 @@ fn main() {
     #[cfg(not(feature = "debug_off"))]
     println!("Hello, world!");
 
-    let bs: BlackSheep = black_sheep::BlackSheep::new();
+    let bs = black_sheep::BlackSheep::new(
+        |_ecs| {
+            || {
+                println!("123");
+            }
+        },
+        |_ecs| {
+            |_i: f32| {
+                println!("123");
+            }
+        },
+    );
     bs.run();
 
     #[cfg(not(feature = "debug_off"))]

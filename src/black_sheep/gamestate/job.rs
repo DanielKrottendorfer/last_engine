@@ -1,6 +1,8 @@
-
-use std::{thread::{JoinHandle, self}, sync::{Mutex, Arc, atomic::AtomicBool, Condvar}};
 use core::sync::atomic::Ordering::SeqCst;
+use std::{
+    sync::{atomic::AtomicBool, Arc, Condvar, Mutex},
+    thread::{self, JoinHandle},
+};
 
 struct Job {
     join_h: JoinHandle<()>,
@@ -35,7 +37,7 @@ impl Job {
 
                 *running = false;
                 s_cvar.notify_one();
-            };
+            }
         });
 
         Job {

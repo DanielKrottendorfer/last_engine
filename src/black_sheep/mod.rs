@@ -4,7 +4,7 @@ mod window;
 mod algorithms;
 #[allow(dead_code)]
 mod constants;
-mod gamestate;
+pub mod gamestate;
 mod generators;
 mod imgui_system;
 mod loop_timing;
@@ -35,26 +35,40 @@ use rendering::geometry;
 use rendering::geometry::mesh::MeshToken;
 use rendering::shader;
 
-pub struct BlackSheep {
+use self::gamestate::ecs::CHAINED_ECS;
+
+pub struct BlackSheep<U, D>
+where
+    U: FnMut(),
+    D: FnMut(f32),
+{
     window: SDLWindow,
-    game_state: GameState,
+    game_state: GameState<U, D>,
     rel_mouse_pos: Vector2<f32>,
 }
 
-impl Drop for BlackSheep {
-    fn drop(&mut self) {
-        shader::cleanup();
-        geometry::cleanup();
-    }
-}
+// impl<U: FnMut(), D: FnMut(f32)> Drop for BlackSheep<U, D> {
+//     fn drop(&mut self) {
+//         shader::cleanup();
+//         geometry::cleanup();
+//     }
+// }
 
-impl BlackSheep {
-    pub fn new() -> Self {
+impl<U, D> BlackSheep<U, D>
+where
+    U: FnMut(),
+    D: FnMut(f32),
+{
+    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
+    where
+        CU: FnOnce(&mut CHAINED_ECS) -> U,
+        CD: FnOnce(&mut CHAINED_ECS) -> D,
+    {
         // KEEP THIS ORDER
         let window = SDLWindow::new();
         shader::init();
         geometry::init();
-        let game_state = GameState::new();
+        let game_state = GameState::new(create_update, create_draw);
         Self {
             window,
             game_state,

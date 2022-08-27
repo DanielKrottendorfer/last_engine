@@ -2,26 +2,26 @@ pub mod input_flags;
 
 pub mod camera;
 
-mod ecs;
+pub mod ecs;
 mod job;
 
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 
-use self::{camera::structs::FlyingEye, input_flags::InputFlags};
+use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
-
-
-
 use super::{
-    rendering::{self, shader::shader_structs::*, geometry::mesh::MeshToken},
+    rendering::{self, geometry::mesh::MeshToken, shader::shader_structs::*},
     settings::*,
     setup,
     window::window_util::*,
 };
 
-
-pub struct GameState {
+pub struct GameState<U, D>
+where
+    U: FnMut(),
+    D: FnMut(f32),
+{
     pub input_flags: InputFlags,
     pub window_size_f32: [f32; 2],
     pub window_size_i32: [i32; 2],
@@ -37,10 +37,21 @@ pub struct GameState {
     color_squares: ColoredTriangles,
 
     mesh_ts: Vec<MeshToken>,
+
+    update: U,
+    draw: D,
 }
 
-impl GameState {
-    pub fn new() -> Self {
+impl<U, D> GameState<U, D>
+where
+    U: FnMut(),
+    D: FnMut(f32),
+{
+    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
+    where
+        CU: FnOnce(&mut CHAINED_ECS) -> U,
+        CD: FnOnce(&mut CHAINED_ECS) -> D,
+    {
         let ui_projection = cgmath::ortho(
             0.0,
             INIT_WINDOW_SIZE_F32[0],
@@ -52,8 +63,9 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(1.35, 1.35, 2.0));
-        cam.rotate_h(Deg(35.0));
+        cam.move_cam(Vector3::new(2.0, 0.5, 2.0));
+        cam.rotate_h(Deg(15.0));
+        cam.rotate_v(Deg(-15.0));
 
         let shader_repo = rendering::shader::get_shader_repo();
         let color_shader = shader_repo.color_3d;
@@ -63,9 +75,10 @@ impl GameState {
 
         let mesh_ts = setup::init_mesh();
 
-        let ecs = ecs::CHAINED_ECS::new();
+        let mut ecs = ecs::CHAINED_ECS::new();
 
-
+        let update = create_update(&mut ecs);
+        let draw = create_draw(&mut ecs);
         GameState {
             input_flags: InputFlags::NONE,
             window_size_f32: INIT_WINDOW_SIZE_F32,
@@ -79,7 +92,9 @@ impl GameState {
 
             mesh_ts,
             circle_cloud_shader,
-            ecs
+            ecs,
+            update,
+            draw,
         }
     }
 
@@ -117,9 +132,7 @@ impl GameState {
         cube.draw_triangle_elements();
     }
 
-    pub fn draw_ui(&mut self, _i: f32) {
-        
-    }
+    pub fn draw_ui(&mut self, _i: f32) {}
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
         let _v = Vector2::new(x as f32, y as f32);

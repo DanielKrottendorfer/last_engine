@@ -1,18 +1,16 @@
 pub mod imgui_mesh;
+pub mod mesh;
 mod mesh_util;
 mod unique_index;
-pub mod mesh;
-
 
 use std::{borrow::Borrow, collections::HashMap, sync::Mutex};
 
-use mesh_util::*;
+
 use unique_index::*;
 
 use mesh::Mesh;
 
 use self::mesh::MeshToken;
-
 
 lazy_static! {
     static ref MESH_REPO: Mutex<Option<MeshRepo>> = Mutex::new(None);
@@ -44,10 +42,9 @@ pub fn cleanup() {
         for mesh in sr.mesh_i_data.iter() {
             mesh.cleanup();
         }
-    }else{
+    } else {
         panic!("shader_repo not initialized")
     }
-
 }
 
 pub fn get_mesh_repo<T: FnMut(&mut MeshRepo) -> S, S>(mut f: T) -> S {
