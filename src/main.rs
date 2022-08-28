@@ -1,5 +1,3 @@
-
-
 mod black_sheep;
 
 extern crate cgmath;
@@ -14,19 +12,7 @@ fn main() {
     #[cfg(not(feature = "debug_off"))]
     println!("Hello, world!");
 
-    let bs = black_sheep::BlackSheep::new(
-        |_ecs| {
-            || {
-                println!("123");
-            }
-        },
-        |_ecs| {
-            |_i: f32| {
-                println!("123");
-            }
-        },
-    );
-    bs.run();
+    black_sheep::run();
 
     #[cfg(not(feature = "debug_off"))]
     println!("Good bye, world!");

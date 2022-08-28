@@ -11,16 +11,13 @@ use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::{
-    rendering::{self, geometry::mesh::MeshToken, shader::shader_structs::*},
     settings::*,
-    setup,
-    window::window_util::*,
 };
 
 pub struct GameState<U, D>
 where
-    U: FnMut(),
-    D: FnMut(f32),
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     pub input_flags: InputFlags,
     pub window_size_f32: [f32; 2],
@@ -31,21 +28,14 @@ where
 
     pub ecs: ecs::CHAINED_ECS,
 
-    color_shader: Color3D,
-    cloud_shader: CloudGeometryShaderProgram,
-    circle_cloud_shader: CircleCloudGeometryShaderProgram,
-    color_squares: ColoredTriangles,
-
-    mesh_ts: Vec<MeshToken>,
-
     update: U,
     draw: D,
 }
 
 impl<U, D> GameState<U, D>
 where
-    U: FnMut(),
-    D: FnMut(f32),
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
     where
@@ -67,13 +57,13 @@ where
         cam.rotate_h(Deg(15.0));
         cam.rotate_v(Deg(-15.0));
 
-        let shader_repo = rendering::shader::get_shader_repo();
-        let color_shader = shader_repo.color_3d;
-        let cloud_shader = shader_repo.point_cloud;
-        let color_squares = shader_repo.colored_triangles;
-        let circle_cloud_shader = shader_repo.circle_point_cloud;
+        // let _shader_repo = rendering::shader::get_shader_repo();
+        // let color_shader = shader_repo.color_3d;
+        // let cloud_shader = shader_repo.point_cloud;
+        // let color_squares = shader_repo.colored_triangles;
+        // let circle_cloud_shader = shader_repo.circle_point_cloud;
 
-        let mesh_ts = setup::init_mesh();
+        //setup::init_mesh();
 
         let mut ecs = ecs::CHAINED_ECS::new();
 
@@ -86,12 +76,6 @@ where
             ui_projection,
             world_projection,
             cam,
-            color_shader,
-            cloud_shader,
-            color_squares,
-
-            mesh_ts,
-            circle_cloud_shader,
             ecs,
             update,
             draw,
@@ -106,33 +90,13 @@ where
         } else {
             self.cam.reset_movement();
         }
+
+        (self.update)(self.input_flags);
     }
 
-    pub fn draw_3d(&mut self, i: f32) {
-        let view = self.cam.get_i_view(i);
-
-        let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
-
-        clear_color(0.0, 0.3, 0.3, 1.0);
-        clear_drawbuffer();
-
-        // let cube_cloud = &self.mesh_ts[3];
-        // self.circle_cloud_shader.use_program();
-        // self.circle_cloud_shader.set_mv(view);
-        // self.circle_cloud_shader
-        //     .set_projection(self.world_projection);
-        // cube_cloud.bind_vertex_array();
-        // cube_cloud.draw_point_elements();
-
-        let cube = &self.mesh_ts[5];
-        self.color_shader.use_program();
-        self.color_shader
-            .set_MVP(self.world_projection * view * model);
-        cube.bind_vertex_array();
-        cube.draw_triangle_elements();
+    pub fn draw(&mut self, i: f32) {
+        (self.draw)(i, &self.cam, &self.world_projection)
     }
-
-    pub fn draw_ui(&mut self, _i: f32) {}
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
         let _v = Vector2::new(x as f32, y as f32);

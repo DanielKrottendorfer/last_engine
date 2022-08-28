@@ -123,7 +123,7 @@ impl From<&Mesh> for MeshToken {
         }
     }
 }
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct MeshToken {
     pub uid: usize,
     array_id: u32,

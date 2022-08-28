@@ -15,6 +15,7 @@ mod setup;
 mod transform;
 
 use cgmath::{Deg, Vector2};
+use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
@@ -35,47 +36,75 @@ use rendering::geometry;
 use rendering::geometry::mesh::MeshToken;
 use rendering::shader;
 
-use self::gamestate::ecs::CHAINED_ECS;
+use camera::structs::FlyingEye;
 
 pub struct BlackSheep<U, D>
 where
-    U: FnMut(),
-    D: FnMut(f32),
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     window: SDLWindow,
     game_state: GameState<U, D>,
     rel_mouse_pos: Vector2<f32>,
 }
 
-// impl<U: FnMut(), D: FnMut(f32)> Drop for BlackSheep<U, D> {
-//     fn drop(&mut self) {
-//         shader::cleanup();
-//         geometry::cleanup();
-//     }
-// }
+impl<U: FnMut(InputFlags), D: FnMut(f32, &FlyingEye, &Matrix4<f32>)> Drop for BlackSheep<U, D> {
+    fn drop(&mut self) {
+        shader::cleanup();
+        geometry::cleanup();
+    }
+}
+pub fn run() {
+    // KEEP THIS ORDER
+    let window = SDLWindow::new();
+    shader::init();
+    geometry::init();
+
+    let meshes = setup::init_mesh();
+
+    let ape = meshes[5].clone();
+
+    let rendering = rendering::shader::get_shader_repo();
+
+    let three_d = rendering.color_3d;
+
+    let game_state = GameState::new(
+        |_ecs| {
+            |_input| {
+                println!("update");
+            }
+        },
+        |_ecs| {
+            |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
+                let view = cam.get_i_view(i);
+
+                let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
+
+                clear_color(0.0, 0.3, 0.3, 1.0);
+                clear_drawbuffer();
+
+                three_d.use_program();
+                three_d.set_MVP(prj * view * model);
+                ape.bind_vertex_array();
+                ape.draw_triangle_elements();
+            }
+        },
+    );
+
+    let bs = BlackSheep {
+        window,
+        game_state,
+        rel_mouse_pos: Vector2::new(0.0, 0.0),
+    };
+
+    bs.run();
+}
 
 impl<U, D> BlackSheep<U, D>
 where
-    U: FnMut(),
-    D: FnMut(f32),
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
-    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
-    where
-        CU: FnOnce(&mut CHAINED_ECS) -> U,
-        CD: FnOnce(&mut CHAINED_ECS) -> D,
-    {
-        // KEEP THIS ORDER
-        let window = SDLWindow::new();
-        shader::init();
-        geometry::init();
-        let game_state = GameState::new(create_update, create_draw);
-        Self {
-            window,
-            game_state,
-            rel_mouse_pos: Vector2::new(0.0, 0.0),
-        }
-    }
-
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
         while let Some(event) = self.window.poll_event() {
             imgui_system.handle_event(&event);
@@ -133,8 +162,7 @@ where
                         game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, -1.0, 1.0);
                         let aspect = (wh[0] - 300.0) / wh[1];
                         game_state.world_projection =
-                            cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
-                        //rt_main.resize(window_size_i32[0] - 300, window_size_i32[1]);
+                            cgmath::perspective(Deg(120.0), aspect, 0.1, 1000.0);
                     }
                     _ => (),
                 },
@@ -258,10 +286,9 @@ where
             clear_color(0.0, 0.3, 0.3, 1.0);
             clear_drawbuffer();
 
-            game_state.draw_3d(i);
+            game_state.draw(i);
 
             set_viewport(game_state.window_size_i32[0], game_state.window_size_i32[1]);
-            game_state.draw_ui(i);
 
             imgui_rendering_setup();
 

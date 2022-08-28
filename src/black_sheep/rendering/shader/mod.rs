@@ -128,9 +128,11 @@ impl ShaderRepo {
     fn cleanup(&mut self) {
         self.imgui.cleanup();
         self.point_cloud.cleanup();
+        self.circle_point_cloud.cleanup();
         self.simple.cleanup();
         self.color_3d.cleanup();
         self.gizmo.cleanup();
         self.point_2d.cleanup();
+        self.colored_triangles.cleanup();
     }
 }

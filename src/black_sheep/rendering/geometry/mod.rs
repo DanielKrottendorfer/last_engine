@@ -5,7 +5,6 @@ mod unique_index;
 
 use std::{borrow::Borrow, collections::HashMap, sync::Mutex};
 
-
 use unique_index::*;
 
 use mesh::Mesh;
