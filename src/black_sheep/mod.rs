@@ -12,9 +12,12 @@ mod q_i_square_root;
 mod script;
 pub mod settings;
 mod setup;
+mod torus;
 mod transform;
 
-use cgmath::{Deg, Vector2};
+use cgmath::{
+    Basis3, Deg, InnerSpace, Matrix3, Quaternion, Rad, Rotation, Rotation3, Vector2, Zero,
+};
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
@@ -37,6 +40,8 @@ use rendering::geometry::mesh::MeshToken;
 use rendering::shader;
 
 use camera::structs::FlyingEye;
+
+use self::torus::torus_r;
 
 pub struct BlackSheep<U, D>
 where
@@ -63,30 +68,253 @@ pub fn run() {
     let meshes = setup::init_mesh();
 
     let ape = meshes[5].clone();
+    let torus = meshes[6].clone();
 
     let rendering = rendering::shader::get_shader_repo();
 
     let three_d = rendering.color_3d;
 
     let game_state = GameState::new(
-        |_ecs| {
-            |_input| {
-                println!("update");
+        |ecs| {
+            use rand::{thread_rng, Rng};
+
+            let mut rng = thread_rng();
+
+            for i in 0..3 {
+                for y in 0..3 {
+                    ecs.add_ape_soa(
+                        [i as f32, 0.0, y as f32].into(),
+                        Quaternion::from_angle_x(Rad(0.0)),
+                        [i as f32, rng.gen_range(-0.5..0.5), y as f32].into(),
+                        Quaternion::from_angle_x(Rad(0.0)),
+                        Vector3::new(1.0, 1.0, 1.0),
+                        cgmath::SquareMatrix::identity(),
+                    );
+                }
+            }
+
+            let mut circle = ecs.getcircle_accessor();
+            let positions = ecs.getpositions_accessor();
+
+            let mut pos_update = ecs.getupdate_pos_ori_accessor();
+
+            move |input| {
+                {
+                    let mut update = pos_update.lock();
+                    for (pos, ori, direction, target_ori) in update.iter() {
+                        *pos = *pos + *direction;
+                        *ori = *target_ori;
+                    }
+                }
+                let mut c_l = circle.lock();
+                let pos_s = positions.lock();
+
+                for (pos, ori, direction, target_ori, col, key) in c_l.iter() {
+                    if torus_r(*pos, 20.0) > 4.0 {
+                        let r_x = Quaternion::from_angle_x(Deg(20.0));
+                        let r_y = Quaternion::from_angle_y(Deg(20.0));
+
+                        let q1 = *ori * r_x;
+                        let q2 = *ori * r_x.invert();
+                        let q3 = *ori * r_y;
+                        let q4 = *ori * r_y.invert();
+
+                        let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
+                        let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
+                        let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
+                        let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
+
+                        let t1 = torus_r(v1, 20.0);
+                        let t2 = torus_r(v2, 20.0);
+                        let t3 = torus_r(v3, 20.0);
+                        let t4 = torus_r(v4, 20.0);
+
+                        let mut min = 0;
+                        let ts = [t1, t2, t3, t4];
+                        for i in 1..ts.len() {
+                            if ts[i] < ts[min] {
+                                min = i;
+                            }
+                        }
+
+                        *col = Vector3::unit_x();
+
+                        match min {
+                            0 => {
+                                *target_ori = q1;
+                                *direction = v1 - *pos;
+                            }
+                            1 => {
+                                *target_ori = q2;
+                                *direction = v2 - *pos;
+                            }
+                            2 => {
+                                *target_ori = q3;
+                                *direction = v3 - *pos;
+                            }
+                            3 => {
+                                *target_ori = q4;
+                                *direction = v4 - *pos;
+                            }
+
+                            _ => (),
+                        }
+                    } else {
+                        let mut min_dist = f32::MAX;
+                        let mut min_key = key.clone();
+                        for (p, k) in pos_s.iter() {
+                            if key == k {
+                                continue;
+                            }
+                            let dist = (pos - p).magnitude();
+                            if dist < min_dist {
+                                min_dist = dist;
+                                min_key = k;
+                            }
+                        }
+
+                        if min_dist < 5.0 {
+                            let p = pos_s.get(min_key).unwrap();
+
+                            let r_x = Quaternion::from_angle_x(Deg(20.0));
+                            let r_y = Quaternion::from_angle_y(Deg(20.0));
+
+                            let q1 = *ori * r_x;
+                            let q2 = *ori * r_x.invert();
+                            let q3 = *ori * r_y;
+                            let q4 = *ori * r_y.invert();
+
+                            let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
+                            let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
+                            let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
+                            let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
+
+                            let t1 = (v1 - *p).magnitude();
+                            let t2 = (v2 - *p).magnitude();
+                            let t3 = (v3 - *p).magnitude();
+                            let t4 = (v4 - *p).magnitude();
+
+                            let mut max = 0;
+                            let ts = [t1, t2, t3, t4];
+                            for i in 1..ts.len() {
+                                if ts[i] > ts[max] {
+                                    max = i;
+                                }
+                            }
+
+                            *col = Vector3::unit_y();
+                            match max {
+                                0 => {
+                                    *target_ori = q1;
+                                    *direction = v1 - *pos;
+                                }
+                                1 => {
+                                    *target_ori = q2;
+                                    *direction = v2 - *pos;
+                                }
+                                2 => {
+                                    *target_ori = q3;
+                                    *direction = v3 - *pos;
+                                }
+                                3 => {
+                                    *target_ori = q4;
+                                    *direction = v4 - *pos;
+                                }
+
+                                _ => (),
+                            }
+                        } else if min_dist > 10.0 {
+                            let p = pos_s.get(min_key).unwrap();
+
+                            let r_x = Quaternion::from_angle_x(Deg(20.0));
+                            let r_y = Quaternion::from_angle_y(Deg(20.0));
+
+                            let q1 = *ori * r_x;
+                            let q2 = *ori * r_x.invert();
+                            let q3 = *ori * r_y;
+                            let q4 = *ori * r_y.invert();
+
+                            let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
+                            let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
+                            let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
+                            let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
+
+                            let t1 = (v1 - *p).magnitude();
+                            let t2 = (v2 - *p).magnitude();
+                            let t3 = (v3 - *p).magnitude();
+                            let t4 = (v4 - *p).magnitude();
+
+                            let mut min = 0;
+                            let ts = [t1, t2, t3, t4];
+                            for i in 1..ts.len() {
+                                if ts[i] < ts[min] {
+                                    min = i;
+                                }
+                            }
+                            *col = Vector3::unit_z();
+
+                            match min {
+                                0 => {
+                                    *target_ori = q1;
+                                    *direction = v1 - *pos;
+                                }
+                                1 => {
+                                    *target_ori = q2;
+                                    *direction = v2 - *pos;
+                                }
+                                2 => {
+                                    *target_ori = q3;
+                                    *direction = v3 - *pos;
+                                }
+                                3 => {
+                                    *target_ori = q4;
+                                    *direction = v4 - *pos;
+                                }
+
+                                _ => (),
+                            }
+                        }
+                    }
+                }
             }
         },
-        |_ecs| {
-            |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
+        |ecs| {
+            let draw_m = ecs.getdraw_accessor();
+
+            let mut calc_mat = ecs.getcalculate_mat_accessor();
+
+            move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
                 let view = cam.get_i_view(i);
 
-                let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
+                for (p, o, direction, to, model) in calc_mat.lock().iter() {
+                    let q = o.slerp(*to, i);
+                    let v = p + (direction * i);
+
+                    let mut m = Matrix4::from(q);
+                    m.w = v.extend(1.0);
+                    *model = m;
+                }
+
+                let d_lock = draw_m.lock();
 
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
-                three_d.use_program();
-                three_d.set_MVP(prj * view * model);
                 ape.bind_vertex_array();
-                ape.draw_triangle_elements();
+                three_d.use_program();
+
+                for (m,c) in d_lock.iter() {
+                    three_d.set_MVP(prj * view * m);
+                    three_d.set_col(*c);
+                    ape.draw_triangle_elements();
+                }
+
+                let s = Matrix4::from_scale(20.0);
+                three_d.set_col(Vector3::zero());
+                three_d.set_MVP(prj * view * s);
+
+                torus.bind_vertex_array();
+                torus.draw_triangle_elements();
             }
         },
     );

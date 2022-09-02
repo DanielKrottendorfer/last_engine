@@ -10,9 +10,7 @@ use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
-use super::{
-    settings::*,
-};
+use super::settings::*;
 
 pub struct GameState<U, D>
 where
@@ -53,17 +51,8 @@ where
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(2.0, 0.5, 2.0));
-        cam.rotate_h(Deg(15.0));
-        cam.rotate_v(Deg(-15.0));
-
-        // let _shader_repo = rendering::shader::get_shader_repo();
-        // let color_shader = shader_repo.color_3d;
-        // let cloud_shader = shader_repo.point_cloud;
-        // let color_squares = shader_repo.colored_triangles;
-        // let circle_cloud_shader = shader_repo.circle_point_cloud;
-
-        //setup::init_mesh();
+        cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
+        cam.rotate_h(Deg(65.0));
 
         let mut ecs = ecs::CHAINED_ECS::new();
 
@@ -113,6 +102,8 @@ where
     }
 }
 
+const CAM_SPEED: f32 = 10.0;
+
 pub fn get_movement(input: &mut InputFlags) -> Option<Vector3<f32>> {
     use InputFlags as kf;
 
@@ -138,6 +129,6 @@ pub fn get_movement(input: &mut InputFlags) -> Option<Vector3<f32>> {
         if input.contains(kf::Y) {
             v += Vector3::new(0.0, -1.0, 0.0)
         }
-        Some(q_normalize(v))
+        Some(q_normalize(v) * CAM_SPEED)
     }
 }

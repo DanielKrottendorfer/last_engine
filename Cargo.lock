@@ -134,7 +134,7 @@ dependencies = [
 [[package]]
 name = "chained_component_system"
 version = "0.1.0"
-source = "git+https://github.com/DanielKrottendorfer/chained_component_system.git#b7ea8e484f8f26e883b9aa94f5ab6456790c3006"
+source = "git+https://github.com/DanielKrottendorfer/chained_component_system.git?branch=release1#d6f7eefc5ffd53bba556a35d6c50bd3627540b81"
 dependencies = [
  "cgmath 0.17.0",
  "proc-macro2",

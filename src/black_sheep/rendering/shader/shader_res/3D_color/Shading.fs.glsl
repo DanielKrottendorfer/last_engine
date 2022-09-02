@@ -1,9 +1,9 @@
 #version 450
 
-in vec3 cl;
+uniform vec3 col;
 
 out vec4 out_color;
 
 void main(){
-	out_color = vec4(cl,1.0);
+	out_color = vec4(col,1.0);
 }

@@ -33,6 +33,7 @@ shader_program!(
 shader_program!(
     Color3D{
         uniform mat4 MVP;
+        uniform vec3 col;
     }
 );
 
