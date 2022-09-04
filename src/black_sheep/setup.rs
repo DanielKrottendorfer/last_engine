@@ -3,7 +3,10 @@ use itertools::Itertools;
 
 use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
-use super::rendering::geometry::{self, mesh::MeshToken};
+use super::{
+    generators,
+    rendering::geometry::{self, mesh::MeshToken},
+};
 
 pub fn init_mesh() -> Vec<MeshToken> {
     let vm = geometry::get_mesh_repo(|mesh_repo| {
@@ -51,31 +54,18 @@ pub fn init_mesh() -> Vec<MeshToken> {
                 let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
                 if let Some(iter) = reader.read_positions() {
                     let p = iter.collect_vec();
-                    m.add_floatbuffer(&p, 0, 3);
-                    m.add_floatbuffer(&p, 1, 3);
+                    m.add_floatbuffer(p.as_slice(), 0, 3);
                 }
                 if let Some(iter) = reader.read_indices() {
                     let e = iter.into_u32().collect_vec();
-                    m.add_elementarraybuffer(&e);
+                    m.add_elementarraybuffer(e.as_slice());
                 }
             }
         });
         let torus = mesh_repo.add_mesh("torus", |m| {
-            let (gltf, buffers, _) = gltf::import("res/torus.glb").unwrap();
-            let mesh = gltf.meshes().next().unwrap();
-
-            for primitive in mesh.primitives() {
-                let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
-                if let Some(iter) = reader.read_positions() {
-                    let p = iter.collect_vec();
-                    m.add_floatbuffer(&p, 0, 3);
-                    m.add_floatbuffer(&p, 1, 3);
-                }
-                if let Some(iter) = reader.read_indices() {
-                    let e = iter.into_u32().collect_vec();
-                    m.add_elementarraybuffer(&e);
-                }
-            }
+            let (v, e) = generators::point_circle::circel(20, 20.0);
+            m.add_floatbuffer(v.as_slice(), 0, 3);
+            m.add_elementarraybuffer(e.as_slice());
         });
 
         vec![

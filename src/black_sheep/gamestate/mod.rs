@@ -49,7 +49,7 @@ where
             1.0,
         );
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
-        let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
+        let world_projection = cgmath::perspective(Deg(80.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
         cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
         cam.rotate_h(Deg(65.0));

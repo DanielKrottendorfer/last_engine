@@ -20,10 +20,10 @@ chained_component_system!(
     };
 
     global_systems{
-        update_pos_ori(mut pos,mut ori,direction,target_ori),
-        circle(pos,ori,mut direction,mut target_ori, mut col,KEY),
-        positions(pos,KEY),
-        calculate_mat(pos,ori,direction,target_ori,mut mat),
-        draw(mat,col)
+        UpdatePosOri(mut pos,mut ori,direction,target_ori),
+        Circle(pos,ori,mut direction,mut target_ori, mut col,KEY),
+        Positions(pos,KEY),
+        CalculateMat(pos,ori,direction,target_ori,mut mat),
+        Draw(mat,col)
     };
 );

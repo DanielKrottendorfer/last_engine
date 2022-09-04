@@ -16,7 +16,7 @@ mod torus;
 mod transform;
 
 use cgmath::{
-    Basis3, Deg, InnerSpace, Matrix3, Quaternion, Rad, Rotation, Rotation3, Vector2, Zero,
+    Deg, InnerSpace, Quaternion, Rad, Rotation, Rotation3, Vector2,
 };
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
@@ -93,12 +93,12 @@ pub fn run() {
                 }
             }
 
-            let mut circle = ecs.getcircle_accessor();
-            let positions = ecs.getpositions_accessor();
+            let mut circle = ecs.get_circle_accessor();
+            let positions = ecs.get_positions_accessor();
 
-            let mut pos_update = ecs.getupdate_pos_ori_accessor();
+            let mut pos_update = ecs.get_update_pos_ori_accessor();
 
-            move |input| {
+            move |_input| {
                 {
                     let mut update = pos_update.lock();
                     for (pos, ori, direction, target_ori) in update.iter() {
@@ -109,21 +109,22 @@ pub fn run() {
                 let mut c_l = circle.lock();
                 let pos_s = positions.lock();
 
+                let speed = 0.5;
                 for (pos, ori, direction, target_ori, col, key) in c_l.iter() {
-                    if torus_r(*pos, 20.0) > 4.0 {
-                        let r_x = Quaternion::from_angle_x(Deg(20.0));
-                        let r_y = Quaternion::from_angle_y(Deg(20.0));
+                    let r_x = Quaternion::from_angle_x(Deg(20.0));
+                    let r_y = Quaternion::from_angle_y(Deg(20.0));
 
-                        let q1 = *ori * r_x;
-                        let q2 = *ori * r_x.invert();
-                        let q3 = *ori * r_y;
-                        let q4 = *ori * r_y.invert();
+                    let q1 = *ori * r_x;
+                    let q2 = *ori * r_x.invert();
+                    let q3 = *ori * r_y;
+                    let q4 = *ori * r_y.invert();
 
-                        let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
-                        let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
-                        let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
-                        let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
+                    let v1 = *pos + q1.rotate_vector(Vector3::unit_z() * speed);
+                    let v2 = *pos + q2.rotate_vector(Vector3::unit_z() * speed);
+                    let v3 = *pos + q3.rotate_vector(Vector3::unit_z() * speed);
+                    let v4 = *pos + q4.rotate_vector(Vector3::unit_z() * speed);
 
+                    let id = if torus_r(*pos, 20.0) > 4.0 {
                         let t1 = torus_r(v1, 20.0);
                         let t2 = torus_r(v2, 20.0);
                         let t3 = torus_r(v3, 20.0);
@@ -138,27 +139,7 @@ pub fn run() {
                         }
 
                         *col = Vector3::unit_x();
-
-                        match min {
-                            0 => {
-                                *target_ori = q1;
-                                *direction = v1 - *pos;
-                            }
-                            1 => {
-                                *target_ori = q2;
-                                *direction = v2 - *pos;
-                            }
-                            2 => {
-                                *target_ori = q3;
-                                *direction = v3 - *pos;
-                            }
-                            3 => {
-                                *target_ori = q4;
-                                *direction = v4 - *pos;
-                            }
-
-                            _ => (),
-                        }
+                        min
                     } else {
                         let mut min_dist = f32::MAX;
                         let mut min_key = key.clone();
@@ -173,27 +154,14 @@ pub fn run() {
                             }
                         }
 
-                        if min_dist < 5.0 {
-                            let p = pos_s.get(min_key).unwrap();
+                        let p = pos_s.get(min_key).unwrap();
 
-                            let r_x = Quaternion::from_angle_x(Deg(20.0));
-                            let r_y = Quaternion::from_angle_y(Deg(20.0));
+                        let t1 = (v1 - *p).magnitude();
+                        let t2 = (v2 - *p).magnitude();
+                        let t3 = (v3 - *p).magnitude();
+                        let t4 = (v4 - *p).magnitude();
 
-                            let q1 = *ori * r_x;
-                            let q2 = *ori * r_x.invert();
-                            let q3 = *ori * r_y;
-                            let q4 = *ori * r_y.invert();
-
-                            let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
-                            let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
-                            let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
-                            let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
-
-                            let t1 = (v1 - *p).magnitude();
-                            let t2 = (v2 - *p).magnitude();
-                            let t3 = (v3 - *p).magnitude();
-                            let t4 = (v4 - *p).magnitude();
-
+                        let id = if min_dist < 5.0 {
                             let mut max = 0;
                             let ts = [t1, t2, t3, t4];
                             for i in 1..ts.len() {
@@ -203,47 +171,8 @@ pub fn run() {
                             }
 
                             *col = Vector3::unit_y();
-                            match max {
-                                0 => {
-                                    *target_ori = q1;
-                                    *direction = v1 - *pos;
-                                }
-                                1 => {
-                                    *target_ori = q2;
-                                    *direction = v2 - *pos;
-                                }
-                                2 => {
-                                    *target_ori = q3;
-                                    *direction = v3 - *pos;
-                                }
-                                3 => {
-                                    *target_ori = q4;
-                                    *direction = v4 - *pos;
-                                }
-
-                                _ => (),
-                            }
+                            max
                         } else if min_dist > 10.0 {
-                            let p = pos_s.get(min_key).unwrap();
-
-                            let r_x = Quaternion::from_angle_x(Deg(20.0));
-                            let r_y = Quaternion::from_angle_y(Deg(20.0));
-
-                            let q1 = *ori * r_x;
-                            let q2 = *ori * r_x.invert();
-                            let q3 = *ori * r_y;
-                            let q4 = *ori * r_y.invert();
-
-                            let v1 = *pos + q1.rotate_vector(Vector3::unit_z());
-                            let v2 = *pos + q2.rotate_vector(Vector3::unit_z());
-                            let v3 = *pos + q3.rotate_vector(Vector3::unit_z());
-                            let v4 = *pos + q4.rotate_vector(Vector3::unit_z());
-
-                            let t1 = (v1 - *p).magnitude();
-                            let t2 = (v2 - *p).magnitude();
-                            let t3 = (v3 - *p).magnitude();
-                            let t4 = (v4 - *p).magnitude();
-
                             let mut min = 0;
                             let ts = [t1, t2, t3, t4];
                             for i in 1..ts.len() {
@@ -251,37 +180,42 @@ pub fn run() {
                                     min = i;
                                 }
                             }
+
                             *col = Vector3::unit_z();
+                            min
+                        } else {
+                            continue;
+                        };
+                        id
+                    };
 
-                            match min {
-                                0 => {
-                                    *target_ori = q1;
-                                    *direction = v1 - *pos;
-                                }
-                                1 => {
-                                    *target_ori = q2;
-                                    *direction = v2 - *pos;
-                                }
-                                2 => {
-                                    *target_ori = q3;
-                                    *direction = v3 - *pos;
-                                }
-                                3 => {
-                                    *target_ori = q4;
-                                    *direction = v4 - *pos;
-                                }
-
-                                _ => (),
-                            }
+                    match id {
+                        0 => {
+                            *target_ori = q1;
+                            *direction = (v1 - *pos) * speed;
                         }
+                        1 => {
+                            *target_ori = q2;
+                            *direction = (v2 - *pos) * speed;
+                        }
+                        2 => {
+                            *target_ori = q3;
+                            *direction = (v3 - *pos) * speed;
+                        }
+                        3 => {
+                            *target_ori = q4;
+                            *direction = (v4 - *pos) * speed;
+                        }
+
+                        _ => (),
                     }
                 }
             }
         },
         |ecs| {
-            let draw_m = ecs.getdraw_accessor();
+            let draw_m = ecs.get_draw_accessor();
 
-            let mut calc_mat = ecs.getcalculate_mat_accessor();
+            let mut calc_mat = ecs.get_calculate_mat_accessor();
 
             move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
                 let view = cam.get_i_view(i);
@@ -303,18 +237,17 @@ pub fn run() {
                 ape.bind_vertex_array();
                 three_d.use_program();
 
-                for (m,c) in d_lock.iter() {
+                for (m, c) in d_lock.iter() {
                     three_d.set_MVP(prj * view * m);
                     three_d.set_col(*c);
                     ape.draw_triangle_elements();
                 }
 
-                let s = Matrix4::from_scale(20.0);
-                three_d.set_col(Vector3::zero());
-                three_d.set_MVP(prj * view * s);
+                three_d.set_MVP(prj * view);
+                three_d.set_col(Vector3::new(1.0, 0.0, 1.0));
 
                 torus.bind_vertex_array();
-                torus.draw_triangle_elements();
+                torus.draw_line_elements();
             }
         },
     );
