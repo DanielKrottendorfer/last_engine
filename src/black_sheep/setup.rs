@@ -1,4 +1,4 @@
-use cgmath::{Vector2, Vector3};
+use cgmath::{Vector2, Vector3, Zero};
 use itertools::Itertools;
 
 use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
@@ -8,7 +8,8 @@ use super::{
     rendering::geometry::{self, mesh::MeshToken},
 };
 
-pub fn init_mesh() -> Vec<MeshToken> {
+pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
+    let mut bb = None;
     let vm = geometry::get_mesh_repo(|mesh_repo| {
         let triangle = mesh_repo.add_mesh("triangle", |mesh| {
             mesh.add_floatbuffer(&SIMPLE_TRIANGL, 0, 2);
@@ -51,6 +52,8 @@ pub fn init_mesh() -> Vec<MeshToken> {
             let mesh = gltf.meshes().next().unwrap();
 
             for primitive in mesh.primitives() {
+                let b = primitive.bounding_box();
+                bb = Some((Vector3::zero(), Vector3::zero()));
                 let reader = primitive.reader(|buffer| Some(&buffers[buffer.index()]));
                 if let Some(iter) = reader.read_positions() {
                     let p = iter.collect_vec();
@@ -67,17 +70,6 @@ pub fn init_mesh() -> Vec<MeshToken> {
             m.add_floatbuffer(v.as_slice(), 0, 3);
             m.add_elementarraybuffer(e.as_slice());
         });
-
-        vec![
-            triangle,
-            gizmo,
-            cube,
-            cube_cloud,
-            colored_triangles,
-            ape,
-            torus,
-        ]
     });
-
-    vm
+    bb
 }

@@ -92,7 +92,7 @@ impl MeshRepo {
         }
     }
 
-    pub fn add_mesh<T: Fn(&mut Mesh)>(&mut self, name: &str, init_mesh: T) -> MeshToken {
+    pub fn add_mesh<T: FnMut(&mut Mesh)>(&mut self, name: &str, mut init_mesh: T) -> MeshToken {
         let unique_index = self.unique_indexer.get_next();
 
         let mut mesh = Mesh::new();
