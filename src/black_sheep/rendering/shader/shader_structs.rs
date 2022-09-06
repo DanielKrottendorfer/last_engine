@@ -33,6 +33,7 @@ shader_program!(
 shader_program!(
     Color3D{
         uniform mat4 MVP;
+        uniform vec3 col;
     }
 );
 
@@ -44,6 +45,11 @@ shader_program!(
 
 shader_program!(
     Point2D{
+        uniform mat4 projection;
+    }
+);
+shader_program!(
+    Simple2D{
         uniform mat4 projection;
     }
 );

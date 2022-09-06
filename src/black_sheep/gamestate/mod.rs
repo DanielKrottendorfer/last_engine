@@ -2,26 +2,21 @@ pub mod input_flags;
 
 pub mod camera;
 
-mod ecs;
+pub mod ecs;
 mod job;
 
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 
-use self::{camera::structs::FlyingEye, input_flags::InputFlags};
+use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
-use chained_component_system::chained_component_system;
 
-use std::sync::*;
+use super::settings::*;
 
-use super::{
-    rendering::{self, geometry::MeshToken, shader::shader_structs::*},
-    settings::*,
-    setup,
-    window::window_util::*,
-};
-
-
-pub struct GameState {
+pub struct GameState<U, D>
+where
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+{
     pub input_flags: InputFlags,
     pub window_size_f32: [f32; 2],
     pub window_size_i32: [i32; 2],
@@ -29,17 +24,22 @@ pub struct GameState {
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
 
-    color_shader: Color3D,
-    cloud_shader: CloudGeometryShaderProgram,
-    circle_cloud_shader: CircleCloudGeometryShaderProgram,
-    color_squares: ColoredTriangles,
+    pub ecs: ecs::CHAINED_ECS,
 
-    mesh_ts: Vec<MeshToken>,
-    //structogram: Structogram,
+    update: U,
+    draw: D,
 }
 
-impl GameState {
-    pub fn new() -> Self {
+impl<U, D> GameState<U, D>
+where
+    U: FnMut(InputFlags),
+    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+{
+    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
+    where
+        CU: FnOnce(&mut CHAINED_ECS) -> U,
+        CD: FnOnce(&mut CHAINED_ECS) -> D,
+    {
         let ui_projection = cgmath::ortho(
             0.0,
             INIT_WINDOW_SIZE_F32[0],
@@ -49,21 +49,15 @@ impl GameState {
             1.0,
         );
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
-        let world_projection = cgmath::perspective(Deg(90.0), aspect, 0.1, 1000.0);
+        let world_projection = cgmath::perspective(Deg(80.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(1.35, 1.35, 2.0));
-        cam.rotate_h(Deg(35.0));
+        cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
+        cam.rotate_h(Deg(65.0));
 
-        let shader_repo = rendering::shader::get_shader_repo();
-        let color_shader = shader_repo.color_3d;
-        let cloud_shader = shader_repo.point_cloud;
-        let color_squares = shader_repo.colored_triangles;
-        let circle_cloud_shader = shader_repo.circle_point_cloud;
+        let mut ecs = ecs::CHAINED_ECS::new();
 
-        let mesh_ts = setup::init_mesh();
-
-        //let structogram = Structogram::new(another_script(), Vector2::new(10.0, 10.0));
-
+        let update = create_update(&mut ecs);
+        let draw = create_draw(&mut ecs);
         GameState {
             input_flags: InputFlags::NONE,
             window_size_f32: INIT_WINDOW_SIZE_F32,
@@ -71,13 +65,9 @@ impl GameState {
             ui_projection,
             world_projection,
             cam,
-            color_shader,
-            cloud_shader,
-            color_squares,
-
-            mesh_ts,
-            circle_cloud_shader,
-            //structogram,
+            ecs,
+            update,
+            draw,
         }
     }
 
@@ -89,46 +79,12 @@ impl GameState {
         } else {
             self.cam.reset_movement();
         }
+
+        (self.update)(self.input_flags);
     }
 
-    pub fn draw_3d(&mut self, i: f32) {
-        let view = self.cam.get_i_view(i);
-
-        let model = Matrix4::from_translation(Vector3::new(1.2, 0.0, 0.0));
-
-        clear_color(0.0, 0.3, 0.3, 1.0);
-        clear_drawbuffer();
-
-        let cube_cloud = &self.mesh_ts[3];
-        self.circle_cloud_shader.use_program();
-        self.circle_cloud_shader.set_mv(view);
-        self.circle_cloud_shader
-            .set_projection(self.world_projection);
-        cube_cloud.bind_vertex_array();
-        cube_cloud.draw_point_elements();
-
-        let cube = &self.mesh_ts[2];
-        self.color_shader.use_program();
-        self.color_shader
-            .set_MVP(self.world_projection * view * model);
-        cube.bind_vertex_array();
-        cube.draw_triangle_elements();
-    }
-
-    pub fn draw_ui(&mut self, _i: f32) {
-        // let colored_squares = &self.structogram.mesh_token;
-        // let model_m = Matrix4::from_translation(self.structogram.panel_position.extend(0.0));
-        // self.color_squares.use_program();
-        // self.color_squares
-        //     .set_projection(self.ui_projection * model_m);
-        // colored_squares.bind_vertex_array();
-        // colored_squares.draw_triangle_elements();
-
-        // let colored_squares = &self.mesh_ts[4];
-        // self.color_squares.use_program();
-        // self.color_squares.set_projection(self.ui_projection);
-        // colored_squares.bind_vertex_array();
-        // colored_squares.draw_triangle_elements();
+    pub fn draw(&mut self, i: f32) {
+        (self.draw)(i, &self.cam, &self.world_projection)
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
@@ -145,6 +101,8 @@ impl GameState {
         }
     }
 }
+
+const CAM_SPEED: f32 = 10.0;
 
 pub fn get_movement(input: &mut InputFlags) -> Option<Vector3<f32>> {
     use InputFlags as kf;
@@ -171,6 +129,6 @@ pub fn get_movement(input: &mut InputFlags) -> Option<Vector3<f32>> {
         if input.contains(kf::Y) {
             v += Vector3::new(0.0, -1.0, 0.0)
         }
-        Some(q_normalize(v))
+        Some(q_normalize(v) * CAM_SPEED)
     }
 }

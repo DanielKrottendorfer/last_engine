@@ -18,8 +18,10 @@ winapi = "0.3.9"
 itertools = "0.10.1"
 lazy_static = "1.4.0"
 rand = {version = "0.8.4" , features = ["small_rng"]}
+gltf = "1.0.0"
+
 shader_macro = {git = "https://github.com/DanielKrottendorfer/gl_shader_macro.git"}
-chained_component_system = {git = "https://github.com/DanielKrottendorfer/chained_component_system.git"}
+chained_component_system = {git = "https://github.com/DanielKrottendorfer/chained_component_system.git", branch = "release1"}
 
 [features]
 vsync_off = []

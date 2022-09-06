@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use super::settings::MS_PER_UPDATE;
+use super::settings::DT_D;
 
 pub struct CatchupTimer {
     start_time: Instant,
@@ -29,8 +29,8 @@ impl CatchupTimer {
         self.previous_update_time = current;
         self.lag += elapsed;
 
-        if self.lag >= MS_PER_UPDATE {
-            self.lag -= MS_PER_UPDATE;
+        if self.lag >= DT_D {
+            self.lag -= DT_D;
             true
         } else {
             self.fps += 1;
@@ -44,6 +44,6 @@ impl CatchupTimer {
     }
 
     pub fn get_iv(&self) -> f32 {
-        self.lag.as_secs_f32() / MS_PER_UPDATE.as_secs_f32()
+        self.lag.as_secs_f32() / DT_D.as_secs_f32()
     }
 }

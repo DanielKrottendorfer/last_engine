@@ -23,6 +23,9 @@ pub static CIRLE_2D_VS: &'static str = include_str!("./shader_res/2D_circles/vs.
 pub static CIRLE_2D_GS: &'static str = include_str!("./shader_res/2D_circles/gs.glsl");
 pub static CIRLE_2D_FS: &'static str = include_str!("./shader_res/2D_circles/fs.glsl");
 
+pub static SIMPLE_2D_VS: &'static str = include_str!("./shader_res/2D_simple/vs.glsl");
+pub static SIMPLE_2D_FS: &'static str = include_str!("./shader_res/2D_simple/fs.glsl");
+
 pub static IMGUI_FS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.frag");
 pub static IMGUI_VS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_400.vert");
 
