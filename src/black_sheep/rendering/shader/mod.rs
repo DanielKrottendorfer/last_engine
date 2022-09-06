@@ -15,6 +15,7 @@ pub struct ShaderRepo {
     pub color_3d: Color3D,
     pub gizmo: GizmoProgram,
     pub point_2d: Point2D,
+    pub simple_2d: Simple2D,
     pub colored_triangles: ColoredTriangles,
 }
 
@@ -106,6 +107,11 @@ impl ShaderRepo {
             let program = build_shader_program(CIRLE_2D_VS, Some(CIRLE_2D_GS), CIRLE_2D_FS);
             point_2d.setup(&program);
         }
+        let mut simple_2d = Simple2D::new();
+        {
+            let program = build_shader_program(SIMPLE_2D_VS,None, SIMPLE_2D_FS);
+            simple_2d.setup(&program);
+        }
 
         let mut colored_triangles = ColoredTriangles::new();
         {
@@ -122,6 +128,7 @@ impl ShaderRepo {
             color_3d,
             gizmo,
             point_2d,
+            simple_2d,
             colored_triangles,
         }
     }
@@ -133,6 +140,7 @@ impl ShaderRepo {
         self.color_3d.cleanup();
         self.gizmo.cleanup();
         self.point_2d.cleanup();
+        self.simple_2d.cleanup();
         self.colored_triangles.cleanup();
     }
 }

@@ -1,7 +1,9 @@
 use cgmath::*;
 
+use crate::black_sheep::rendering::geometry;
+
 use super::{
-    gamestate::ecs::{CircleAccessor, PositionsAccessor},
+    gamestate::ecs::{CircleAccessor, PositionsAccessor, CHAINED_ECS},
     torus::torus_r,
 };
 
@@ -108,6 +110,35 @@ pub fn run_ape_ai(circle: &mut CircleAccessor, positions: &PositionsAccessor) {
             }
 
             _ => (),
+        }
+    }
+}
+
+pub fn gen_apes(ecs: &mut CHAINED_ECS) {
+    
+    use rand::{thread_rng, Rng};
+
+    let mut rng = thread_rng();
+
+    let mut center = Vec::new();
+    let mut ups = Vec::new();
+
+    for i in 0..3 {
+        for y in 0..3 {
+            let c = [i as f32, 0.0, y as f32].into();
+            let u:Vector3<f32> = Vector3::unit_y();
+
+
+            ecs.add_ape_soa(
+                c,
+                Quaternion::from_angle_x(Rad(0.0)),
+                [i as f32, rng.gen_range(-0.5..0.5), y as f32].into(),
+                Quaternion::from_angle_x(Rad(0.0)),
+                Vector3::new(1.0, 1.0, 1.0),
+                cgmath::SquareMatrix::identity()
+            );
+            center.push(c);
+            ups.push(u);
         }
     }
 }

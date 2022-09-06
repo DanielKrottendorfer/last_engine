@@ -18,6 +18,5 @@ void main() {
 
   if (dist < pow(fs_in.radius,2)) {
     out_color = out_color + vec4(fs_in.color,1.0);
-  }else{
   }
 };

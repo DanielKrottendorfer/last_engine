@@ -143,7 +143,11 @@ impl MeshToken {
     pub fn draw_point_elements(&self) {
         draw_point_elements(self.vertex_count);
     }
+    pub fn draw_point_array(&self) {
+        draw_point_array(self.vertex_count);
+    }
     pub fn draw_line_elements(&self) {
         draw_line_elements(self.vertex_count);
     }
 }
+

@@ -9,8 +9,12 @@ out VS_OUT {
     float radius;
 } vs_out;
 
+
+uniform mat4 projection;
+
+
 void main(){
-	gl_Position =  vec4(position,0,1);
+	gl_Position =  projection * vec4(position,0,1);
     vs_out.color = color;
     vs_out.radius = radius;
 }

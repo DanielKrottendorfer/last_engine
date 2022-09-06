@@ -116,6 +116,11 @@ pub fn draw_point_elements(vertex_count: i32) {
         );
     }
 }
+pub fn draw_point_array(vertex_count: i32) {
+    unsafe{
+        gl::DrawArrays(POINTS,0,vertex_count);
+    }
+}
 pub fn draw_line_elements(vertex_count: i32) {
     unsafe {
         gl::DrawElements(

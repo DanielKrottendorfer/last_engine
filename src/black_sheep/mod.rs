@@ -16,12 +16,13 @@ mod setup;
 mod torus;
 mod transform;
 
-use cgmath::{Deg, Quaternion, Rad, Rotation3, Vector2};
+use cgmath::{Deg, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero, InnerSpace};
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 use sdl2::mouse::MouseButton;
+use sdl2::render;
 use window::window_util::*;
 use window::SDLWindow;
 
@@ -39,6 +40,8 @@ use rendering::geometry::mesh::MeshToken;
 use rendering::shader;
 
 use camera::structs::FlyingEye;
+
+use self::settings::{UPS_F32, DT};
 
 pub struct BlackSheep<U, D>
 where
@@ -62,40 +65,38 @@ pub fn run() {
     shader::init();
     geometry::init();
 
-    let bb = setup::init_mesh();
+    let bb = setup::init_mesh().unwrap();
 
-    let (ape, torus) = geometry::get_mesh_repo(|mr| {
+    let (ape, torus,circles) = geometry::get_mesh_repo(|mr| {
         let ape = MeshToken::from(mr.get_mesh_by_name("ape").unwrap());
         let torus = MeshToken::from(mr.get_mesh_by_name("torus").unwrap());
-        (ape, torus)
+        let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
+        (ape, torus,circles)
     });
 
     let rendering = rendering::shader::get_shader_repo();
 
     let three_d = rendering.color_3d;
+    let circles_2d = rendering.point_2d;
 
     let game_state = GameState::new(
         |ecs| {
-            use rand::{thread_rng, Rng};
 
-            let mut rng = thread_rng();
+            gameplay::gen_apes(ecs);
 
-            for i in 0..3 {
-                for y in 0..3 {
-                    ecs.add_ape_soa(
-                        [i as f32, 0.0, y as f32].into(),
-                        Quaternion::from_angle_x(Rad(0.0)),
-                        [i as f32, rng.gen_range(-0.5..0.5), y as f32].into(),
-                        Quaternion::from_angle_x(Rad(0.0)),
-                        Vector3::new(1.0, 1.0, 1.0),
-                        cgmath::SquareMatrix::identity(),
-                    );
-                }
-            }
+            let rng = rand::thread_rng();
+
+            ecs.add_ball_soa(Vector2::new(5.0,-5.0), Vector2::zero());
 
             let mut circle = ecs.get_circle_accessor();
             let positions = ecs.get_positions_accessor();
             let mut pos_update = ecs.get_update_pos_ori_accessor();
+
+            let mut simulate = ecs.get_simulate_accessor();
+
+            let g = Vector2::new(0.0, -10.0);
+
+            let r = 2.0;
 
             move |_input| {
                 {
@@ -106,12 +107,28 @@ pub fn run() {
                     }
                 }
                 gameplay::run_ape_ai(&mut circle, &positions);
+
+                let mut simulate = simulate.lock();
+
+                for (pos, v) in simulate.iter(){
+
+                    *v += g*DT;
+                    let p = *pos;
+                    *pos += *v*DT;
+                    *pos = pos.normalize() * r;
+                    *v = (*pos - p)/DT;
+                    
+                }
             }
         },
         |ecs| {
             let draw_m = ecs.get_draw_accessor();
 
             let mut calc_mat = ecs.get_calculate_mat_accessor();
+
+
+            let mut c_vec = Vec::new();
+            let mut simulate = ecs.get_simulate_accessor();
 
             move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
                 let view = cam.get_i_view(i);
@@ -144,6 +161,27 @@ pub fn run() {
 
                 torus.bind_vertex_array();
                 torus.draw_line_elements();
+
+                for c in  simulate.lock().iter() {
+                    c_vec.push(*c.0 );
+                }
+                geometry::get_mesh_repo(|mr| {
+                    mr.get_mesh_by_uid(&circles.uid).unwrap().update_buffer(c_vec.as_slice(), 0);
+                });
+                c_vec.clear();
+
+                circles_2d.use_program();
+                let ortho = cgmath::ortho(-8.0, 8.0, -8.0, 8.0, -1.0, 1.0);
+                circles_2d.set_projection(ortho);
+                
+                unsafe {
+                    gl::Disable(gl::DEPTH_TEST);
+                }
+                
+                circles.bind_vertex_array();
+                circles.draw_point_elements();
+
+
             }
         },
     );
