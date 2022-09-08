@@ -163,7 +163,7 @@ pub fn run() {
                 torus.draw_line_elements();
 
                 for c in  simulate.lock().iter() {
-                    c_vec.push(*c.0 );
+                    c_vec.push(*c.0 + (*c.1 * DT * i));
                 }
                 geometry::get_mesh_repo(|mr| {
                     mr.get_mesh_by_uid(&circles.uid).unwrap().update_buffer(c_vec.as_slice(), 0);
