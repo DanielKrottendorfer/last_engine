@@ -16,7 +16,7 @@ mod setup;
 mod torus;
 mod transform;
 
-use cgmath::{Deg, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero, InnerSpace};
+use cgmath::{Deg, InnerSpace, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero};
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
@@ -41,7 +41,7 @@ use rendering::shader;
 
 use camera::structs::FlyingEye;
 
-use self::settings::{UPS_F32, DT};
+use self::settings::{DT, UPS_F32};
 
 pub struct BlackSheep<U, D>
 where
@@ -67,11 +67,11 @@ pub fn run() {
 
     let bb = setup::init_mesh().unwrap();
 
-    let (ape, torus,circles) = geometry::get_mesh_repo(|mr| {
+    let (ape, torus, circles) = geometry::get_mesh_repo(|mr| {
         let ape = MeshToken::from(mr.get_mesh_by_name("ape").unwrap());
         let torus = MeshToken::from(mr.get_mesh_by_name("torus").unwrap());
         let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
-        (ape, torus,circles)
+        (ape, torus, circles)
     });
 
     let rendering = rendering::shader::get_shader_repo();
@@ -81,12 +81,25 @@ pub fn run() {
 
     let game_state = GameState::new(
         |ecs| {
-
             gameplay::gen_apes(ecs);
 
             let rng = rand::thread_rng();
 
-            ecs.add_ball_soa(Vector2::new(5.0,-5.0), Vector2::zero());
+            ecs.add_ball_soa(
+                Vector2::new(5.0, 0.0),
+                Vector2::new(5.0, 0.0),
+                Vector2::zero(),
+            );
+            ecs.add_ball_soa(
+                Vector2::new(7.0, 0.0),
+                Vector2::new(7.0, 0.0),
+                Vector2::zero(),
+            );
+            ecs.add_ball_soa(
+                Vector2::new(9.0, 0.0),
+                Vector2::new(9.0, 0.0),
+                Vector2::zero(),
+            );
 
             let mut circle = ecs.get_circle_accessor();
             let positions = ecs.get_positions_accessor();
@@ -96,28 +109,56 @@ pub fn run() {
 
             let g = Vector2::new(0.0, -10.0);
 
-            let r = 2.0;
+            let r = 3.0;
 
             move |_input| {
-                {
-                    let mut update = pos_update.lock();
-                    for (pos, ori, direction, target_ori) in update.iter() {
-                        *pos = *pos + *direction;
-                        *ori = *target_ori;
-                    }
-                }
-                gameplay::run_ape_ai(&mut circle, &positions);
+                // {
+                //     let mut update = pos_update.lock();
+                //     for (pos, ori, direction, target_ori) in update.iter() {
+                //         *pos = *pos + *direction;
+                //         *ori = *target_ori;
+                //     }
+                // }
+                // gameplay::run_ape_ai(&mut circle, &positions);
 
                 let mut simulate = simulate.lock();
 
-                for (pos, v) in simulate.iter(){
+                let steps = 100;
+                let s = steps as f32;
+                let dt_var = DT / s;
 
-                    *v += g*DT;
-                    let p = *pos;
-                    *pos += *v*DT;
-                    *pos = pos.normalize() * r;
-                    *v = (*pos - p)/DT;
-                    
+                for _ in 0..steps{
+                    let mut it = simulate.iter();
+                    if let Some((pos, pp, v)) = it.next() {
+                        *v += g * dt_var;
+                        *pp = *pos;
+                        *pos += *v * dt_var;
+                        *pos = pos.normalize() * r;
+                    }
+                    while let Some((pos, pp, v)) = it.next() {
+                        *v += g * dt_var;
+                        *pp = *pos;
+                        *pos += *v * dt_var;
+                    }
+    
+                    let mut it = simulate.iter();
+                    let mut v1 = it.next().unwrap();
+                    while let Some(v2) = it.next(){
+    
+                        let cs = *v2.0 - *v1.0;
+                        let c = cs.normalize() * 2.0;
+                        let k = (cs-c)/2.0;
+        
+                        *v1.0 += k;
+                        *v2.0 -= k;
+    
+                        v1 = v2;
+                    }
+    
+                    let mut it = simulate.iter();
+                    while let Some((pos, pp, v)) = it.next() {
+                        *v = (*pos - *pp) / dt_var;
+                    }
                 }
             }
         },
@@ -125,7 +166,6 @@ pub fn run() {
             let draw_m = ecs.get_draw_accessor();
 
             let mut calc_mat = ecs.get_calculate_mat_accessor();
-
 
             let mut c_vec = Vec::new();
             let mut simulate = ecs.get_simulate_accessor();
@@ -147,41 +187,41 @@ pub fn run() {
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
-                ape.bind_vertex_array();
-                three_d.use_program();
+                // ape.bind_vertex_array();
+                // three_d.use_program();
 
-                for (m, c) in d_lock.iter() {
-                    three_d.set_MVP(prj * view * m);
-                    three_d.set_col(*c);
-                    ape.draw_triangle_elements();
-                }
+                // for (m, c) in d_lock.iter() {
+                //     three_d.set_MVP(prj * view * m);
+                //     three_d.set_col(*c);
+                //     ape.draw_triangle_elements();
+                // }
 
-                three_d.set_MVP(prj * view);
-                three_d.set_col(Vector3::new(1.0, 0.0, 1.0));
+                // three_d.set_MVP(prj * view);
+                // three_d.set_col(Vector3::new(1.0, 0.0, 1.0));
 
-                torus.bind_vertex_array();
-                torus.draw_line_elements();
+                // torus.bind_vertex_array();
+                // torus.draw_line_elements();
 
-                for c in  simulate.lock().iter() {
-                    c_vec.push(*c.0 + (*c.1 * DT * i));
+                for c in simulate.lock().iter() {
+                    c_vec.push(*c.0 +((*c.2*DT) * i));
                 }
                 geometry::get_mesh_repo(|mr| {
-                    mr.get_mesh_by_uid(&circles.uid).unwrap().update_buffer(c_vec.as_slice(), 0);
+                    mr.get_mesh_by_uid(&circles.uid)
+                        .unwrap()
+                        .update_buffer(c_vec.as_slice(), 0);
                 });
                 c_vec.clear();
 
                 circles_2d.use_program();
-                let ortho = cgmath::ortho(-8.0, 8.0, -8.0, 8.0, -1.0, 1.0);
+                let ortho = cgmath::ortho(-8.0, 8.0, -10.0, 6.0, -1.0, 1.0);
                 circles_2d.set_projection(ortho);
-                
+
                 unsafe {
                     gl::Disable(gl::DEPTH_TEST);
                 }
-                
+
                 circles.bind_vertex_array();
                 circles.draw_point_elements();
-
-
             }
         },
     );

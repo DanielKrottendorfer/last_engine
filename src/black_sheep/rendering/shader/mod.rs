@@ -109,7 +109,7 @@ impl ShaderRepo {
         }
         let mut simple_2d = Simple2D::new();
         {
-            let program = build_shader_program(SIMPLE_2D_VS,None, SIMPLE_2D_FS);
+            let program = build_shader_program(SIMPLE_2D_VS, None, SIMPLE_2D_FS);
             simple_2d.setup(&program);
         }
 

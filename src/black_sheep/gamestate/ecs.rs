@@ -12,6 +12,7 @@ chained_component_system!(
         target_ori: Quaternion<f32>,
         col: Vector3<f32>,
 
+        pp: Vector2<f32>,
         p: Vector2<f32>,
         v: Vector2<f32>,
 
@@ -20,7 +21,7 @@ chained_component_system!(
 
     entities{
         Ape(pos,ori,direction,target_ori,col,mat),
-        Ball(p,v)
+        Ball(p,pp,v)
     };
 
     global_systems{
@@ -29,7 +30,7 @@ chained_component_system!(
         Positions(pos,KEY),
         CalculateMat(pos,ori,direction,target_ori,mut mat),
         Draw(mat,col),
-        Simulate(mut p,mut v),
+        Simulate(mut p,mut pp,mut v),
         Poss(p),
     };
 );

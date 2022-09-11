@@ -150,4 +150,3 @@ impl MeshToken {
         draw_line_elements(self.vertex_count);
     }
 }
-
