@@ -86,6 +86,11 @@ pub fn run() {
             let rng = rand::thread_rng();
 
             ecs.add_ball_soa(
+                Vector2::new(3.0, 0.0),
+                Vector2::new(3.0, 0.0),
+                Vector2::zero(),
+            );
+            ecs.add_ball_soa(
                 Vector2::new(5.0, 0.0),
                 Vector2::new(5.0, 0.0),
                 Vector2::zero(),
@@ -123,38 +128,33 @@ pub fn run() {
 
                 let mut simulate = simulate.lock();
 
-                let steps = 100;
+                let steps = 500;
                 let s = steps as f32;
                 let dt_var = DT / s;
 
-                for _ in 0..steps{
+                for _ in 0..steps {
                     let mut it = simulate.iter();
-                    if let Some((pos, pp, v)) = it.next() {
+                    while let Some((x, p, v)) = it.next() {
                         *v += g * dt_var;
-                        *pp = *pos;
-                        *pos += *v * dt_var;
-                        *pos = pos.normalize() * r;
+                        *p = *x;
+                        *x += *v * dt_var;
                     }
-                    while let Some((pos, pp, v)) = it.next() {
-                        *v += g * dt_var;
-                        *pp = *pos;
-                        *pos += *v * dt_var;
-                    }
-    
+
                     let mut it = simulate.iter();
-                    let mut v1 = it.next().unwrap();
-                    while let Some(v2) = it.next(){
-    
-                        let cs = *v2.0 - *v1.0;
-                        let c = cs.normalize() * 2.0;
-                        let k = (cs-c)/2.0;
-        
-                        *v1.0 += k;
-                        *v2.0 -= k;
-    
-                        v1 = v2;
+                    if let Some(mut v1) = it.next() {
+                        *v1.0 = v1.0.normalize() * r;
+                        while let Some(v2) = it.next() {
+                            let cs = *v2.0 - *v1.0;
+                            let c = cs.normalize() * 2.0;
+                            let k = (cs - c) / 2.0;
+
+                            *v1.0 += k;
+                            *v2.0 -= k;
+
+                            v1 = v2;
+                        }
                     }
-    
+
                     let mut it = simulate.iter();
                     while let Some((pos, pp, v)) = it.next() {
                         *v = (*pos - *pp) / dt_var;
@@ -203,7 +203,7 @@ pub fn run() {
                 // torus.draw_line_elements();
 
                 for c in simulate.lock().iter() {
-                    c_vec.push(*c.0 +((*c.2*DT) * i));
+                    c_vec.push(*c.0 + ((*c.2 * DT) * i));
                 }
                 geometry::get_mesh_repo(|mr| {
                     mr.get_mesh_by_uid(&circles.uid)

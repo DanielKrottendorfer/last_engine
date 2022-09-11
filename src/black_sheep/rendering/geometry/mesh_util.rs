@@ -70,15 +70,6 @@ pub fn update_buffer_data<T>(buffer_data: &[T], buffer_id: u32, buffer_type: GLe
             gl::DYNAMIC_DRAW,
         );
     }
-    // unsafe {
-    //     gl::BindBuffer(buffer_type, buffer_id);
-    //     gl::BufferSubData(
-    //         buffer_type,
-    //         0,
-    //         (buffer_data.len() * std::mem::size_of::<T>()) as GLsizeiptr,
-    //         std::mem::transmute(&buffer_data[0]),
-    //     );
-    // }
 }
 
 pub fn gen_vertexarray() -> u32 {
