@@ -1,6 +1,6 @@
+use crate::black_sheep::math::tetrahedral::Tetrahedral;
 use cgmath::*;
 use chained_component_system::chained_component_system;
-
 use std::sync::*;
 
 chained_component_system!(
@@ -17,11 +17,15 @@ chained_component_system!(
         v: Vector2<f32>,
 
         mat: Matrix4<f32>,
+
+        tet: Tetrahedral
     };
 
     entities{
         Ape(pos,ori,direction,target_ori,col,mat),
-        Ball(p,pp,v)
+        Ball(p,pp,v),
+        Tets(tet),
+
     };
 
     global_systems{
@@ -32,5 +36,6 @@ chained_component_system!(
         Draw(mat,col),
         Simulate(mut p,mut pp,mut v),
         Poss(p),
+        GetTets(mut tet)
     };
 );

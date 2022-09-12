@@ -1,11 +1,54 @@
+use std::borrow::BorrowMut;
+
 use cgmath::*;
 
 use crate::black_sheep::rendering::geometry;
 
 use super::{
-    gamestate::ecs::{CircleAccessor, PositionsAccessor, CHAINED_ECS},
+    gamestate::ecs::{CircleAccessor, PositionsAccessor, SimulateAccessor, CHAINED_ECS},
+    settings::DT,
     torus::torus_r,
 };
+
+pub fn run_pendulum(circels: &mut SimulateAccessor) {
+    let mut simulate = circels.lock();
+
+    let steps = 5;
+    let s = steps as f32;
+    let dt_var = DT / s;
+
+    let g = Vector2::new(0.0, -10.0);
+    let r = 3.0;
+
+    for _ in 0..steps {
+        let mut it = simulate.iter();
+        while let Some((x, p, v)) = it.next() {
+            *v += g * dt_var;
+            *p = *x;
+            *x += *v * dt_var;
+        }
+
+        let mut it = simulate.iter();
+        if let Some(mut v1) = it.next() {
+            *v1.0 = v1.0.normalize() * r;
+            while let Some(v2) = it.next() {
+                let cs = *v2.0 - *v1.0;
+                let c = cs.normalize() * 2.0;
+                let k = (cs - c) / 2.0;
+
+                *v1.0 += k;
+                *v2.0 -= k;
+
+                v1 = v2;
+            }
+        }
+
+        let mut it = simulate.iter();
+        while let Some((pos, pp, v)) = it.next() {
+            *v = (*pos - *pp) / dt_var;
+        }
+    }
+}
 
 pub fn run_ape_ai(circle: &mut CircleAccessor, positions: &PositionsAccessor) {
     let mut c_l = circle.lock();
@@ -138,5 +181,29 @@ pub fn gen_apes(ecs: &mut CHAINED_ECS) {
             center.push(c);
             ups.push(u);
         }
+    }
+}
+
+pub fn harddeck(t: &mut super::math::tetrahedral::Tetrahedral) {
+    for v in t.0.iter_mut() {
+        if v.y < 0.0 {
+            v.y = 0.0;
+        }
+    }
+}
+
+pub fn tetra_dist(t: &mut super::math::tetrahedral::Tetrahedral) {
+    let dist = t.1;
+
+    let mut rest = t.0.as_mut_slice();
+    while let Some((v1, rest_)) = rest.split_first_mut() {
+        for v2 in rest_.borrow_mut() {
+            let cs = *v2 - *v1;
+            let c = cs.normalize() * dist;
+            let k = (cs - c) / 2.0;
+            *v1 += k;
+            *v2 -= k;
+        }
+        rest = rest_;
     }
 }

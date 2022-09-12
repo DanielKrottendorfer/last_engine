@@ -9,6 +9,7 @@ pub mod gamestate;
 mod generators;
 mod imgui_system;
 mod loop_timing;
+pub mod math;
 mod q_i_square_root;
 mod script;
 pub mod settings;
@@ -16,7 +17,10 @@ mod setup;
 mod torus;
 mod transform;
 
-use cgmath::{Deg, InnerSpace, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero};
+use std::borrow::BorrowMut;
+use std::sync::{Arc, Mutex};
+
+use cgmath::{Deg, InnerSpace, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero, Matrix3};
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
@@ -41,6 +45,7 @@ use rendering::shader;
 
 use camera::structs::FlyingEye;
 
+use self::math::tetrahedral::Tetrahedral;
 use self::settings::{DT, UPS_F32};
 
 pub struct BlackSheep<U, D>
@@ -67,17 +72,29 @@ pub fn run() {
 
     let bb = setup::init_mesh().unwrap();
 
-    let (ape, torus, circles) = geometry::get_mesh_repo(|mr| {
+    let (ape, tetra, circles) = geometry::get_mesh_repo(|mr| {
         let ape = MeshToken::from(mr.get_mesh_by_name("ape").unwrap());
-        let torus = MeshToken::from(mr.get_mesh_by_name("torus").unwrap());
+        let tetra = MeshToken::from(mr.get_mesh_by_name("tetra").unwrap());
         let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
-        (ape, torus, circles)
+        (ape, tetra, circles)
     });
 
     let rendering = rendering::shader::get_shader_repo();
 
     let three_d = rendering.color_3d;
     let circles_2d = rendering.point_2d;
+
+    let mut t = Tetrahedral::new(4.0);
+    let m = Matrix3::from_angle_z(Deg(20.0));
+    t.0.iter_mut().for_each(|v| {
+        *v += Vector3::unit_y() * 5.0;
+        *v = m * *v;
+    });
+
+
+    let mut tet1 = Arc::new(Mutex::new(t));
+    let mut tet_v1 = Arc::new(Mutex::new(Tetrahedral::zero()));
+    let mut tet2 = tet1.clone();
 
     let game_state = GameState::new(
         |ecs| {
@@ -112,7 +129,7 @@ pub fn run() {
 
             let mut simulate = ecs.get_simulate_accessor();
 
-            let g = Vector2::new(0.0, -10.0);
+            let g = Vector3::unit_y() * -10.0;
 
             let r = 3.0;
 
@@ -125,39 +142,28 @@ pub fn run() {
                 //     }
                 // }
                 // gameplay::run_ape_ai(&mut circle, &positions);
+                gameplay::run_pendulum(&mut simulate);
 
-                let mut simulate = simulate.lock();
+                let t = &mut *tet1.lock().unwrap();
+                let v = &mut *tet_v1.lock().unwrap();
 
-                let steps = 500;
-                let s = steps as f32;
-                let dt_var = DT / s;
+                let p = t.clone();
+                for (x, v) in t.0.iter_mut().zip(v.0.iter_mut()) {
+                    *v += g * DT;
+                    *x += *v * DT;
+                }
 
-                for _ in 0..steps {
-                    let mut it = simulate.iter();
-                    while let Some((x, p, v)) = it.next() {
-                        *v += g * dt_var;
-                        *p = *x;
-                        *x += *v * dt_var;
-                    }
+                gameplay::tetra_dist(t);
+                gameplay::harddeck(t);
 
-                    let mut it = simulate.iter();
-                    if let Some(mut v1) = it.next() {
-                        *v1.0 = v1.0.normalize() * r;
-                        while let Some(v2) = it.next() {
-                            let cs = *v2.0 - *v1.0;
-                            let c = cs.normalize() * 2.0;
-                            let k = (cs - c) / 2.0;
+                for i in 0..4 {
+                    let v = v.0.get_mut(i).unwrap();
+                    let t = t.0.get_mut(i).unwrap();
+                    let p = p.0.get(i).unwrap();
 
-                            *v1.0 += k;
-                            *v2.0 -= k;
-
-                            v1 = v2;
-                        }
-                    }
-
-                    let mut it = simulate.iter();
-                    while let Some((pos, pp, v)) = it.next() {
-                        *v = (*pos - *pp) / dt_var;
+                    *v = (*t - *p) / DT;
+                    if v.magnitude2() < 0.1 {
+                        *v = Vector3::zero();
                     }
                 }
             }
@@ -169,6 +175,8 @@ pub fn run() {
 
             let mut c_vec = Vec::new();
             let mut simulate = ecs.get_simulate_accessor();
+
+            let mut tet = ecs.get_tets();
 
             move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
                 let view = cam.get_i_view(i);
@@ -187,8 +195,19 @@ pub fn run() {
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
-                // ape.bind_vertex_array();
-                // three_d.use_program();
+                three_d.use_program();
+                three_d.set_MVP(prj * view);
+                three_d.set_col(Vector3::unit_x());
+
+                let t = tet2.lock().unwrap().clone();
+                let te: [Vector3<f32>; 4] = t.into();
+                geometry::get_mesh_repo(|mr| {
+                    mr.get_mesh_by_uid(&tetra.uid)
+                        .unwrap()
+                        .update_buffer(&te, 0);
+                });
+                tetra.bind_vertex_array();
+                tetra.draw_line_elements();
 
                 // for (m, c) in d_lock.iter() {
                 //     three_d.set_MVP(prj * view * m);
@@ -297,7 +316,7 @@ where
                         game_state.ui_projection = cgmath::ortho(0.0, wh[0], wh[1], 0.0, -1.0, 1.0);
                         let aspect = (wh[0] - 300.0) / wh[1];
                         game_state.world_projection =
-                            cgmath::perspective(Deg(120.0), aspect, 0.1, 1000.0);
+                            cgmath::perspective(Deg(60.0), aspect, 0.1, 1000.0);
                     }
                     _ => (),
                 },

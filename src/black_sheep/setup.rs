@@ -6,6 +6,7 @@ use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
 use super::{
     generators,
+    math::tetrahedral::Tetrahedral,
     rendering::geometry::{self, mesh::MeshToken},
 };
 
@@ -95,6 +96,14 @@ pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
             m.add_dynamic_floatbuffer(positions.as_slice(), 0, 2);
             m.add_floatbuffer(colors.as_slice(), 1, 3);
             m.add_floatbuffer(rads.as_slice(), 2, 1);
+            m.add_elementarraybuffer(elements.as_slice());
+        });
+        let tetra = mesh_repo.add_mesh("tetra", |m| {
+            let tet = Tetrahedral::new(4.0);
+
+            let elements = vec![0, 1, 0, 2, 0, 3, 1, 2, 1, 3, 2, 3];
+
+            m.add_dynamic_floatbuffer(&tet.0, 0, 3);
             m.add_elementarraybuffer(elements.as_slice());
         });
     });

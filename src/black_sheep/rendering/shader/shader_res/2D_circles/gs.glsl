@@ -1,7 +1,7 @@
 #version 450
 
 layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+layout (triangle_strip, max_vertices = 3) out;
 
 uniform mat4 projection;
 
@@ -17,6 +17,7 @@ out GS_OUT {
     float radius;
 } gs_out;
 
+float root_3 = 1.7320508;
 
 void main()
 {
@@ -27,12 +28,10 @@ void main()
     gs_out.color = gs_in[0].color;
     gs_out.radius = gs_in[0].radius;
 
+    vec4 p1 = (position + vec4( gs_in[0].radius * root_3, -gs_in[0].radius, 0.0, 0.0));
+    vec4 p2 = (position + vec4( 0, gs_in[0].radius * 2.0, 0.0, 0.0));
+    vec4 p3 = (position + vec4( -gs_in[0].radius * root_3, -gs_in[0].radius, 0.0, 0.0));
 
-    vec4 p1 = (position + vec4( gs_in[0].radius, gs_in[0].radius, 0.0, 0.0));
-    vec4 p2 = (position + vec4( -gs_in[0].radius, gs_in[0].radius, 0.0, 0.0));
-    vec4 p3 = (position + vec4( gs_in[0].radius, -gs_in[0].radius, 0.0, 0.0));
-    vec4 p4 = (position + vec4( -gs_in[0].radius, -gs_in[0].radius, 0.0, 0.0));
-    
     gs_out.screen_pos = p1.xy;
     gl_Position = projection * p1;
     EmitVertex();
@@ -43,10 +42,6 @@ void main()
 
     gs_out.screen_pos = p3.xy;
     gl_Position = projection * p3;
-    EmitVertex();
-
-    gs_out.screen_pos = p4.xy;
-    gl_Position = projection * p4;
     EmitVertex();
 
     EndPrimitive();
