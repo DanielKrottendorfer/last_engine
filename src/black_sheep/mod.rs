@@ -20,7 +20,7 @@ mod transform;
 use std::borrow::BorrowMut;
 use std::sync::{Arc, Mutex};
 
-use cgmath::{Deg, InnerSpace, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero, Matrix3};
+use cgmath::{Deg, InnerSpace, Matrix3, Quaternion, Rad, Rotation3, Vector2, Vector4, Zero};
 use cgmath::{Matrix4, Vector3};
 use gamestate::*;
 
@@ -83,14 +83,15 @@ pub fn run() {
 
     let three_d = rendering.color_3d;
     let circles_2d = rendering.point_2d;
+    let circle_3d = rendering.circle_point_cloud;
 
     let mut t = Tetrahedral::new(4.0);
-    let m = Matrix3::from_angle_z(Deg(20.0));
+    // let m = Matrix3::from_angle_z(Deg(20.0));
     t.0.iter_mut().for_each(|v| {
         *v += Vector3::unit_y() * 5.0;
-        *v = m * *v;
+        //*v = m * *v;
     });
-
+    let c = t.get_constraints();
 
     let mut tet1 = Arc::new(Mutex::new(t));
     let mut tet_v1 = Arc::new(Mutex::new(Tetrahedral::zero()));
@@ -154,6 +155,7 @@ pub fn run() {
                 }
 
                 gameplay::tetra_dist(t);
+                gameplay::vol_c(t);
                 gameplay::harddeck(t);
 
                 for i in 0..4 {
@@ -195,6 +197,14 @@ pub fn run() {
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
+                
+                circle_3d.use_program();
+                circle_3d.set_mv(view);
+                circle_3d.set_projection(*prj);
+                
+                tetra.bind_vertex_array();
+                tetra.draw_point_array();
+
                 three_d.use_program();
                 three_d.set_MVP(prj * view);
                 three_d.set_col(Vector3::unit_x());
@@ -208,6 +218,7 @@ pub fn run() {
                 });
                 tetra.bind_vertex_array();
                 tetra.draw_line_elements();
+
 
                 // for (m, c) in d_lock.iter() {
                 //     three_d.set_MVP(prj * view * m);

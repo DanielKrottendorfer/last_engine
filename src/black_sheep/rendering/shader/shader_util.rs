@@ -3,11 +3,11 @@ use std::ffi::CString;
 use std::ptr;
 use std::str;
 
-// // Shader sources
+// // // Shader sources
 
-pub static GVS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gvs_cloud.glsl");
-pub static GS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gs_cloud.glsl");
-pub static GFS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gfs_cloud.glsl");
+// pub static GVS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gvs_cloud.glsl");
+// pub static GS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gs_cloud.glsl");
+// pub static GFS_SRC_CLOUD: &'static str = include_str!("./shader_res/cloud/gfs_cloud.glsl");
 pub static GVS_SRC_CIRCLE_CLOUD: &'static str =
     include_str!("./shader_res/cloud_circle/gvs_cloud.glsl");
 pub static GS_SRC_CIRCLE_CLOUD: &'static str =

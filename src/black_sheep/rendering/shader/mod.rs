@@ -9,7 +9,6 @@ use shader_util::*;
 #[derive(Default, Clone)]
 pub struct ShaderRepo {
     pub imgui: ImguiShaderProgram,
-    pub point_cloud: CloudGeometryShaderProgram,
     pub circle_point_cloud: CircleCloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
     pub color_3d: Color3D,
@@ -62,11 +61,11 @@ pub fn get_shader_repo() -> ShaderRepo {
 
 impl ShaderRepo {
     fn new() -> Self {
-        let mut point_cloud = CloudGeometryShaderProgram::new();
-        {
-            let program = build_shader_program(GVS_SRC_CLOUD, Some(GS_SRC_CLOUD), GFS_SRC_CLOUD);
-            point_cloud.setup(&program);
-        }
+        // let mut point_cloud = CloudGeometryShaderProgram::new();
+        // {
+        //     let program = build_shader_program(GVS_SRC_CLOUD, Some(GS_SRC_CLOUD), GFS_SRC_CLOUD);
+        //     point_cloud.setup(&program);
+        // }
 
         let mut circle_point_cloud = CircleCloudGeometryShaderProgram::new();
         {
@@ -122,7 +121,7 @@ impl ShaderRepo {
 
         ShaderRepo {
             imgui,
-            point_cloud,
+            //point_cloud,
             circle_point_cloud,
             simple,
             color_3d,
@@ -134,7 +133,7 @@ impl ShaderRepo {
     }
     fn cleanup(&mut self) {
         self.imgui.cleanup();
-        self.point_cloud.cleanup();
+        //self.point_cloud.cleanup();
         self.circle_point_cloud.cleanup();
         self.simple.cleanup();
         self.color_3d.cleanup();

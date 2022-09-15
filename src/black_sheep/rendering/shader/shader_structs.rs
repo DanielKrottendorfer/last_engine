@@ -48,6 +48,7 @@ shader_program!(
         uniform mat4 projection;
     }
 );
+
 shader_program!(
     Simple2D{
         uniform mat4 projection;

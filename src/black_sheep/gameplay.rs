@@ -6,6 +6,7 @@ use crate::black_sheep::rendering::geometry;
 
 use super::{
     gamestate::ecs::{CircleAccessor, PositionsAccessor, SimulateAccessor, CHAINED_ECS},
+    math::tetrahedral::Tetrahedral,
     settings::DT,
     torus::torus_r,
 };
@@ -184,7 +185,7 @@ pub fn gen_apes(ecs: &mut CHAINED_ECS) {
     }
 }
 
-pub fn harddeck(t: &mut super::math::tetrahedral::Tetrahedral) {
+pub fn harddeck(t: &mut Tetrahedral) {
     for v in t.0.iter_mut() {
         if v.y < 0.0 {
             v.y = 0.0;
@@ -192,7 +193,15 @@ pub fn harddeck(t: &mut super::math::tetrahedral::Tetrahedral) {
     }
 }
 
-pub fn tetra_dist(t: &mut super::math::tetrahedral::Tetrahedral) {
+pub fn vol_c(t: &mut Tetrahedral) {
+    let c = t.get_constraints();
+    let lamb = (-1.0 * (t.get_volume() - t.1)) / c.iter().map(|x| x.magnitude2()).sum::<f32>();
+    for i in 0..4{
+        t.0[i] += lamb*c[i];
+    }
+}
+
+pub fn tetra_dist(t: &mut Tetrahedral) {
     let dist = t.1;
 
     let mut rest = t.0.as_mut_slice();
@@ -201,6 +210,9 @@ pub fn tetra_dist(t: &mut super::math::tetrahedral::Tetrahedral) {
             let cs = *v2 - *v1;
             let c = cs.normalize() * dist;
             let k = (cs - c) / 2.0;
+
+            let lamb = 
+
             *v1 += k;
             *v2 -= k;
         }
