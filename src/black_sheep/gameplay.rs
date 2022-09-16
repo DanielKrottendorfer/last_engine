@@ -14,7 +14,7 @@ use super::{
 pub fn run_pendulum(circels: &mut SimulateAccessor) {
     let mut simulate = circels.lock();
 
-    let steps = 5;
+    let steps = 50;
     let s = steps as f32;
     let dt_var = DT / s;
 
@@ -195,26 +195,34 @@ pub fn harddeck(t: &mut Tetrahedral) {
 
 pub fn vol_c(t: &mut Tetrahedral) {
     let c = t.get_constraints();
-    let lamb = (-1.0 * (t.get_volume() - t.1)) / c.iter().map(|x| x.magnitude2()).sum::<f32>();
+    let lamb = (-6.0 * (t.get_volume() - t.1)) / (c.iter().map(|x| x.magnitude2()).sum::<f32>()+(1.0/DT.powf(2.0)));
+    
+    println!("{} {}",t.get_volume() , t.1);
     for i in 0..4{
         t.0[i] += lamb*c[i];
     }
 }
 
 pub fn tetra_dist(t: &mut Tetrahedral) {
-    let dist = t.1;
+    let dist = t.2;
 
     let mut rest = t.0.as_mut_slice();
     while let Some((v1, rest_)) = rest.split_first_mut() {
         for v2 in rest_.borrow_mut() {
-            let cs = *v2 - *v1;
-            let c = cs.normalize() * dist;
-            let k = (cs - c) / 2.0;
+            
+            let w = 2.0;
 
-            let lamb = 
+            let g = *v1-*v2;
+            let len = g.magnitude();
+            let g = g / len;
 
-            *v1 += k;
-            *v2 -= k;
+            let c = len - dist;
+
+            let lamb = -c / (w + (1.0/DT.powf(2.0)));
+
+            *v1+= g * lamb;
+            *v2-= g * lamb;
+
         }
         rest = rest_;
     }

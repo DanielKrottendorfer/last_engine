@@ -119,8 +119,8 @@ pub fn run() {
                 Vector2::zero(),
             );
             ecs.add_ball_soa(
-                Vector2::new(9.0, 0.0),
-                Vector2::new(9.0, 0.0),
+                Vector2::new(7.0, 2.0),
+                Vector2::new(7.0, 2.0),
                 Vector2::zero(),
             );
 
@@ -197,6 +197,9 @@ pub fn run() {
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
+                unsafe {
+                    gl::Disable(gl::DEPTH_TEST);
+                }
                 
                 circle_3d.use_program();
                 circle_3d.set_mv(view);
@@ -246,9 +249,6 @@ pub fn run() {
                 let ortho = cgmath::ortho(-8.0, 8.0, -10.0, 6.0, -1.0, 1.0);
                 circles_2d.set_projection(ortho);
 
-                unsafe {
-                    gl::Disable(gl::DEPTH_TEST);
-                }
 
                 circles.bind_vertex_array();
                 circles.draw_point_elements();
