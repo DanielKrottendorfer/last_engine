@@ -13,7 +13,7 @@ pub mod tetrahedral {
             let v2 = Vector3::new(x, 0.0, -r);
             let v3 = Vector3::new(0.0, 0.0, 2.0 * r);
             let v4 = Vector3::new(0.0, h, 0.0);
-            let mut t = Tetrahedral([v1, v2, v3, v4], 0.0,2.0*x);
+            let mut t = Tetrahedral([v1, v2, v3, v4], 0.0, 2.0 * x);
             t.1 = t.get_volume();
             t
         }
@@ -22,7 +22,7 @@ pub mod tetrahedral {
             let v2 = Vector3::zero();
             let v3 = Vector3::zero();
             let v4 = Vector3::zero();
-            Tetrahedral([v1, v2, v3, v4], 0.0,0.0)
+            Tetrahedral([v1, v2, v3, v4], 0.0, 0.0)
         }
         pub fn get_constraints(&self) -> [Vector3<f32>; 4] {
             let v1 = self.0[0];

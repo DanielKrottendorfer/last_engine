@@ -22,6 +22,10 @@ impl Mesh {
             panic!("Attribute size needs to be > 0")
         }
 
+        if self.vertex_count < 0 {
+            self.vertex_count = data.len() as i32;
+        }
+
         let buffer_id = buffer_data_static(data, gl::ARRAY_BUFFER);
         set_attribute_pointer(attribute_index, gl::FLOAT, attribute_size);
 

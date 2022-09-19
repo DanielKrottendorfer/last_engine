@@ -14,10 +14,11 @@ use super::settings::*;
 
 pub struct GameState<U, D>
 where
-    U: FnMut(InputFlags),
+    U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     pub input_flags: InputFlags,
+    pub mouse_pos: [i32; 2],
     pub window_size_f32: [f32; 2],
     pub window_size_i32: [i32; 2],
     pub ui_projection: Matrix4<f32>,
@@ -32,7 +33,7 @@ where
 
 impl<U, D> GameState<U, D>
 where
-    U: FnMut(InputFlags),
+    U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
@@ -51,9 +52,8 @@ where
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(60.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(-20.0, 20.0, 20.0));
-        cam.rotate_h(Deg(30.0));
-        cam.rotate_v(Deg(45.0));
+        cam.move_cam(Vector3::new(24.0, 12.0, 38.0));
+        cam.rotate_v(Deg(-25.0));
 
         let mut ecs = ecs::CHAINED_ECS::new();
 
@@ -61,6 +61,7 @@ where
         let draw = create_draw(&mut ecs);
         GameState {
             input_flags: InputFlags::NONE,
+            mouse_pos: [0, 0],
             window_size_f32: INIT_WINDOW_SIZE_F32,
             window_size_i32: INIT_WINDOW_SIZE_I32,
             ui_projection,
@@ -81,7 +82,7 @@ where
             self.cam.reset_movement();
         }
 
-        (self.update)(self.input_flags);
+        (self.update)(self.input_flags, self.mouse_pos);
     }
 
     pub fn draw(&mut self, i: f32) {
@@ -89,8 +90,7 @@ where
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
-        let _v = Vector2::new(x as f32, y as f32);
-        //self.structogram.update(v);
+        self.mouse_pos = [x, y];
 
         if self.input_flags.contains(InputFlags::CAPTURED_MOUSE) {
             if xrel != 0 {

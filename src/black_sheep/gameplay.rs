@@ -195,11 +195,11 @@ pub fn harddeck(t: &mut Tetrahedral) {
 
 pub fn vol_c(t: &mut Tetrahedral) {
     let c = t.get_constraints();
-    let lamb = (-6.0 * (t.get_volume() - t.1)) / (c.iter().map(|x| x.magnitude2()).sum::<f32>()+(1.0/DT.powf(2.0)));
-    
-    println!("{} {}",t.get_volume() , t.1);
-    for i in 0..4{
-        t.0[i] += lamb*c[i];
+    let lamb = (-6.0 * (t.get_volume() - t.1))
+        / (c.iter().map(|x| x.magnitude2()).sum::<f32>() + (1.0 / DT.powf(2.0)));
+
+    for i in 0..4 {
+        t.0[i] += lamb * c[i];
     }
 }
 
@@ -209,20 +209,18 @@ pub fn tetra_dist(t: &mut Tetrahedral) {
     let mut rest = t.0.as_mut_slice();
     while let Some((v1, rest_)) = rest.split_first_mut() {
         for v2 in rest_.borrow_mut() {
-            
             let w = 2.0;
 
-            let g = *v1-*v2;
+            let g = *v1 - *v2;
             let len = g.magnitude();
             let g = g / len;
 
             let c = len - dist;
 
-            let lamb = -c / (w + (1.0/DT.powf(2.0)));
+            let lamb = -c / (w + (1.0 / DT.powf(2.0)));
 
-            *v1+= g * lamb;
-            *v2-= g * lamb;
-
+            *v1 += g * lamb;
+            *v2 -= g * lamb;
         }
         rest = rest_;
     }

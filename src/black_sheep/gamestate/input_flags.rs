@@ -4,21 +4,23 @@ use sdl2::keyboard::Keycode;
 bitflags! {
     #[derive(Default)]
     pub struct InputFlags: u32 {
-        const NONE =            0b0;
-        const CLOSE =           0b1;
-        const W =               0b10;
-        const S =               0b100;
-        const D =               0b1000;
-        const A =               0b10000;
-        const X =               0b100000;
-        const Y =               0b1000000;
-        const E =               0b10000000;
-        const Q =               0b100000000;
-        const RIGHT =           0b1000000000;
-        const LEFT =            0b10000000000;
-        const UP =              0b100000000000;
-        const DOWN  =           0b1000000000000;
-        const CAPTURED_MOUSE =  0b10000000000000;
+        const NONE =                0b0;
+        const CLOSE =               0b1;
+        const W =                   0b10;
+        const S =                   0b100;
+        const D =                   0b1000;
+        const A =                   0b10000;
+        const X =                   0b100000;
+        const Y =                   0b1000000;
+        const E =                   0b10000000;
+        const Q =                   0b100000000;
+        const RIGHT =               0b1000000000;
+        const LEFT =                0b10000000000;
+        const UP =                  0b100000000000;
+        const DOWN  =               0b1000000000000;
+        const CAPTURED_MOUSE =      0b10000000000000;
+        const LEFT_MOUSE_DOWN =     0b100000000000000;
+        const RIGHT_MOUSE_DOWN =    0b1000000000000000;
         const WS = Self::W.bits |  Self::S.bits;
     }
 }
@@ -45,6 +47,20 @@ impl From<Keycode> for InputFlags {
 }
 
 impl InputFlags {
+    pub fn left_mouse_down(&mut self, down: bool) {
+        if down {
+            self.insert(InputFlags::LEFT_MOUSE_DOWN);
+        } else {
+            self.remove(InputFlags::LEFT_MOUSE_DOWN);
+        }
+    }
+    pub fn right_mouse_down(&mut self, down: bool) {
+        if down {
+            self.insert(InputFlags::RIGHT_MOUSE_DOWN);
+        } else {
+            self.remove(InputFlags::RIGHT_MOUSE_DOWN);
+        }
+    }
     pub fn key_down(&mut self, key_code: sdl2::keyboard::Keycode) {
         use InputFlags as kf;
         self.insert(kf::from(key_code));

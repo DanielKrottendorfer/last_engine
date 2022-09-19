@@ -17,6 +17,8 @@ mod setup;
 mod torus;
 mod transform;
 
+mod softbody;
+
 use std::borrow::BorrowMut;
 use std::sync::{Arc, Mutex};
 
@@ -50,7 +52,7 @@ use self::settings::{DT, UPS_F32};
 
 pub struct BlackSheep<U, D>
 where
-    U: FnMut(InputFlags),
+    U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     window: SDLWindow,
@@ -58,7 +60,9 @@ where
     rel_mouse_pos: Vector2<f32>,
 }
 
-impl<U: FnMut(InputFlags), D: FnMut(f32, &FlyingEye, &Matrix4<f32>)> Drop for BlackSheep<U, D> {
+impl<U: FnMut(InputFlags, [i32; 2]), D: FnMut(f32, &FlyingEye, &Matrix4<f32>)> Drop
+    for BlackSheep<U, D>
+{
     fn drop(&mut self) {
         shader::cleanup();
         geometry::cleanup();
@@ -69,15 +73,25 @@ pub fn run() {
     let window = SDLWindow::new();
     shader::init();
     geometry::init();
+    // KEEP THIS ORDER
 
     let bb = setup::init_mesh().unwrap();
+    let mut soft_b = softbody::Softbody::build_tetragrid(4.0, 5);
 
-    let (ape, tetra, circles) = geometry::get_mesh_repo(|mr| {
+    let (ape, circles, soft) = geometry::get_mesh_repo(|mr| {
         let ape = MeshToken::from(mr.get_mesh_by_name("ape").unwrap());
         let tetra = MeshToken::from(mr.get_mesh_by_name("tetra").unwrap());
         let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
-        (ape, tetra, circles)
+        let soft = mr.add_mesh("soft", |ms| {
+            ms.add_dynamic_floatbuffer(soft_b.get_particle_slice(), 0, 3);
+            ms.add_dynamic_floatbuffer(soft_b.colors.as_slice(), 1, 3);
+            ms.add_elementarraybuffer(soft_b.edges.as_slice())
+        });
+        (ape, circles, soft)
     });
+
+    let mut soft_b = Arc::new(Mutex::new(soft_b));
+    let mut soft_b2 = soft_b.clone();
 
     let rendering = rendering::shader::get_shader_repo();
 
@@ -86,23 +100,17 @@ pub fn run() {
     let circle_3d = rendering.circle_point_cloud;
 
     let mut t = Tetrahedral::new(4.0);
-    // let m = Matrix3::from_angle_z(Deg(20.0));
+    let m = Matrix3::from_angle_z(Deg(20.0));
     t.0.iter_mut().for_each(|v| {
         *v += Vector3::unit_y() * 5.0;
-        //*v = m * *v;
+        *v = m * *v;
     });
     let c = t.get_constraints();
-
-    let mut tet1 = Arc::new(Mutex::new(t));
-    let mut tet_v1 = Arc::new(Mutex::new(Tetrahedral::zero()));
-    let mut tet2 = tet1.clone();
 
     let game_state = GameState::new(
         |ecs| {
             gameplay::gen_apes(ecs);
 
-            let rng = rand::thread_rng();
-
             ecs.add_ball_soa(
                 Vector2::new(3.0, 0.0),
                 Vector2::new(3.0, 0.0),
@@ -123,62 +131,16 @@ pub fn run() {
                 Vector2::new(7.0, 2.0),
                 Vector2::zero(),
             );
-
-            let mut circle = ecs.get_circle_accessor();
-            let positions = ecs.get_positions_accessor();
-            let mut pos_update = ecs.get_update_pos_ori_accessor();
 
             let mut simulate = ecs.get_simulate_accessor();
 
-            let g = Vector3::unit_y() * -10.0;
-
-            let r = 3.0;
-
-            move |_input| {
-                // {
-                //     let mut update = pos_update.lock();
-                //     for (pos, ori, direction, target_ori) in update.iter() {
-                //         *pos = *pos + *direction;
-                //         *ori = *target_ori;
-                //     }
-                // }
-                // gameplay::run_ape_ai(&mut circle, &positions);
+            move |_input, mouse_p| {
                 gameplay::run_pendulum(&mut simulate);
-
-                let t = &mut *tet1.lock().unwrap();
-                let v = &mut *tet_v1.lock().unwrap();
-
-                let p = t.clone();
-                for (x, v) in t.0.iter_mut().zip(v.0.iter_mut()) {
-                    *v += g * DT;
-                    *x += *v * DT;
-                }
-
-                gameplay::tetra_dist(t);
-                gameplay::vol_c(t);
-                gameplay::harddeck(t);
-
-                for i in 0..4 {
-                    let v = v.0.get_mut(i).unwrap();
-                    let t = t.0.get_mut(i).unwrap();
-                    let p = p.0.get(i).unwrap();
-
-                    *v = (*t - *p) / DT;
-                    if v.magnitude2() < 0.1 {
-                        *v = Vector3::zero();
-                    }
-                }
+                soft_b2.lock().unwrap().simulate(DT);
             }
         },
         |ecs| {
-            let draw_m = ecs.get_draw_accessor();
-
             let mut calc_mat = ecs.get_calculate_mat_accessor();
-
-            let mut c_vec = Vec::new();
-            let mut simulate = ecs.get_simulate_accessor();
-
-            let mut tet = ecs.get_tets();
 
             move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
                 let view = cam.get_i_view(i);
@@ -192,66 +154,37 @@ pub fn run() {
                     *model = m;
                 }
 
-                let d_lock = draw_m.lock();
-
                 clear_color(0.0, 0.3, 0.3, 1.0);
                 clear_drawbuffer();
 
                 unsafe {
-                    gl::Disable(gl::DEPTH_TEST);
+                    gl::Enable(gl::DEPTH_TEST);
                 }
-                
-                circle_3d.use_program();
-                circle_3d.set_mv(view);
-                circle_3d.set_projection(*prj);
-                
-                tetra.bind_vertex_array();
-                tetra.draw_point_array();
+
+                let soft_b = soft_b.lock().unwrap();
+                rendering::geometry::get_mesh_repo(|mr| {
+                    mr.get_mesh_by_uid(&soft.uid)
+                        .unwrap()
+                        .update_buffer(soft_b.get_particle_slice(), 0);
+                });
 
                 three_d.use_program();
                 three_d.set_MVP(prj * view);
-                three_d.set_col(Vector3::unit_x());
+                three_d.set_col(Vector3::unit_y());
 
-                let t = tet2.lock().unwrap().clone();
-                let te: [Vector3<f32>; 4] = t.into();
-                geometry::get_mesh_repo(|mr| {
-                    mr.get_mesh_by_uid(&tetra.uid)
-                        .unwrap()
-                        .update_buffer(&te, 0);
-                });
-                tetra.bind_vertex_array();
-                tetra.draw_line_elements();
+                soft.bind_vertex_array();
+                soft.draw_line_elements();
 
-
-                // for (m, c) in d_lock.iter() {
-                //     three_d.set_MVP(prj * view * m);
-                //     three_d.set_col(*c);
-                //     ape.draw_triangle_elements();
-                // }
-
-                // three_d.set_MVP(prj * view);
-                // three_d.set_col(Vector3::new(1.0, 0.0, 1.0));
-
-                // torus.bind_vertex_array();
-                // torus.draw_line_elements();
-
-                for c in simulate.lock().iter() {
-                    c_vec.push(*c.0 + ((*c.2 * DT) * i));
+                unsafe {
+                    gl::Disable(gl::DEPTH_TEST);
                 }
-                geometry::get_mesh_repo(|mr| {
-                    mr.get_mesh_by_uid(&circles.uid)
-                        .unwrap()
-                        .update_buffer(c_vec.as_slice(), 0);
-                });
-                c_vec.clear();
 
-                circles_2d.use_program();
-                let ortho = cgmath::ortho(-8.0, 8.0, -10.0, 6.0, -1.0, 1.0);
-                circles_2d.set_projection(ortho);
+                circle_3d.use_program();
+                circle_3d.set_mv(view);
+                circle_3d.set_projection(*prj);
 
-
-                circles.bind_vertex_array();
-                circles.draw_point_elements();
+                soft.bind_vertex_array();
+                soft.draw_point_array();
             }
         },
     );
@@ -267,7 +200,7 @@ pub fn run() {
 
 impl<U, D> BlackSheep<U, D>
 where
-    U: FnMut(InputFlags),
+    U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
 {
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
@@ -299,14 +232,32 @@ where
                         println!("No Valid KeyCode");
                     }
                 }
-                Event::MouseButtonDown { mouse_btn, .. } => {
+                Event::MouseButtonDown {
+                    mouse_btn, x, y, ..
+                } => {
+                    if MouseButton::Left == mouse_btn {
+                        game_state.input_flags.left_mouse_down(true);
+                        println!("{} {}", x, y);
+
+                        let v = game_state.cam.get_i_view(0.0);
+                        let p = game_state.world_projection;
+                        let vp = p * v;
+                        let ray = vp * Vector4::new(x as f32, y as f32, -1.0, 1.0);
+                        let ray = ray.truncate() - game_state.cam.position;
+                        println!("{:?}", ray.normalize());
+                    }
                     if MouseButton::Right == mouse_btn {
+                        game_state.input_flags.right_mouse_down(true);
                         game_state.input_flags.insert(InputFlags::CAPTURED_MOUSE);
                         self.window.capture_mouse();
                     }
                 }
                 Event::MouseButtonUp { mouse_btn, .. } => {
+                    if MouseButton::Left == mouse_btn {
+                        game_state.input_flags.left_mouse_down(false);
+                    }
                     if MouseButton::Right == mouse_btn {
+                        game_state.input_flags.right_mouse_down(false);
                         game_state.input_flags.remove(InputFlags::CAPTURED_MOUSE);
                         self.window.release_mouse();
                     }
@@ -401,7 +352,10 @@ where
                             }
 
                             ui.text(format!("{:?}", -game_state.cam.position));
-                            ui.text(format!("{:#?}", game_state.cam.orientation));
+                            ui.text(format!(
+                                "{:#?}",
+                                cgmath::Euler::from(game_state.cam.orientation)
+                            ));
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(TextureId::new(2 as usize), [300.0, 300.0])
                                 .uv0([0.0, 1.0])
