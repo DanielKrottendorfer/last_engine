@@ -22,11 +22,6 @@ mod softbody;
 mod canvas;
 
 use std::borrow::BorrowMut;
-
-
-
-
-
 use cgmath::{Matrix4};
 
 
@@ -39,8 +34,6 @@ use window::SDLWindow;
 use sdl2::event::{Event, WindowEvent};
 
 use crate::black_sheep::rendering::loader::load_texture_from_path;
-
-
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
 use gamestate::input_flags::InputFlags;
@@ -48,11 +41,6 @@ use imgui_system::ImguiSystem;
 use rendering::geometry;
 
 use rendering::shader;
-
-
-
-
-
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -77,7 +65,7 @@ pub fn run() {
     geometry::init();
     // KEEP THIS ORDER
     unsafe {
-        gl::LineWidth(0.5);
+        gl::LineWidth(2.0);
     }
 
     let _bb = setup::init_mesh().unwrap();
@@ -115,7 +103,7 @@ impl BlackSheep {
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
         while let Some(event) = self.window.poll_event() {
             imgui_system.handle_event(&event);
-            self.canvas.update(&event);
+            self.canvas.handle_event(&event,);
             match event {
                 Event::Quit { .. } => {
                     self.input_flags.insert(InputFlags::CLOSE);
@@ -237,6 +225,8 @@ impl BlackSheep {
                                 wiregrid = !wiregrid;
                                 gl_wiregrid(wiregrid);
                             }
+                                                        
+                            ui.input_int("class", &mut self.canvas.current_class).build();
 
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);

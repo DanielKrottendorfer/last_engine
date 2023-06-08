@@ -27,7 +27,6 @@ shader_program!(
 shader_program!(
     SimpleShaderProgram{
         uniform mat4 proj;
-        uniform vec3 color;
     }
 );
 
@@ -59,5 +58,12 @@ shader_program!(
 shader_program!(
     ColoredTriangles{
         uniform mat4 projection;
+    }
+);
+
+shader_program!(
+    CanvasImageShader{
+        uniform int image1;
+        uniform mat4 proj;
     }
 );

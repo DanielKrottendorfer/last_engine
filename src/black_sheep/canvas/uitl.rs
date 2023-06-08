@@ -1,4 +1,4 @@
-use cgmath::Vector2;
+use cgmath::{Vector2, Vector3};
 
 use super::Canvas;
 
@@ -33,6 +33,7 @@ impl Canvas{
                 y: self.canvas_size[1] as f32,
             },
         );
+        self.colors.extend([Vector3::unit_x();4]);
     }
 
     pub fn add_square(&mut self,start: Vector2<f32>,end: Vector2<f32>) {

@@ -16,6 +16,7 @@ pub struct ShaderRepo {
     pub point_2d: Point2D,
     pub simple_2d: Simple2D,
     pub colored_triangles: ColoredTriangles,
+    pub canvas_image: CanvasImageShader,
 }
 
 lazy_static! {
@@ -119,6 +120,13 @@ impl ShaderRepo {
             colored_triangles.setup(&program);
         }
 
+        let mut canvas_image = CanvasImageShader::new();
+        {
+            let program =
+                build_shader_program(CANVAS_VS_SRC, None, CANVAS_FS_SRC);
+                canvas_image.setup(&program);
+        }
+
         ShaderRepo {
             imgui,
             //point_cloud,
@@ -129,6 +137,7 @@ impl ShaderRepo {
             point_2d,
             simple_2d,
             colored_triangles,
+            canvas_image
         }
     }
     fn cleanup(&mut self) {
