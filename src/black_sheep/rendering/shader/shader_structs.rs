@@ -26,6 +26,7 @@ shader_program!(
 
 shader_program!(
     SimpleShaderProgram{
+        uniform mat4 proj;
         uniform vec3 color;
     }
 );

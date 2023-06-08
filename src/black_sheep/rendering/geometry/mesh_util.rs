@@ -122,3 +122,12 @@ pub fn draw_line_elements(vertex_count: i32) {
         );
     }
 }
+pub fn draw_line_array(vertex_count: i32) {
+    unsafe {
+        gl::DrawArrays(
+            LINES,
+            0,
+            vertex_count,
+        );
+    }
+}

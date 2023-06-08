@@ -5,17 +5,18 @@ pub mod camera;
 pub mod ecs;
 mod job;
 
-use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
+use cgmath::{Deg, Matrix4, Vector3, Zero};
 
 use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::settings::*;
 
-pub struct GameState<U, D>
+pub struct GameState<U, D,Z>
 where
     U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+    Z: FnMut(&Self)
 {
     pub input_flags: InputFlags,
     pub mouse_pos: [i32; 2],
@@ -29,14 +30,16 @@ where
 
     update: U,
     draw: D,
+    test: Z,
 }
 
-impl<U, D> GameState<U, D>
+impl<U, D,Z> GameState<U, D,Z>
 where
     U: FnMut(InputFlags, [i32; 2]),
     D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+    Z: FnMut(&Self)
 {
-    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
+    pub fn new<CU, CD>(create_update: CU, create_draw: CD, test: Z) -> Self
     where
         CU: FnOnce(&mut CHAINED_ECS) -> U,
         CD: FnOnce(&mut CHAINED_ECS) -> D,
@@ -70,6 +73,8 @@ where
             ecs,
             update,
             draw,
+            test
+
         }
     }
 
@@ -87,6 +92,9 @@ where
 
     pub fn draw(&mut self, i: f32) {
         (self.draw)(i, &self.cam, &self.world_projection)
+    }
+
+    pub fn call_test(&self) {
     }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
