@@ -34,8 +34,9 @@ pub enum AnnoState {
 
 pub struct Canvas {
     lines: Vec<Vector2<f32>>,
+    l_colors: Vec<Vector3<f32>>,
     dots: Vec<Vector2<f32>>,
-    colors: Vec<Vector3<f32>>,
+    d_colors: Vec<Vector3<f32>>,
 
     line_mesh: Option<Mesh>,
     dot_mesh: Option<Mesh>,
@@ -80,8 +81,9 @@ impl Canvas {
 
         Self {
             lines: Vec::new(),
+            l_colors: Vec::new(),
             dots: Vec::new(),
-            colors: Vec::new(),
+            d_colors: Vec::new(),
             line_mesh: None,
             dot_mesh: None,
             canvas_shader: rendering::shader::get_shader_repo().simple,
@@ -111,6 +113,7 @@ impl Canvas {
                     let mut dim = (0, 0);
                     self.texture = load_texture_from_path_dimout(&filename, &mut dim).unwrap();
                     self.current_file_string = filename.clone();
+                    self.reset();
                 }
             }
             sdl2::event::Event::MouseButtonDown { x, y, .. } => {
@@ -195,44 +198,67 @@ impl Canvas {
 
         for i in 0..self.annos.len() {
             let a = &self.annos[i];
-            if a.class == 0 {
-                self.colors.extend([Vector3::unit_x(); 8]);
-            } else {
-                self.colors.extend([Vector3::unit_z(); 8]);
-            }
+
+            let color = match a.class {
+                0 => Vector3 {
+                    x: 1.0,
+                    y: 1.0,
+                    z: 0.0,
+                },
+                1 => Vector3 {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 1.0,
+                },
+                2 => Vector3 {
+                    x: 0.0,
+                    y: 1.0,
+                    z: 1.0,
+                },
+                _ => Vector3::zero(),
+            };
+
             self.dots.extend(a.keyp);
             self.add_square(a.bbox.0, a.bbox.1);
+            self.l_colors.extend([color; 8]);
+            self.d_colors.extend([Vector3::unit_x(),Vector3::unit_z()]);
         }
 
         if self.lines.len() > 0 {
             if let Some(l) = self.line_mesh.borrow_mut() {
                 l.update_buffer(&self.lines, 0);
-                l.update_buffer(&self.colors, 1);
+                l.update_buffer(&self.l_colors, 1);
             } else {
                 let mut m = Mesh::new();
                 m.add_floatbuffer(&self.lines, 0, 2);
-                m.add_floatbuffer(&self.colors, 1, 3);
+                m.add_floatbuffer(&self.l_colors, 1, 3);
                 self.line_mesh = Some(m);
             }
             self.lines.clear();
-            self.colors.clear();
+            self.l_colors.clear();
         }
 
         if self.dots.len() > 0 {
             if let Some(d) = self.dot_mesh.borrow_mut() {
                 d.update_buffer(&self.dots, 0);
+                d.update_buffer(&self.d_colors, 1);
             } else {
                 let mut m = Mesh::new();
                 m.add_floatbuffer(&self.dots, 0, 2);
+                m.add_floatbuffer(&self.d_colors, 1, 3);
                 self.dot_mesh = Some(m);
             }
             self.dots.clear();
+            self.d_colors.clear();
         }
     }
 
     pub fn build_ui(&mut self, ui: &Ui) {
-        ui.indent();
         ui.separator();
+        if ui.button("reset") {
+            self.reset();
+        }
+        ui.indent();
         let mut delete = None;
         for (i, anno) in self.annos.iter_mut().enumerate() {
             let _id = ui.push_id(i as i32);
@@ -302,6 +328,16 @@ impl Canvas {
 
         self.canvas_image_shader.set_image1(0);
         self.image_mesh.draw_triangle_elements();
+    }
+
+    pub fn reset(&mut self) {
+        self.lines.clear();
+        self.dots.clear();
+        self.l_colors.clear();
+        self.d_colors.clear();
+        self.annos.clear();
+        self.anno_state = AnnoState::BoxStart;
+        self.current_class = 0;
     }
 
     pub fn export(&self) {

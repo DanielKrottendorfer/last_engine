@@ -215,10 +215,12 @@ impl BlackSheep {
                             ui.text("こんにちは世界！");
                             ui.text(format!("canvas_state: {:?}", self.canvas.anno_state));
 
-                            self.canvas.build_ui(ui);
+                            ui.input_int("class", &mut self.canvas.current_class)
+                                .build();
                             if ui.button("export") {
                                 self.canvas.export();
                             }
+                            self.canvas.build_ui(ui);
 
                             let label = if wiregrid { "no wwiregrid" } else { "iregrid" };
                             if ui.button(label) {
@@ -226,8 +228,6 @@ impl BlackSheep {
                                 gl_wiregrid(wiregrid);
                             }
 
-                            ui.input_int("class", &mut self.canvas.current_class)
-                                .build();
 
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);

@@ -33,7 +33,7 @@ impl Canvas {
                 y: self.canvas_size[1] as f32,
             },
         );
-        self.colors.extend(
+        self.l_colors.extend(
             [Vector3 {
                 x: 0.0,
                 y: 1.0,
