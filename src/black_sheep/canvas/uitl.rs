@@ -2,7 +2,7 @@ use cgmath::{Vector2, Vector3};
 
 use super::Canvas;
 
-impl Canvas{
+impl Canvas {
     fn add_line(&mut self, start: Vector2<f32>, end: Vector2<f32>) {
         self.lines.push(start);
         self.lines.push(end);
@@ -33,10 +33,16 @@ impl Canvas{
                 y: self.canvas_size[1] as f32,
             },
         );
-        self.colors.extend([Vector3::unit_x();4]);
+        self.colors.extend(
+            [Vector3 {
+                x: 0.0,
+                y: 1.0,
+                z: 1.0,
+            }; 4],
+        );
     }
 
-    pub fn add_square(&mut self,start: Vector2<f32>,end: Vector2<f32>) {
+    pub fn add_square(&mut self, start: Vector2<f32>, end: Vector2<f32>) {
         self.add_line(
             start,
             Vector2 {
@@ -66,5 +72,4 @@ impl Canvas{
             },
         );
     }
-
 }

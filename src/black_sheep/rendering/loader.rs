@@ -24,6 +24,30 @@ pub fn load_texture_from_path(path: &str) -> Option<Texture> {
     ))
 }
 
+pub fn load_texture_from_path_dimout(path: &str, dim_out: &mut (u32, u32)) -> Option<Texture> {
+    use image::io::Reader as ImageReader;
+
+    let im = match ImageReader::open(path) {
+        Ok(im) => im.decode().unwrap().flipv(),
+        Err(_) => return None,
+    };
+
+    let im = match im.flipv() {
+        image::DynamicImage::ImageRgba8(img) => img,
+        img => img.to_rgba8(),
+    };
+
+    let dim = im.dimensions();
+
+    *dim_out = dim;
+
+    Some(gen_texture(
+        im.as_ptr() as *mut std::ffi::c_void,
+        (dim.0 as i32, dim.1 as i32),
+        true,
+    ))
+}
+
 pub fn gen_texture(data: *mut std::ffi::c_void, dim: (i32, i32), mipmap: bool) -> Texture {
     let mut texture = 0;
     unsafe {

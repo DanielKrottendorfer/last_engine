@@ -1,12 +1,9 @@
 pub mod rendering;
 mod window;
 
-mod algorithms;
 #[allow(dead_code)]
 mod constants;
-mod gameplay;
-pub mod gamestate;
-mod generators;
+mod gamestate;
 mod imgui_system;
 mod loop_timing;
 pub mod math;
@@ -21,9 +18,8 @@ mod softbody;
 
 mod canvas;
 
+use cgmath::Matrix4;
 use std::borrow::BorrowMut;
-use cgmath::{Matrix4};
-
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 use sdl2::mouse::MouseButton;
@@ -36,11 +32,12 @@ use sdl2::event::{Event, WindowEvent};
 use crate::black_sheep::rendering::loader::load_texture_from_path;
 use crate::black_sheep::window::window_util::{clear_drawbuffer, set_viewport};
 
-use gamestate::input_flags::InputFlags;
 use imgui_system::ImguiSystem;
 use rendering::geometry;
 
 use rendering::shader;
+
+use self::gamestate::input_flags::InputFlags;
 
 pub struct BlackSheep {
     window: SDLWindow,
@@ -66,6 +63,7 @@ pub fn run() {
     // KEEP THIS ORDER
     unsafe {
         gl::LineWidth(2.0);
+        gl::PointSize(5.0);
     }
 
     let _bb = setup::init_mesh().unwrap();
@@ -103,7 +101,7 @@ impl BlackSheep {
     pub fn handle_events(&mut self, imgui_system: &mut ImguiSystem) {
         while let Some(event) = self.window.poll_event() {
             imgui_system.handle_event(&event);
-            self.canvas.handle_event(&event,);
+            self.canvas.handle_event(&event);
             match event {
                 Event::Quit { .. } => {
                     self.input_flags.insert(InputFlags::CLOSE);
@@ -129,9 +127,7 @@ impl BlackSheep {
                         println!("No Valid KeyCode");
                     }
                 }
-                Event::MouseButtonDown {
-                    mouse_btn,   ..
-                } => {
+                Event::MouseButtonDown { mouse_btn, .. } => {
                     if MouseButton::Left == mouse_btn {
                         self.input_flags.left_mouse_down(true);
                     }
@@ -151,9 +147,7 @@ impl BlackSheep {
                         self.window.release_mouse();
                     }
                 }
-                Event::MouseMotion {
-                      x, y, ..
-                } => {
+                Event::MouseMotion { x, y, .. } => {
                     self.mouse_pos = [x, y];
                 }
                 Event::Window { win_event, .. } => match win_event {
@@ -188,7 +182,7 @@ impl BlackSheep {
 
         let mut loop_timer = loop_timing::CatchupTimer::new();
 
-        let _fps = 0;
+        let mut _fps = 0.0;
 
         let mut t_color = [1.0, 0.0, 0.0, 1.0];
 
@@ -219,14 +213,21 @@ impl BlackSheep {
                         .build(&ui, || {
                             ui.text("Hello world!");
                             ui.text("こんにちは世界！");
+                            ui.text(format!("canvas_state: {:?}", self.canvas.anno_state));
+
+                            self.canvas.build_ui(ui);
+                            if ui.button("export") {
+                                self.canvas.export();
+                            }
 
                             let label = if wiregrid { "no wwiregrid" } else { "iregrid" };
                             if ui.button(label) {
                                 wiregrid = !wiregrid;
                                 gl_wiregrid(wiregrid);
                             }
-                                                        
-                            ui.input_int("class", &mut self.canvas.current_class).build();
+
+                            ui.input_int("class", &mut self.canvas.current_class)
+                                .build();
 
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
@@ -234,7 +235,6 @@ impl BlackSheep {
                 });
                 //HANDLE INPUT
                 self.update();
-
             }
 
             //RENDER
@@ -242,7 +242,7 @@ impl BlackSheep {
             three_d_rendering_setup();
             clear_color(0.0, 0.3, 0.3, 1.0);
             clear_drawbuffer();
-            set_viewport(self.window_size_i32[0]-300, self.window_size_i32[1]);
+            set_viewport(self.window_size_i32[0] - 300, self.window_size_i32[1]);
             self.draw();
 
             unsafe {

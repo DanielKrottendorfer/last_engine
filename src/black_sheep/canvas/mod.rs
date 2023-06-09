@@ -1,12 +1,13 @@
-use std::borrow::BorrowMut;
+use std::{borrow::BorrowMut, io::Write};
 
 use cgmath::{Vector2, Vector3, Zero};
+use imgui::Ui;
 
 use super::{
     rendering::{
         self,
         geometry::mesh::Mesh,
-        loader::load_texture_from_path,
+        loader::{load_texture_from_path, load_texture_from_path_dimout},
         shader::shader_structs::{CanvasImageShader, SimpleShaderProgram},
         Texture,
     },
@@ -25,7 +26,7 @@ struct Annotation {
 }
 
 #[derive(Clone, Debug)]
-enum AnnoState {
+pub enum AnnoState {
     BoxStart,
     BoxEnd,
     KeyPoint(usize),
@@ -49,9 +50,10 @@ pub struct Canvas {
 
     mouse_pos: Vector2<f32>,
     annos: Vec<Annotation>,
-    anno_state: AnnoState,
+    pub anno_state: AnnoState,
 
     pub current_class: i32,
+    pub current_file_string: String,
 }
 
 const SQUARE: [f32; 8] = [
@@ -94,11 +96,23 @@ impl Canvas {
             image_mesh,
             texture: load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap(),
             current_class: 0,
+            current_file_string: String::new(),
         }
     }
 
     pub fn handle_event(&mut self, event: &sdl2::event::Event) {
         match event {
+            sdl2::event::Event::DropFile {
+                timestamp: _,
+                window_id: _,
+                filename,
+            } => {
+                if filename.ends_with(".png") {
+                    let mut dim = (0, 0);
+                    self.texture = load_texture_from_path_dimout(&filename, &mut dim).unwrap();
+                    self.current_file_string = filename.clone();
+                }
+            }
             sdl2::event::Event::MouseButtonDown { x, y, .. } => {
                 if *x > self.canvas_size[0] {
                     return;
@@ -216,6 +230,41 @@ impl Canvas {
         }
     }
 
+    pub fn build_ui(&mut self, ui: &Ui) {
+        ui.indent();
+        ui.separator();
+        let mut delete = None;
+        for (i, anno) in self.annos.iter_mut().enumerate() {
+            let _id = ui.push_id(i as i32);
+            if ui.button("delete") {
+                delete = Some(i);
+            }
+
+            let mut v: [f32; 2] = anno.bbox.0.into();
+            ui.input_float2("bbox1", v.borrow_mut()).build();
+            anno.bbox.0 = v.into();
+
+            let mut v: [f32; 2] = anno.bbox.1.into();
+            ui.input_float2("bbox2", v.borrow_mut()).build();
+            anno.bbox.1 = v.into();
+
+            for (ii, kp) in anno.keyp.iter_mut().enumerate() {
+                let _iid = ui.push_id(ii as i32);
+                let mut v: [f32; 2] = (*kp).into();
+                ui.input_float2("keyp", &mut v).build();
+                *kp = v.into();
+            }
+            ui.separator();
+        }
+
+        if let Some(d) = delete {
+            println!("remove {}", d);
+            self.annos.remove(d);
+        }
+
+        ui.unindent();
+    }
+
     pub fn draw(&mut self) {
         let proj = cgmath::ortho(
             0.0,
@@ -242,16 +291,61 @@ impl Canvas {
             d.draw_point_array();
         });
 
-        // self.canvas_image_shader.use_program();
-        // self.canvas_image_shader.set_proj(proj);
-        // self.image_mesh.bind_vertex_array();
+        self.canvas_image_shader.use_program();
+        self.canvas_image_shader.set_proj(proj);
+        self.image_mesh.bind_vertex_array();
 
-        // unsafe {
-        //     gl::ActiveTexture(gl::TEXTURE0 + 0);
-        //     self.texture.bind();
-        // }
+        unsafe {
+            gl::ActiveTexture(gl::TEXTURE0 + 0);
+            self.texture.bind();
+        }
 
-        // self.canvas_image_shader.set_image1(0);
-        // self.image_mesh.draw_triangle_elements();
+        self.canvas_image_shader.set_image1(0);
+        self.image_mesh.draw_triangle_elements();
+    }
+
+    pub fn export(&self) {
+        let canvas_dim = Vector2 {
+            x: self.canvas_size[0] as f32,
+            y: self.canvas_size[1] as f32,
+        };
+        let out_str = self
+            .annos
+            .iter()
+            .map(|anno| {
+                let box_center = (anno.bbox.0 + anno.bbox.1) / 2.0;
+                let box_center = Vector2 {
+                    x: box_center.x / canvas_dim.x,
+                    y: box_center.y / canvas_dim.y,
+                };
+                let box_dim = anno.bbox.0 - anno.bbox.1;
+                let box_dim = Vector2 {
+                    x: box_dim.x.abs() / canvas_dim.x,
+                    y: box_dim.y.abs() / canvas_dim.y,
+                };
+
+                let kp = anno
+                    .keyp
+                    .iter()
+                    .map(|kp| format!("{} {} 2.0 ", kp.x / canvas_dim.x, kp.y / canvas_dim.y))
+                    .collect::<String>();
+
+                format!(
+                    "{} {} {} {} {} {}\n",
+                    anno.class, box_center.x, box_center.y, box_dim.x, box_dim.y, kp
+                )
+            })
+            .collect::<String>();
+
+        let txt_path = self.current_file_string.replace(".png", ".txt");
+
+        let file = std::fs::File::create(&txt_path);
+
+        match file {
+            Ok(mut f) => {
+                f.write_all(out_str.as_bytes()).unwrap();
+            }
+            Err(e) => println!("{}", e),
+        }
     }
 }
