@@ -228,7 +228,6 @@ impl BlackSheep {
                                 gl_wiregrid(wiregrid);
                             }
 
-
                             ColorPicker::new("color_picker", &mut t_color).build(ui);
                             Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
                         });

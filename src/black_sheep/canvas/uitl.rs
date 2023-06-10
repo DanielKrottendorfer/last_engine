@@ -35,7 +35,7 @@ impl Canvas {
         );
         self.l_colors.extend(
             [Vector3 {
-                x: 0.0,
+                x: 1.0,
                 y: 1.0,
                 z: 1.0,
             }; 4],

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-pub const UPS: u64 = 25;
+pub const UPS: u64 = 60;
 pub const UPS_F32: f32 = UPS as f32;
 pub const DT: f32 = 1.0 / UPS_F32;
 pub const DT_D: Duration = Duration::from_micros(1000000 / UPS);

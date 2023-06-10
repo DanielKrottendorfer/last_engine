@@ -7,7 +7,7 @@ use super::{
     rendering::{
         self,
         geometry::mesh::Mesh,
-        loader::{load_texture_from_path, load_texture_from_path_dimout},
+        loader::{load_texture_from_path},
         shader::shader_structs::{CanvasImageShader, SimpleShaderProgram},
         Texture,
     },
@@ -110,8 +110,7 @@ impl Canvas {
                 filename,
             } => {
                 if filename.ends_with(".png") {
-                    let mut dim = (0, 0);
-                    self.texture = load_texture_from_path_dimout(&filename, &mut dim).unwrap();
+                    self.texture = load_texture_from_path(&filename).unwrap();
                     self.current_file_string = filename.clone();
                     self.reset();
                 }
@@ -221,7 +220,7 @@ impl Canvas {
             self.dots.extend(a.keyp);
             self.add_square(a.bbox.0, a.bbox.1);
             self.l_colors.extend([color; 8]);
-            self.d_colors.extend([Vector3::unit_x(),Vector3::unit_z()]);
+            self.d_colors.extend([Vector3::unit_x(), Vector3::unit_z()]);
         }
 
         if self.lines.len() > 0 {
@@ -341,7 +340,7 @@ impl Canvas {
     }
 
     pub fn export(&self) {
-        let canvas_dim = Vector2 {
+        let c_dim = Vector2 {
             x: self.canvas_size[0] as f32,
             y: self.canvas_size[1] as f32,
         };
@@ -351,19 +350,20 @@ impl Canvas {
             .map(|anno| {
                 let box_center = (anno.bbox.0 + anno.bbox.1) / 2.0;
                 let box_center = Vector2 {
-                    x: box_center.x / canvas_dim.x,
-                    y: box_center.y / canvas_dim.y,
+                    x: box_center.x / c_dim.x,
+                    y: box_center.y / c_dim.y,
                 };
+
                 let box_dim = anno.bbox.0 - anno.bbox.1;
                 let box_dim = Vector2 {
-                    x: box_dim.x.abs() / canvas_dim.x,
-                    y: box_dim.y.abs() / canvas_dim.y,
+                    x: box_dim.x.abs() / c_dim.x,
+                    y: box_dim.y.abs() / c_dim.y,
                 };
 
                 let kp = anno
                     .keyp
                     .iter()
-                    .map(|kp| format!("{} {} 2.0 ", kp.x / canvas_dim.x, kp.y / canvas_dim.y))
+                    .map(|kp| format!("{} {} 2.0 ", kp.x / c_dim.x, kp.y / c_dim.y))
                     .collect::<String>();
 
                 format!(
@@ -374,7 +374,6 @@ impl Canvas {
             .collect::<String>();
 
         let txt_path = self.current_file_string.replace(".png", ".txt");
-
         let file = std::fs::File::create(&txt_path);
 
         match file {
