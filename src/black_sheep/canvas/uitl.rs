@@ -1,6 +1,6 @@
 use cgmath::{Vector2, Vector3};
 
-use super::Canvas;
+use super::{Annotation, Canvas};
 
 impl Canvas {
     fn add_line(&mut self, start: Vector2<f32>, end: Vector2<f32>) {
@@ -72,4 +72,17 @@ impl Canvas {
             },
         );
     }
+}
+
+pub fn rotate_anno90(anno: &mut Annotation) {
+    let m = cgmath::Matrix2::<f32>::from_angle(cgmath::Deg(90.0));
+    anno.bbox.0 = Vector2::new(640.0, 0.0) + m * anno.bbox.0;
+    anno.bbox.1 = Vector2::new(640.0, 0.0) + m * anno.bbox.1;
+
+    println!("{:?}", m * anno.bbox.0);
+    println!("{:?}", m * anno.bbox.1);
+
+    anno.keyp.iter_mut().for_each(|kp| {
+        *kp = Vector2::new(640.0, 0.0) + m * *kp;
+    });
 }

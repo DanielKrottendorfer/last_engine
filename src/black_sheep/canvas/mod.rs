@@ -1,13 +1,19 @@
 use std::{borrow::BorrowMut, io::Write};
 
 use cgmath::{Vector2, Vector3, Zero};
+use image::DynamicImage;
 use imgui::Ui;
+use rand::Rng;
+
+use crate::black_sheep::rendering::loader::load_texture_from_dy_image;
+
+use self::uitl::rotate_anno90;
 
 use super::{
     rendering::{
         self,
         geometry::mesh::Mesh,
-        loader::{load_texture_from_path},
+        loader::load_texture_from_path,
         shader::shader_structs::{CanvasImageShader, SimpleShaderProgram},
         Texture,
     },
@@ -19,7 +25,7 @@ const KEY_P: usize = 2;
 mod uitl;
 
 #[derive(Clone, Copy, Debug)]
-struct Annotation {
+pub struct Annotation {
     class: i32,
     bbox: (Vector2<f32>, Vector2<f32>),
     keyp: [Vector2<f32>; KEY_P],
@@ -55,6 +61,7 @@ pub struct Canvas {
 
     pub current_class: i32,
     pub current_file_string: String,
+    pub current_image: Option<DynamicImage>,
 }
 
 const SQUARE: [f32; 8] = [
@@ -99,6 +106,7 @@ impl Canvas {
             texture: load_texture_from_path("./res/aP3DgOB_460swp.png").unwrap(),
             current_class: 0,
             current_file_string: String::new(),
+            current_image: None,
         }
     }
 
@@ -109,10 +117,20 @@ impl Canvas {
                 window_id: _,
                 filename,
             } => {
-                if filename.ends_with(".png") {
-                    self.texture = load_texture_from_path(&filename).unwrap();
+                if filename.ends_with(".png") || filename.ends_with(".jpg") {
+                    use image::io::Reader as ImageReader;
+
+                    let im = match ImageReader::open(filename) {
+                        Ok(im) => {
+                            let im = im.decode().unwrap();
+                            self.current_image = Some(im.clone());
+                            im.flipv()
+                        }
+                        Err(_) => return,
+                    };
+
+                    self.texture = load_texture_from_dy_image(&im).unwrap();
                     self.current_file_string = filename.clone();
-                    self.reset();
                 }
             }
             sdl2::event::Event::MouseButtonDown { x, y, .. } => {
@@ -339,42 +357,103 @@ impl Canvas {
         self.current_class = 0;
     }
 
-    pub fn export(&self) {
+    pub fn export(&self) -> Option<()> {
+        let path = self.current_file_string.clone();
+
+        let dir = path.split_at(path.rfind("\\")?).0;
+
+        let mut rng = rand::thread_rng();
+        let r = rng.gen_range(0..100_000_000);
+
+        std::fs::create_dir(format!("{}\\images", dir))
+            .err()
+            .map(|e| println!("{}", e));
+        std::fs::create_dir(format!("{}\\labels", dir))
+            .err()
+            .map(|e| println!("{}", e));
+
+        let img_path = format!("{}\\images\\{:0>8}", dir, r);
+        let ano_path = format!("{}\\labels\\{:0>8}", dir, r);
+
+        self.export_anno(&ano_path)?;
+        self.export_image(&img_path)?;
+
+        Some(())
+    }
+
+    fn export_image(&self, path: &String) -> Option<()> {
+        let im =
+            self.current_image
+                .as_ref()?
+                .resize(640, 640, image::imageops::FilterType::CatmullRom);
+        match im.save(format!("{}_000.png", path)) {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        };
+
+        let im = im.rotate90();
+        match im.save(format!("{}_090.png", path)) {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        };
+
+        let im = im.rotate90();
+        match im.save(format!("{}_180.png", path)) {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        };
+
+        let im = im.rotate90();
+        match im.save(format!("{}_270.png", path)) {
+            Ok(_) => (),
+            Err(e) => println!("{}", e),
+        };
+
+        Some(())
+    }
+
+    fn export_anno(&self, path: &String) -> Option<()> {
         let c_dim = Vector2 {
             x: self.canvas_size[0] as f32,
             y: self.canvas_size[1] as f32,
         };
-        let out_str = self
-            .annos
-            .iter()
-            .map(|anno| {
-                let box_center = (anno.bbox.0 + anno.bbox.1) / 2.0;
-                let box_center = Vector2 {
-                    x: box_center.x / c_dim.x,
-                    y: box_center.y / c_dim.y,
-                };
 
-                let box_dim = anno.bbox.0 - anno.bbox.1;
-                let box_dim = Vector2 {
-                    x: box_dim.x.abs() / c_dim.x,
-                    y: box_dim.y.abs() / c_dim.y,
-                };
+        let mut annos = self.annos.clone();
 
-                let kp = anno
-                    .keyp
-                    .iter()
-                    .map(|kp| format!("{} {} 2.0 ", kp.x / c_dim.x, kp.y / c_dim.y))
-                    .collect::<String>();
+        let get_out_str = |annos: &[Annotation]| {
+            annos
+                .iter()
+                .map(|anno| {
+                    let box_center = (anno.bbox.0 + anno.bbox.1) / 2.0;
+                    let box_center = Vector2 {
+                        x: box_center.x / c_dim.x,
+                        y: box_center.y / c_dim.y,
+                    };
 
-                format!(
-                    "{} {} {} {} {} {}\n",
-                    anno.class, box_center.x, box_center.y, box_dim.x, box_dim.y, kp
-                )
-            })
-            .collect::<String>();
+                    let box_dim = anno.bbox.0 - anno.bbox.1;
+                    let box_dim = Vector2 {
+                        x: box_dim.x.abs() / c_dim.x,
+                        y: box_dim.y.abs() / c_dim.y,
+                    };
 
-        let txt_path = self.current_file_string.replace(".png", ".txt");
-        let file = std::fs::File::create(&txt_path);
+                    let kp = anno
+                        .keyp
+                        .iter()
+                        .map(|kp| format!("{} {} 2.0 ", kp.x / c_dim.x, kp.y / c_dim.y))
+                        .collect::<String>();
+
+                    format!(
+                        "{} {} {} {} {} {}\n",
+                        anno.class, box_center.x, box_center.y, box_dim.x, box_dim.y, kp
+                    )
+                })
+                .collect::<String>()
+        };
+
+        let txt_path = format!("{}_000.txt", path);
+        let file = std::fs::File::create(txt_path);
+
+        let out_str = get_out_str(&annos);
 
         match file {
             Ok(mut f) => {
@@ -382,5 +461,43 @@ impl Canvas {
             }
             Err(e) => println!("{}", e),
         }
+
+        let txt_path = format!("{}_090.txt", path);
+        let file = std::fs::File::create(txt_path);
+
+        annos.iter_mut().for_each(|a| rotate_anno90(a));
+        let out_str = get_out_str(&annos);
+        match file {
+            Ok(mut f) => {
+                f.write_all(out_str.as_bytes()).unwrap();
+            }
+            Err(e) => println!("{}", e),
+        }
+
+        let txt_path = format!("{}_180.txt", path);
+        let file = std::fs::File::create(txt_path);
+
+        annos.iter_mut().for_each(|a| rotate_anno90(a));
+        let out_str = get_out_str(&annos);
+        match file {
+            Ok(mut f) => {
+                f.write_all(out_str.as_bytes()).unwrap();
+            }
+            Err(e) => println!("{}", e),
+        }
+
+        let txt_path = format!("{}_270.txt", path);
+        let file = std::fs::File::create(txt_path);
+
+        annos.iter_mut().for_each(|a| rotate_anno90(a));
+        let out_str = get_out_str(&annos);
+        match file {
+            Ok(mut f) => {
+                f.write_all(out_str.as_bytes()).unwrap();
+            }
+            Err(e) => println!("{}", e),
+        }
+
+        Some(())
     }
 }

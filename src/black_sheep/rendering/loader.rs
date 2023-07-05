@@ -1,3 +1,4 @@
+use image::DynamicImage;
 use imgui::FontAtlasTexture;
 
 use super::Texture;
@@ -9,8 +10,12 @@ pub fn load_texture_from_path(path: &str) -> Option<Texture> {
         Ok(im) => im.decode().unwrap().flipv(),
         Err(_) => return None,
     };
+    load_texture_from_dy_image(&im)
+}
 
-    let im = match im.flipv() {
+pub fn load_texture_from_dy_image(dy: &DynamicImage) -> Option<Texture> {
+
+    let im = match dy.flipv() {
         image::DynamicImage::ImageRgba8(img) => img,
         img => img.to_rgba8(),
     };
