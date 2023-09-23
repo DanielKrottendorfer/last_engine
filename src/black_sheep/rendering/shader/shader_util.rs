@@ -35,6 +35,9 @@ pub static SIMPLE_FS_SRC: &'static str = include_str!("./shader_res/simple/fs.gl
 pub static COLOR3D_VS_SRC: &'static str = include_str!("./shader_res/3D_color/Shading.vs.glsl");
 pub static COLOR3D_FS_SRC: &'static str = include_str!("./shader_res/3D_color/Shading.fs.glsl");
 
+pub static COLOR3DLIGHT_VS_SRC: &'static str = include_str!("./shader_res/3D_color_light/Shading.vs.glsl");
+pub static COLOR3DLIGHT_FS_SRC: &'static str = include_str!("./shader_res/3D_color_light/Shading.fs.glsl");
+
 pub static COLORED_TRIANGLES_VS_SRC: &'static str =
     include_str!("./shader_res/colored_triangles/vs.glsl");
 pub static COLORED_TRIANGLES_FS_SRC: &'static str =

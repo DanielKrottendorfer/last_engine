@@ -13,6 +13,7 @@ pub struct ShaderRepo {
     pub circle_point_cloud: CircleCloudGeometryShaderProgram,
     pub simple: SimpleShaderProgram,
     pub color_3d: Color3D,
+    pub color_3d_light: Color3DLight,
     pub gizmo: GizmoProgram,
     pub point_2d: Point2D,
     pub simple_2d: Simple2D,
@@ -96,6 +97,12 @@ impl ShaderRepo {
             color_3d.setup(&program);
         }
 
+        let mut color_3d_light = Color3DLight::new();
+        {
+            let program = build_shader_program(COLOR3DLIGHT_VS_SRC, None, COLOR3DLIGHT_FS_SRC);
+            color_3d_light.setup(&program);
+        }
+
         let mut gizmo = GizmoProgram::new();
         {
             let program = build_shader_program(GIZMO_VS, Some(GIZMO_GS), GIZMO_FS);
@@ -109,7 +116,7 @@ impl ShaderRepo {
         }
         let mut simple_2d = Simple2D::new();
         {
-            let program = build_shader_program(SIMPLE_2D_VS,None, SIMPLE_2D_FS);
+            let program = build_shader_program(SIMPLE_2D_VS, None, SIMPLE_2D_FS);
             simple_2d.setup(&program);
         }
 
@@ -130,6 +137,7 @@ impl ShaderRepo {
             point_2d,
             simple_2d,
             colored_triangles,
+            color_3d_light,
         }
     }
     fn cleanup(&mut self) {
@@ -138,6 +146,7 @@ impl ShaderRepo {
         self.circle_point_cloud.cleanup();
         self.simple.cleanup();
         self.color_3d.cleanup();
+        self.color_3d_light.cleanup();
         self.gizmo.cleanup();
         self.point_2d.cleanup();
         self.simple_2d.cleanup();

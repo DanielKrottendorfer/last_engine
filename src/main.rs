@@ -1,12 +1,12 @@
 #![feature(trait_alias)]
 
 use crate::black_sheep::{
-    gamestate::{camera::structs::FlyingEye},
-    rendering::geometry::{mesh::MeshToken, self},
+    gamestate::camera::structs::FlyingEye,
+    rendering::geometry::{mesh::MeshToken},
     settings::DT,
 };
 use black_sheep::{DrawFunction, UpdateFunction};
-use cgmath::{InnerSpace, Matrix4, Vector2, Zero, Vector3};
+use cgmath::{InnerSpace, Matrix4, Vector2, Vector3, Zero, vec3};
 
 mod black_sheep;
 mod gameplay;
@@ -63,21 +63,22 @@ fn main() {
 
         let mut calc_mat = ecs.get_calculate_mat_accessor();
 
-        let mut c_vec = Vec::new();
-        let mut simulate = ecs.get_simulate_accessor();
+        //let mut c_vec = Vec::new();
+        //let mut simulate = ecs.get_simulate_accessor();
 
         let _bb = black_sheep::setup::init_mesh().unwrap();
 
-        let (ape, torus, circles) = black_sheep::rendering::geometry::get_mesh_repo(|mr| {
+        let (ape, torus) = black_sheep::rendering::geometry::get_mesh_repo(|mr| {
             let ape = MeshToken::from(mr.get_mesh_by_name("ape").unwrap());
             let torus = MeshToken::from(mr.get_mesh_by_name("torus").unwrap());
-            let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
-            (ape, torus, circles)
+            //let circles = MeshToken::from(mr.get_mesh_by_name("circles").unwrap());
+            (ape, torus)
         });
 
         let rendering = black_sheep::rendering::shader::get_shader_repo();
 
         let three_d = rendering.color_3d;
+        let three_dl = rendering.color_3d_light;
         let _circles_2d = rendering.point_2d;
 
         let draw = move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
@@ -95,30 +96,33 @@ fn main() {
             let d_lock = draw_m.lock();
 
             ape.bind_vertex_array();
-            three_d.use_program();
+            three_dl.use_program();
+            three_dl.set_light_position(vec3(30.0, 30.0, 10.0));
+            three_dl.set_light_power(1000.0);
 
             for (m, c) in d_lock.iter() {
-                three_d.set_MVP(prj * view * m);
-                three_d.set_col(*c);
+                three_dl.set_MVP(prj * view * m);
+                three_dl.set_M(*m);
+                three_dl.set_col(*c);
                 ape.draw_triangle_elements();
-                //println!("draw ape");
             }
 
+            three_d.use_program();
             three_d.set_MVP(prj * view);
             three_d.set_col(Vector3::new(1.0, 0.0, 1.0));
 
             torus.bind_vertex_array();
             torus.draw_line_elements();
 
-            for c in simulate.lock().iter() {
-                c_vec.push(*c.0 + (*c.1 * DT * i));
-            }
-            geometry::get_mesh_repo(|mr| {
-                mr.get_mesh_by_uid(&circles.uid)
-                    .unwrap()
-                    .update_buffer(c_vec.as_slice(), 0);
-            });
-            c_vec.clear();
+            // for c in simulate.lock().iter() {
+            //     c_vec.push(*c.0 + (*c.1 * DT * i));
+            // }
+            // geometry::get_mesh_repo(|mr| {
+            //     mr.get_mesh_by_uid(&circles.uid)
+            //         .unwrap()
+            //         .update_buffer(c_vec.as_slice(), 0);
+            // });
+            // c_vec.clear();
 
             // circles_2d.use_program();
             // let ortho = cgmath::ortho(-8.0, 8.0, -8.0, 8.0, -1.0, 1.0);

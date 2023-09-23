@@ -38,6 +38,16 @@ shader_program!(
 );
 
 shader_program!(
+    Color3DLight{
+        uniform mat4 MVP;
+        uniform mat4 M;
+        uniform vec3 col;
+        uniform vec3 light_position;
+        uniform float light_power;
+    }
+);
+
+shader_program!(
     GizmoProgram{
         uniform mat4 view;
     }

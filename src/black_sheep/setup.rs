@@ -60,6 +60,10 @@ pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
                     let p = iter.collect_vec();
                     m.add_floatbuffer(p.as_slice(), 0, 3);
                 }
+                if let Some(iter) = reader.read_normals() {
+                    let p = iter.collect_vec();
+                    m.add_floatbuffer(p.as_slice(), 1, 3);
+                }
                 if let Some(iter) = reader.read_indices() {
                     let e = iter.into_u32().collect_vec();
                     m.add_elementarraybuffer(e.as_slice());
@@ -72,7 +76,6 @@ pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
             m.add_elementarraybuffer(e.as_slice());
         });
         let _circles = mesh_repo.add_mesh("circles", |m| {
-
             let mut positions = Vec::new();
             let mut rads = Vec::new();
             let mut colors = Vec::new();
@@ -81,19 +84,23 @@ pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
             let mut rng = rand::thread_rng();
 
             let mut e = 0;
-            for i in 0..1 { 
-                for y in 0..1{
-                    positions.push(Vector2::new(i as f32 + 5.0 ,y as f32 + 1.0));
+            for i in 0..1 {
+                for y in 0..1 {
+                    positions.push(Vector2::new(i as f32 + 5.0, y as f32 + 1.0));
                     rads.push(0.5 as f32);
-                    colors.push(Vector3::new(rng.gen_range(0.0..1.0 as f32),rng.gen_range(0.0..1.0),rng.gen_range(0.0..1.0)));
+                    colors.push(Vector3::new(
+                        rng.gen_range(0.0..1.0 as f32),
+                        rng.gen_range(0.0..1.0),
+                        rng.gen_range(0.0..1.0),
+                    ));
                     elements.push(e);
-                    e+=1;
+                    e += 1;
                 }
             }
 
-            m.add_dynamic_floatbuffer(positions.as_slice(),0,2);
-            m.add_floatbuffer(colors.as_slice(),1,3);
-            m.add_floatbuffer(rads.as_slice(),2,1);
+            m.add_dynamic_floatbuffer(positions.as_slice(), 0, 2);
+            m.add_floatbuffer(colors.as_slice(), 1, 3);
+            m.add_floatbuffer(rads.as_slice(), 2, 1);
             m.add_elementarraybuffer(elements.as_slice());
         });
     });

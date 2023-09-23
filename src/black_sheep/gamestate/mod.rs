@@ -9,29 +9,22 @@ use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
-
 use super::settings::*;
-
 
 //pub auto trait UpdateFunction : FnMut(InputFlags){}
 // pub auto trait DrawFunction : FnMut(f32, &FlyingEye, &Matrix4<f32>);
 
-
-pub struct GameState
-{
+pub struct GameState {
     pub input_flags: InputFlags,
     pub window_size_f32: [f32; 2],
     pub window_size_i32: [i32; 2],
     pub ui_projection: Matrix4<f32>,
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
-
 }
 
-impl GameState
-{
-    pub fn new() -> Self
-    {
+impl GameState {
+    pub fn new() -> Self {
         let ui_projection = cgmath::ortho(
             0.0,
             INIT_WINDOW_SIZE_F32[0],
@@ -45,7 +38,6 @@ impl GameState
         let mut cam = FlyingEye::new();
         cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
         cam.rotate_h(Deg(65.0));
-
 
         GameState {
             input_flags: InputFlags::NONE,
@@ -66,7 +58,6 @@ impl GameState
             self.cam.reset_movement();
         }
     }
-
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
         let _v = Vector2::new(x as f32, y as f32);

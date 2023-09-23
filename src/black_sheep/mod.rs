@@ -4,6 +4,7 @@ pub mod window;
 mod algorithms;
 #[allow(dead_code)]
 mod constants;
+pub mod ecs;
 pub mod gamestate;
 mod generators;
 mod imgui_system;
@@ -12,14 +13,13 @@ mod q_i_square_root;
 mod script;
 pub mod settings;
 pub mod setup;
-pub mod ecs;
 mod torus;
 mod transform;
 
 mod gl_debug;
 
+use cgmath::Matrix4;
 use cgmath::{Deg, Vector2};
-use cgmath::{Matrix4};
 use gamestate::*;
 
 use imgui::{ColorPicker, Condition, Image, TextureId, Window};
@@ -70,7 +70,7 @@ impl<U: UpdateFunction, D: DrawFunction> Drop for BlackSheep<U, D> {
     }
 }
 
-pub fn run<U, D,FL>(mut f_logic: FL )
+pub fn run<U, D, FL>(mut f_logic: FL)
 where
     U: UpdateFunction,
     D: DrawFunction,
@@ -171,7 +171,7 @@ where
     }
 
     pub fn run(mut self) {
-        let (imgui_shader_program, gizmo_shader,_three_d) = {
+        let (imgui_shader_program, gizmo_shader, _three_d) = {
             let shader_repo = rendering::shader::get_shader_repo();
             (shader_repo.imgui, shader_repo.gizmo, shader_repo.color_3d)
         };
@@ -247,7 +247,7 @@ where
                 //HANDLE INPUT
 
                 game_state.update();
-                
+
                 (self.logic.update)(game_state.input_flags);
             }
 
@@ -264,7 +264,6 @@ where
             let i = loop_timer.get_iv();
 
             let view = game_state.cam.get_i_view(i);
-
 
             rt_gizmo.bind_framebuffer();
             three_d_rendering_setup();
@@ -288,7 +287,7 @@ where
             clear_drawbuffer();
 
             (self.logic.draw)(i, &game_state.cam, &game_state.world_projection);
-            
+
             set_viewport(game_state.window_size_i32[0], game_state.window_size_i32[1]);
             imgui_rendering_setup();
 
