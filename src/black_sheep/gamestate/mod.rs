@@ -2,20 +2,22 @@ pub mod input_flags;
 
 pub mod camera;
 
-pub mod ecs;
 mod job;
 
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 
-use self::{camera::structs::FlyingEye, ecs::CHAINED_ECS, input_flags::InputFlags};
+use self::{camera::structs::FlyingEye, input_flags::InputFlags};
 use crate::black_sheep::q_i_square_root::q_normalize;
+
 
 use super::settings::*;
 
-pub struct GameState<U, D>
-where
-    U: FnMut(InputFlags),
-    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+
+//pub auto trait UpdateFunction : FnMut(InputFlags){}
+// pub auto trait DrawFunction : FnMut(f32, &FlyingEye, &Matrix4<f32>);
+
+
+pub struct GameState
 {
     pub input_flags: InputFlags,
     pub window_size_f32: [f32; 2],
@@ -24,21 +26,11 @@ where
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
 
-    pub ecs: ecs::CHAINED_ECS,
-
-    update: U,
-    draw: D,
 }
 
-impl<U, D> GameState<U, D>
-where
-    U: FnMut(InputFlags),
-    D: FnMut(f32, &FlyingEye, &Matrix4<f32>),
+impl GameState
 {
-    pub fn new<CU, CD>(create_update: CU, create_draw: CD) -> Self
-    where
-        CU: FnOnce(&mut CHAINED_ECS) -> U,
-        CD: FnOnce(&mut CHAINED_ECS) -> D,
+    pub fn new() -> Self
     {
         let ui_projection = cgmath::ortho(
             0.0,
@@ -54,10 +46,7 @@ where
         cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
         cam.rotate_h(Deg(65.0));
 
-        let mut ecs = ecs::CHAINED_ECS::new();
 
-        let update = create_update(&mut ecs);
-        let draw = create_draw(&mut ecs);
         GameState {
             input_flags: InputFlags::NONE,
             window_size_f32: INIT_WINDOW_SIZE_F32,
@@ -65,9 +54,6 @@ where
             ui_projection,
             world_projection,
             cam,
-            ecs,
-            update,
-            draw,
         }
     }
 
@@ -79,13 +65,8 @@ where
         } else {
             self.cam.reset_movement();
         }
-
-        (self.update)(self.input_flags);
     }
 
-    pub fn draw(&mut self, i: f32) {
-        (self.draw)(i, &self.cam, &self.world_projection)
-    }
 
     pub fn on_mouse_motion(&mut self, xrel: i32, yrel: i32, x: i32, y: i32) {
         let _v = Vector2::new(x as f32, y as f32);

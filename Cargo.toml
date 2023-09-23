@@ -24,6 +24,8 @@ shader_macro = {git = "https://github.com/DanielKrottendorfer/gl_shader_macro.gi
 chained_component_system = {git = "https://github.com/DanielKrottendorfer/chained_component_system.git", branch = "release1"}
 
 [features]
+
 vsync_off = []
 debug_off = []
 fps_off = []
+gl_debug = []

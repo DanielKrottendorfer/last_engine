@@ -1,11 +1,11 @@
-use cgmath::*;
+use cgmath::{*, num_traits::Pow};
 
-use crate::black_sheep::rendering::geometry;
+use crate::black_sheep::{ecs::*};
 
-use super::{
-    gamestate::ecs::{CircleAccessor, PositionsAccessor, CHAINED_ECS},
-    torus::torus_r,
-};
+#[inline]
+pub fn torus_r(v: Vector3<f32>, r_mj: f32) -> f32 {
+    f32::sqrt((r_mj - f32::sqrt(v.x.pow(2) + v.z.pow(2))).pow(2) + v.y.pow(2))
+}
 
 pub fn run_ape_ai(circle: &mut CircleAccessor, positions: &PositionsAccessor) {
     let mut c_l = circle.lock();
