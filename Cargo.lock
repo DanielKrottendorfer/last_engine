@@ -1075,7 +1075,7 @@ dependencies = [
 [[package]]
 name = "shader_macro"
 version = "0.1.0"
-source = "git+https://github.com/DanielKrottendorfer/gl_shader_macro.git#76da3ebfd9b492eecf859afdaf55b423cc5dbe22"
+source = "git+https://github.com/DanielKrottendorfer/gl_shader_macro.git#df4f9cb469d46f9f4dc5529ffeeb75b02cdc5a4c"
 dependencies = [
  "cgmath 0.17.0",
  "proc-macro2",

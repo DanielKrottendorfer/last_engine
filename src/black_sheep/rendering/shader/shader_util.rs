@@ -38,6 +38,9 @@ pub static COLOR3D_FS_SRC: &'static str = include_str!("./shader_res/3D_color/Sh
 pub static COLOR3DLIGHT_VS_SRC: &'static str = include_str!("./shader_res/3D_color_light/Shading.vs.glsl");
 pub static COLOR3DLIGHT_FS_SRC: &'static str = include_str!("./shader_res/3D_color_light/Shading.fs.glsl");
 
+pub static SPRITE_VS_SRC: &'static str = include_str!("./shader_res/sprite/sprite.vs.glsl");
+pub static SPRITE_FS_SRC: &'static str = include_str!("./shader_res/sprite/sprite.fs.glsl");
+
 pub static COLORED_TRIANGLES_VS_SRC: &'static str =
     include_str!("./shader_res/colored_triangles/vs.glsl");
 pub static COLORED_TRIANGLES_FS_SRC: &'static str =

@@ -6,7 +6,7 @@ use crate::black_sheep::{constants::*, generators::squares::*, generators::*};
 
 use super::{
     generators,
-    rendering::geometry::{self},
+    rendering::geometry::{self}, constants,
 };
 
 pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
@@ -102,6 +102,11 @@ pub fn init_mesh() -> Option<(Vector3<f32>, Vector3<f32>)> {
             m.add_floatbuffer(colors.as_slice(), 1, 3);
             m.add_floatbuffer(rads.as_slice(), 2, 1);
             m.add_elementarraybuffer(elements.as_slice());
+        });
+        let _circles = mesh_repo.add_mesh("sprite", |m| {
+            m.add_floatbuffer(&constants::SPRITE_SQUARE, 0, 3);
+            m.add_floatbuffer(&constants::SPRITE_UV, 1, 2);
+            m.add_elementarraybuffer(&constants::SPRITE_ELEMENTS);
         });
     });
     bb

@@ -1,4 +1,4 @@
-use cgmath::{Matrix4, Vector3};
+use cgmath::{Matrix4, Vector3,Vector2};
 use shader_macro::shader_program;
 
 use std::ffi::CString;
@@ -67,5 +67,16 @@ shader_program!(
 shader_program!(
     ColoredTriangles{
         uniform mat4 projection;
+    }
+);
+
+shader_program!(
+    Sprite{
+        uniform int myTextureSampler;
+        uniform vec3 CameraRight_worldspace;
+        uniform vec3 CameraUp_worldspace;
+        uniform mat4 VP; 
+        uniform vec3 BillboardPos; 
+        uniform vec2 BillboardSize; 
     }
 );

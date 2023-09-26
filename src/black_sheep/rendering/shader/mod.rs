@@ -18,6 +18,7 @@ pub struct ShaderRepo {
     pub point_2d: Point2D,
     pub simple_2d: Simple2D,
     pub colored_triangles: ColoredTriangles,
+    pub sprite: Sprite,
 }
 
 lazy_static! {
@@ -127,6 +128,12 @@ impl ShaderRepo {
             colored_triangles.setup(&program);
         }
 
+        let mut sprite = Sprite::new();
+        {
+            let program = build_shader_program(SPRITE_VS_SRC, None, SPRITE_FS_SRC);
+            sprite.setup(&program);
+        }
+
         ShaderRepo {
             imgui,
             point_cloud,
@@ -138,6 +145,7 @@ impl ShaderRepo {
             simple_2d,
             colored_triangles,
             color_3d_light,
+            sprite,
         }
     }
     fn cleanup(&mut self) {

@@ -16,5 +16,5 @@ void main(){
 	vec3 dir = dir_/dist;
 	float f = dot(dir,world_nor.xyz) *light_power * (1/pow(dist,2));
 
-	out_color = vec4(col * f,1.0);
+	out_color = vec4(col * max(0,f),1.0);
 }

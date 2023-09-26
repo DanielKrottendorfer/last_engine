@@ -1,62 +1,58 @@
-use cgmath::{Vector2, Vector3};
+use cgmath::{vec2, vec3, Vector2, Vector3};
 
 pub const SQUARE: [Vector3<f32>; 6] = [
-    Vector3::new(-1.0, -1.0, 0.0),
-    Vector3::new(1.0, -1.0, 0.0),
-    Vector3::new(1.0, 1.0, 0.0),
-    Vector3::new(-1.0, -1.0, 0.0),
-    Vector3::new(-1.0, 1.0, 0.0),
-    Vector3::new(1.0, 1.0, 0.0),
+    vec3(-1.0, -1.0, 0.0),
+    vec3(1.0, -1.0, 0.0),
+    vec3(1.0, 1.0, 0.0),
+    vec3(-1.0, -1.0, 0.0),
+    vec3(-1.0, 1.0, 0.0),
+    vec3(1.0, 1.0, 0.0),
 ];
 pub const UVS: [Vector2<f32>; 6] = [
-    Vector2::new(0.0, 0.0),
-    Vector2::new(1.0, 0.0),
-    Vector2::new(1.0, 1.0),
-    Vector2::new(0.0, 0.0),
-    Vector2::new(0.0, 1.0),
-    Vector2::new(1.0, 1.0),
+    vec2(0.0, 0.0),
+    vec2(1.0, 0.0),
+    vec2(1.0, 1.0),
+    vec2(0.0, 0.0),
+    vec2(0.0, 1.0),
+    vec2(1.0, 1.0),
 ];
 pub const SQUARE_NORM: [Vector3<f32>; 6] = [
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(0.0, 0.0, 1.0),
 ];
 pub const ELEMENTS: [u32; 6] = [0, 1, 2, 3, 4, 5];
 
-pub const SIMPLE_TRIANGL: [Vector2<f32>; 3] = [
-    Vector2::new(-1.0, 1.0),
-    Vector2::new(-1.0, 0.5),
-    Vector2::new(-0.5, 1.0),
-];
+pub const SIMPLE_TRIANGL: [Vector2<f32>; 3] = [vec2(-1.0, 1.0), vec2(-1.0, 0.5), vec2(-0.5, 1.0)];
 pub const SIMPLE_TRIANGL_COLORS: [Vector3<f32>; 3] = [
-    Vector3::new(1.0, 0.0, 0.0),
-    Vector3::new(1.0, 0.0, 1.0),
-    Vector3::new(1.0, 1.0, 1.0),
+    vec3(1.0, 0.0, 0.0),
+    vec3(1.0, 0.0, 1.0),
+    vec3(1.0, 1.0, 1.0),
 ];
 pub const TRIANGLE_ELEMENTS: [u32; 3] = [0, 1, 2];
 
 pub const CUBE: [Vector3<f32>; 8] = [
-    Vector3::new(0.0, 0.0, 0.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(1.0, 0.0, 1.0),
-    Vector3::new(1.0, 0.0, 0.0),
-    Vector3::new(0.0, 1.0, 0.0),
-    Vector3::new(0.0, 1.0, 1.0),
-    Vector3::new(1.0, 1.0, 1.0),
-    Vector3::new(1.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 0.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(1.0, 0.0, 1.0),
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 1.0, 1.0),
+    vec3(1.0, 1.0, 1.0),
+    vec3(1.0, 1.0, 0.0),
 ];
 pub const CUBE_COLOR: [Vector3<f32>; 8] = [
-    Vector3::new(0.0, 0.0, 0.0),
-    Vector3::new(0.0, 0.0, 1.0),
-    Vector3::new(1.0, 0.0, 1.0),
-    Vector3::new(1.0, 0.0, 0.0),
-    Vector3::new(0.0, 1.0, 0.0),
-    Vector3::new(0.0, 1.0, 1.0),
-    Vector3::new(1.0, 1.0, 1.0),
-    Vector3::new(1.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 0.0),
+    vec3(0.0, 0.0, 1.0),
+    vec3(1.0, 0.0, 1.0),
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 1.0, 1.0),
+    vec3(1.0, 1.0, 1.0),
+    vec3(1.0, 1.0, 0.0),
 ];
 pub const CUBE_ELEMENTS: [u32; 36] = [
     0, 1, 2, 0, 2, 3, //BOT
@@ -68,8 +64,24 @@ pub const CUBE_ELEMENTS: [u32; 36] = [
 ];
 
 pub const GIZMO_VECS: [Vector3<f32>; 3] = [
-    Vector3::new(1.0, 0.0, 0.0),
-    Vector3::new(0.0, 1.0, 0.0),
-    Vector3::new(0.0, 0.0, 1.0),
+    vec3(1.0, 0.0, 0.0),
+    vec3(0.0, 1.0, 0.0),
+    vec3(0.0, 0.0, 1.0),
 ];
 pub const GITMO_ELEMENTS: [u32; 3] = [0, 1, 2];
+
+pub const SPRITE_SQUARE: [Vector3<f32>; 4] = [
+    vec3(-0.5, -0.5, 0.0),
+    vec3(0.5, -0.5, 0.0),
+    vec3(-0.5, 0.5, 0.0),
+    vec3(0.5, 0.5, 0.0),
+];
+
+pub const SPRITE_UV: [Vector2<f32>; 4] = [
+    vec2(0.0, 1.0),
+    vec2(1.0, 1.0),
+    vec2(0.0, 0.0),
+    vec2(1.0, 0.0),
+];
+
+pub const SPRITE_ELEMENTS: [u32; 6] = [0, 1, 2, 1, 3, 2];
