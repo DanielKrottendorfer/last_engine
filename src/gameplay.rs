@@ -119,9 +119,6 @@ pub fn gen_apes(ecs: &mut CHAINED_ECS) {
 
     let mut rng = thread_rng();
 
-    let mut center = Vec::new();
-    let mut ups = Vec::new();
-
     for i in 0..3 {
         for y in 0..3 {
             let c = [i as f32, 0.0, y as f32].into();
@@ -135,8 +132,6 @@ pub fn gen_apes(ecs: &mut CHAINED_ECS) {
                 Vector3::new(1.0, 1.0, 1.0),
                 cgmath::SquareMatrix::identity(),
             );
-            center.push(c);
-            ups.push(u);
         }
     }
 }
