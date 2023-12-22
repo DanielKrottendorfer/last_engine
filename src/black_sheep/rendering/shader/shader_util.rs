@@ -32,6 +32,9 @@ pub static IMGUI_VS_SRC: &'static str = include_str!("./shader_res/imgui/glsl_40
 pub static SIMPLE_VS_SRC: &'static str = include_str!("./shader_res/simple/vs.glsl");
 pub static SIMPLE_FS_SRC: &'static str = include_str!("./shader_res/simple/fs.glsl");
 
+pub static DOUBLE_VS_SRC: &'static str = include_str!("./shader_res/double_sphere/vs.glsl");
+pub static DOUBLE_FS_SRC: &'static str = include_str!("./shader_res/double_sphere/fs.glsl");
+
 pub static COLOR3D_VS_SRC: &'static str = include_str!("./shader_res/3D_color/Shading.vs.glsl");
 pub static COLOR3D_FS_SRC: &'static str = include_str!("./shader_res/3D_color/Shading.fs.glsl");
 

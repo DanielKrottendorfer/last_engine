@@ -180,8 +180,6 @@ where
 
         let mut imgui_system = imgui_system::init();
 
-        let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
-        rendertarget::unbind_framebuffer();
 
         let font_texture = imgui_system.load_font_atlas_texture();
         let nice_image = load_texture_from_path("./res/1322615842122.jpg").unwrap();
@@ -257,24 +255,12 @@ where
                 font_texture.bind();
                 gl::ActiveTexture(gl::TEXTURE0 + 1);
                 nice_image.bind();
-                gl::ActiveTexture(gl::TEXTURE0 + 2);
-                rt_gizmo.bind_texture();
             }
 
             let i = loop_timer.get_iv();
 
             let view = game_state.cam.get_i_view(i);
 
-            rt_gizmo.bind_framebuffer();
-            three_d_rendering_setup();
-            clear_color(0.1, 0.1, 0.1, 1.0);
-            clear_drawbuffer();
-            set_viewport(300, 300);
-            gizmo_shader.use_program();
-            gizmo_shader.set_view(view);
-            gizmo.bind_vertex_array();
-            gizmo.draw_point_elements();
-            rendertarget::unbind_framebuffer();
 
             set_viewport(
                 game_state.window_size_i32[0] - 300,

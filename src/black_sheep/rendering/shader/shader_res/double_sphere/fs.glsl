@@ -1,11 +1,19 @@
 #version 450
 
-out layout (location = 0) vec4 out_color;
+uniform vec3 col;
+uniform vec3 light_position;
+uniform float light_power;
 
-in vec4 c2;
+in vec4 world_pos;
+in vec4 world_nor;
 
-void main()
-{
-    out_color = c2;
-    out_color.w = 1.0;
-}  
+out vec4 out_color;
+
+void main(){
+	vec3 dir_ = light_position-world_pos.xyz;
+	float dist = length(dir_);
+	vec3 dir = dir_/dist;
+	float f = dot(dir,world_nor.xyz) *light_power * (1/pow(dist,2));
+
+	out_color = vec4(col * max(0,f),1.0);
+}

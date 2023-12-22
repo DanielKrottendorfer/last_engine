@@ -19,6 +19,7 @@ pub struct ShaderRepo {
     pub simple_2d: Simple2D,
     pub colored_triangles: ColoredTriangles,
     pub sprite: Sprite,
+    pub double_sphere: DoubleSphere
 }
 
 lazy_static! {
@@ -134,6 +135,12 @@ impl ShaderRepo {
             sprite.setup(&program);
         }
 
+        let mut double_sphere = DoubleSphere::new();
+        {
+            let program = build_shader_program(DOUBLE_VS_SRC, None, DOUBLE_FS_SRC);
+            double_sphere.setup(&program);
+        }
+
         ShaderRepo {
             imgui,
             point_cloud,
@@ -146,6 +153,7 @@ impl ShaderRepo {
             colored_triangles,
             color_3d_light,
             sprite,
+            double_sphere
         }
     }
     fn cleanup(&mut self) {
@@ -159,5 +167,6 @@ impl ShaderRepo {
         self.point_2d.cleanup();
         self.simple_2d.cleanup();
         self.colored_triangles.cleanup();
+        self.double_sphere.cleanup();
     }
 }

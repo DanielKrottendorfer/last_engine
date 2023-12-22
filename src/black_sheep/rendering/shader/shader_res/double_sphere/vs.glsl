@@ -1,16 +1,31 @@
 #version 450
 
-layout (location = 0) in vec3 position;
+vec3 project(vec3 v) {
+    float fx = 565.0;
+    float fy = 565.0;
+    float cx = 635.0;
+    float cy = 521.0;
+    float tt = -0.23;
+    float aa = 0.55;
 
-out VS_OUT {
-    vec4 color;
-} vs_out;
+    float d1 = length(v);
+    float d2 = length(vec3(v.x, v.y, (tt * d1) + v.z));
 
-uniform mat4 view;
+    float div = (aa * d2) + ((1.0 - aa) * ((tt * d1) + v.z));
 
-void main()
-{
-    vs_out.color = vec4(position,1.0);
+    return vec3(vec2(fx * (v.x / div), fy * (v.y / div))/ 1565.0 , (d1 - 20.0)/1000.0  ) ; //+ vec2(cx, cy)
+}
 
-    gl_Position = view * vec4(position, 0.0);
+in layout (location = 0) vec3 position;
+in layout (location = 1) vec3 normal;
+
+uniform mat4 M;
+
+out vec4 world_pos;
+out vec4 world_nor;
+
+void main(){
+	world_pos = M * vec4(position,1);
+	world_nor = M * vec4(normal,0);
+	gl_Position =  vec4( project( (M * vec4(position,1)).xyz), 1.0);
 }
