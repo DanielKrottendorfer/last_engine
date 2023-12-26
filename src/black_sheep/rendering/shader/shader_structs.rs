@@ -42,6 +42,8 @@ shader_program!(
         uniform mat4 M;
         uniform vec3 col;
         uniform vec3 light_position;
+        uniform float aa;
+        uniform float tt;
         uniform float light_power;
     }
 );

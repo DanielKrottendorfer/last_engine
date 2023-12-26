@@ -4,23 +4,39 @@ pub mod camera;
 
 mod job;
 
+use bitflags::Flags;
 use cgmath::{Deg, Matrix4, Vector2, Vector3, Zero};
 
-use self::{camera::structs::FlyingEye, input_flags::InputFlags};
+use self::{
+    camera::structs::FlyingEye,
+    input_flags::{InputFlags, Inputs},
+};
 use crate::black_sheep::q_i_square_root::q_normalize;
 
 use super::settings::*;
 
-//pub auto trait UpdateFunction : FnMut(InputFlags){}
-// pub auto trait DrawFunction : FnMut(f32, &FlyingEye, &Matrix4<f32>);
-
 pub struct GameState {
-    pub input_flags: InputFlags,
+    pub inputs: Inputs,
     pub window_size_f32: [f32; 2],
     pub window_size_i32: [i32; 2],
     pub ui_projection: Matrix4<f32>,
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
+    pub up_pressed: bool,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            inputs: Default::default(),
+            window_size_f32: Default::default(),
+            window_size_i32: Default::default(),
+            ui_projection: Matrix4::zero(),
+            world_projection: Matrix4::zero(),
+            cam: Default::default(),
+            up_pressed: Default::default(),
+        }
+    }
 }
 
 impl GameState {
@@ -36,23 +52,23 @@ impl GameState {
         let aspect = (INIT_WINDOW_SIZE_F32[0] - 300.0) / INIT_WINDOW_SIZE_F32[1];
         let world_projection = cgmath::perspective(Deg(120.0), aspect, 0.1, 1000.0);
         let mut cam = FlyingEye::new();
-        cam.move_cam(Vector3::new(0.0, 20.0, 20.0));
-        cam.rotate_h(Deg(65.0));
+        cam.move_cam(Vector3::new(0.0, 00.0, 60.0));
 
         GameState {
-            input_flags: InputFlags::NONE,
+            inputs: Inputs::default(),
             window_size_f32: INIT_WINDOW_SIZE_F32,
             window_size_i32: INIT_WINDOW_SIZE_I32,
             ui_projection,
             world_projection,
             cam,
+            ..Default::default()
         }
     }
 
     pub fn update(&mut self) {
         self.cam.update();
 
-        if let Some(v) = get_movement(&mut self.input_flags) {
+        if let Some(v) = get_movement(&mut self.inputs.input_flags) {
             self.cam.set_movement(v);
         } else {
             self.cam.reset_movement();
@@ -63,7 +79,7 @@ impl GameState {
         let _v = Vector2::new(x as f32, y as f32);
         //self.structogram.update(v);
 
-        if self.input_flags.contains(InputFlags::CAPTURED_MOUSE) {
+        if self.inputs.key_down(InputFlags::CAPTURED_MOUSE) {
             if xrel != 0 {
                 self.cam.rotate_v(Deg(xrel as f32 / 10.0));
             }
@@ -79,7 +95,7 @@ const CAM_SPEED: f32 = 10.0;
 pub fn get_movement(input: &mut InputFlags) -> Option<Vector3<f32>> {
     use InputFlags as kf;
 
-    if *input == kf::NONE {
+    if input.bits() == kf::NONE.bits() {
         None
     } else {
         let mut v = Vector3::zero();

@@ -1,13 +1,17 @@
 #![feature(trait_alias)]
 
+use std::borrow::Borrow;
+
 use crate::black_sheep::{
-    gamestate::camera::structs::FlyingEye,
+    gamestate::{self, camera::structs::FlyingEye, GameState, input_flags::{self, InputFlags}},
+    imgui_system::ImguiSystem,
     rendering::{self, geometry::mesh::MeshToken, loader::load_texture_from_path, rendertarget},
     settings::DT,
-    window::window_util::{clear_color, clear_drawbuffer, set_viewport},
+    window::window_util::{clear_color, clear_drawbuffer, set_viewport, three_d_rendering_setup},
 };
 use black_sheep::{DrawFunction, UpdateFunction};
-use cgmath::{vec2, vec3, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+use cgmath::{vec2, vec3, Deg, InnerSpace, Matrix4, Vector2, Vector3, Zero};
+use imgui::{ColorPicker, Condition, Image, TextureId, Window};
 
 mod black_sheep;
 mod gameplay;
@@ -30,18 +34,14 @@ fn main() {
         let rt_gizmo = rendering::rendertarget::RenderTarget::new(300, 300);
         rendertarget::unbind_framebuffer();
 
-        unsafe {
-            gl::ActiveTexture(gl::TEXTURE0 + 2);
-            rt_gizmo.bind_texture();
-        }
-
         ecs.add_ball_soa(Vector2::new(5.0, -5.0), Vector2::zero());
 
         let mut circle = ecs.get_circle_accessor();
         let positions = ecs.get_positions_accessor();
         let mut pos_update = ecs.get_update_pos_ori_accessor();
 
-        let update = move |_input| {
+
+        let update = move |game_state: &mut GameState, imgui_system: &mut ImguiSystem| {
             {
                 let mut update = pos_update.lock();
                 for (pos, ori, direction, target_ori) in update.iter() {
@@ -50,6 +50,42 @@ fn main() {
                 }
             }
             gameplay::run_ape_ai(&mut circle, &positions);
+
+            if game_state.inputs.key_pressed(InputFlags::UP) {
+                game_state.up_pressed = !game_state.up_pressed;
+            }
+
+            imgui_system.update(&mut |ui| {
+                use imgui::WindowFlags;
+
+                let mut t_color = [0.0, 0.0, 0.0, 0.0];
+
+                Window::new("Image")
+                    .size([300.0, game_state.window_size_f32[1]], Condition::Always)
+                    .position(
+                        [game_state.window_size_f32[0] - 300.0, 0.0],
+                        Condition::Always,
+                    )
+                    .flags(
+                        WindowFlags::NO_MOVE
+                            | WindowFlags::NO_RESIZE
+                            | WindowFlags::NO_COLLAPSE
+                            | WindowFlags::NO_TITLE_BAR,
+                    )
+                    .build(&ui, || {
+                        ui.text("Hello world!");
+                        ui.text("こんにちは世界！");
+
+                        ui.text(format!("{:?}", -game_state.cam.position));
+                        ui.text(format!("{:#?}", game_state.cam.orientation));
+                        ColorPicker::new("color_picker", &mut t_color).build(ui);
+                        Image::new(TextureId::new(2 as usize), [300.0, 300.0])
+                            .uv0([0.0, 1.0])
+                            .uv1([1.0, 0.0])
+                            .build(ui);
+                        Image::new(TextureId::new(1 as usize), [300.0, 300.0]).build(ui);
+                    });
+            });
         };
 
         let draw_m = ecs.get_draw_accessor();
@@ -79,7 +115,14 @@ fn main() {
 
         let nice_image = load_texture_from_path("./res/1322615842122.jpg").unwrap();
         let mut last = None;
-        let draw = move |i: f32, cam: &FlyingEye, prj: &Matrix4<f32>| {
+
+        let mut f = true;
+
+        let draw = move |i: f32, game_state: &GameState| {
+
+            let cam = game_state.cam.borrow();
+            let prj = game_state.world_projection;
+
             let view = cam.get_i_view(i);
             let vp = prj * view;
             for (p, o, direction, to, model) in calc_mat.lock().iter() {
@@ -93,37 +136,61 @@ fn main() {
 
             let d_lock = draw_m.lock();
 
-            // ape.bind_vertex_array();
-            // three_dl.use_program();
-            // three_dl.set_light_position(vec3(30.0, 30.0, 10.0));
-            // three_dl.set_light_power(1000.0);
-
-            // for (m, c) in d_lock.iter() {
-            //     three_dl.set_MVP(vp * m);
-            //     three_dl.set_M(*m);
-            //     three_dl.set_col(*c);
-            //     ape.draw_triangle_elements();
-            // }
-
-            // rt_gizmo.bind_framebuffer();
-            // clear_color(0.1, 0.1, 0.1, 1.0);
-            // clear_drawbuffer();
 
             ape.bind_vertex_array();
-            doubl_sphere.use_program();
-            doubl_sphere.set_light_position(vec3(30.0, 30.0, 10.0));
-            doubl_sphere.set_light_power(3000.0);
 
-            for (m, c) in d_lock.iter() {
-                doubl_sphere.set_M(view * m);
-                doubl_sphere.set_col(*c);
-                ape.draw_triangle_elements();
+            let three_d = || {
+
+                doubl_sphere.use_program();
+                doubl_sphere.set_light_position(vec3(30.0, 30.0, 10.0));
+                doubl_sphere.set_light_power(3000.0);
+
+                for (m, c) in d_lock.iter() {
+                    doubl_sphere.set_M(view * m);
+                    doubl_sphere.set_col(*c);
+                    ape.draw_triangle_elements();
+                }
+            };
+            let doubele_l = || {
+                three_dl.use_program();
+                three_dl.set_light_position(vec3(30.0, 30.0, 10.0));
+                three_dl.set_light_power(3000.0);
+
+                let vp = cgmath::perspective(Deg(80.0), 1.0, 0.1, 1000.0) * view;
+                for (m, c) in d_lock.iter() {
+                    three_dl.set_MVP(vp * m);
+                    three_dl.set_M(*m);
+                    three_dl.set_col(*c);
+                    ape.draw_triangle_elements();
+                }
+            };
+
+            
+
+
+            if game_state.up_pressed {
+                three_d();
+            }else{
+                doubele_l();
             }
 
-            // unsafe {
-            //     gl::ActiveTexture(gl::TEXTURE0 + 2);
-            //     rt_gizmo.bind_texture();
-            // }
+            rt_gizmo.bind_framebuffer();
+            three_d_rendering_setup();
+            clear_color(0.0, 0.3, 0.3, 1.0);
+            clear_drawbuffer();
+            set_viewport(300, 300);
+
+            if !f{
+                three_d();
+            }else{
+                doubele_l();
+            }
+            rendertarget::unbind_framebuffer();
+
+            unsafe {
+                gl::ActiveTexture(gl::TEXTURE0 + 2);
+                rt_gizmo.bind_texture();
+            }
 
             // rendertarget::unbind_framebuffer();
 
