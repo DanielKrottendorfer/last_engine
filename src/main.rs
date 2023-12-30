@@ -41,6 +41,7 @@ fn main() {
         let mut pos_update = ecs.get_update_pos_ori_accessor();
 
 
+        let mut t_color = [0.0, 0.0, 0.0, 0.0];
         let update = move |game_state: &mut GameState, imgui_system: &mut ImguiSystem| {
             {
                 let mut update = pos_update.lock();
@@ -58,7 +59,6 @@ fn main() {
             imgui_system.update(&mut |ui| {
                 use imgui::WindowFlags;
 
-                let mut t_color = [0.0, 0.0, 0.0, 0.0];
 
                 Window::new("Image")
                     .size([300.0, game_state.window_size_f32[1]], Condition::Always)
@@ -75,7 +75,8 @@ fn main() {
                     .build(&ui, || {
                         ui.text("Hello world!");
                         ui.text("こんにちは世界！");
-
+                        ui.input_float("tt", &mut game_state.tt).build();
+                        ui.input_float("aa", &mut game_state.aa).build();
                         ui.text(format!("{:?}", -game_state.cam.position));
                         ui.text(format!("{:#?}", game_state.cam.orientation));
                         ColorPicker::new("color_picker", &mut t_color).build(ui);
@@ -144,6 +145,8 @@ fn main() {
                 doubl_sphere.use_program();
                 doubl_sphere.set_light_position(vec3(30.0, 30.0, 10.0));
                 doubl_sphere.set_light_power(3000.0);
+                doubl_sphere.set_aa(game_state.aa);
+                doubl_sphere.set_tt(game_state.tt);
 
                 for (m, c) in d_lock.iter() {
                     doubl_sphere.set_M(view * m);

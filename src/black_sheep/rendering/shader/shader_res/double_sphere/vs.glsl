@@ -18,12 +18,13 @@ vec3 project(vec3 v) {
     float div = (aa * d2) + ((1.0 - aa) * ((tt * d1) + v.z));
 
     float z = 0.0;
-
-    if(v.z < 0.0){
         z =  (d1 - 20.0)/1000.0;
-    }else{
-        z = 1.0;
-    }
+
+    // if(v.z < 0.0){
+    //     z =  (d1 - 20.0)/1000.0;
+    // }else{
+    //     z = 1.0;
+    // }
     
     return vec3(vec2((v.x / div), (v.y / div)) * 0.4,z) ; //+ vec2(cx, cy)
 }

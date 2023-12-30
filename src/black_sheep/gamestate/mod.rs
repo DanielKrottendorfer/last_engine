@@ -23,6 +23,9 @@ pub struct GameState {
     pub world_projection: Matrix4<f32>,
     pub cam: FlyingEye,
     pub up_pressed: bool,
+
+    pub tt: f32,
+    pub aa: f32
 }
 
 impl Default for GameState {
@@ -35,6 +38,8 @@ impl Default for GameState {
             world_projection: Matrix4::zero(),
             cam: Default::default(),
             up_pressed: Default::default(),
+            tt: -0.18,
+            aa:  0.55
         }
     }
 }
